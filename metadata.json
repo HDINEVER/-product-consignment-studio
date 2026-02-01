@@ -1,0 +1,5 @@
+{
+  "name": "ComicCon Consignment Hub",
+  "description": "A Gumroad-styled consignment platform for comic con merchandise featuring Atropos-style 3D cards, IP filtering, and BOM generation for orders.",
+  "requestFramePermissions": []
+}
