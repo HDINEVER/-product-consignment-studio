@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - 'src/worker/**' # 忽略后端 (Worker) 代码变更
-      - 'wrangler.toml' # 忽略后端配置文件变更
+      - "src/worker/**" # 忽略后端(Worker)代码变更
+      - "wrangler.toml" # 忽略后端配置文件变更
   workflow_dispatch:
 
 jobs:
