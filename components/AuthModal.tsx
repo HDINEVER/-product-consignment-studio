@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, ArrowRight } from 'lucide-react';
+import AnimatedButton from './AnimatedButton';
 
 interface AuthModalProps {
   onLogin: (email: string) => void;
@@ -47,10 +48,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ onLogin }) => {
             />
           </div>
           
-          <button
+          <AnimatedButton
             type="submit"
+            variant="primary"
+            hasShimmer={!loading}
             disabled={loading}
-            className="w-full bg-black text-white py-4 rounded-lg font-bold text-lg flex items-center justify-center gap-2 hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none"
+            className="w-full py-4 text-lg"
           >
             {loading ? '正在进入...' : (
               <>
@@ -58,7 +61,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onLogin }) => {
                 <ArrowRight size={20} />
               </>
             )}
-          </button>
+          </AnimatedButton>
         </form>
 
         <div className="mt-6 text-center text-xs text-gray-400">

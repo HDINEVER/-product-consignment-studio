@@ -7,6 +7,8 @@ import ProductModal from './components/ProductModal';
 import CartDrawer from './components/CartDrawer';
 import AuthModal from './components/AuthModal';
 import AdminDashboard from './components/AdminDashboard';
+import AnimatedButton from './components/AnimatedButton';
+import SidebarFilterButton from './components/SidebarFilterButton';
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -121,12 +123,14 @@ function App() {
       {/* Top Navigation Bar */}
       <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b-2 border-black z-30 flex items-center px-4 justify-between">
         <div className="flex items-center gap-4">
-          <button 
+          <AnimatedButton 
+            variant="ghost"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 hover:bg-gray-100 rounded-lg border-2 border-transparent hover:border-black transition-all"
+            className="p-2"
+            aria-label="Toggle sidebar menu"
           >
             <Menu size={20} />
-          </button>
+          </AnimatedButton>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-black text-white flex items-center justify-center font-bold text-lg rounded-md rotate-3">C</div>
             <h1 className="font-black text-xl hidden sm:block tracking-tighter">COMIC HUB</h1>
@@ -144,14 +148,15 @@ function App() {
 
         <div className="flex items-center gap-4">
           
-          <button
+          <AnimatedButton
+            variant="outline"
             onClick={() => setViewMode('admin')}
-            className="hidden md:flex items-center gap-2 px-3 py-1.5 border-2 border-black rounded bg-gray-50 hover:bg-yellow-400 transition-colors text-xs font-bold"
+            className="hidden md:flex items-center gap-2 px-3 py-1.5 text-xs"
             title="Manage Database"
           >
             <Database size={14} />
             <span>后台管理</span>
-          </button>
+          </AnimatedButton>
 
           <div className="hidden md:block text-xs font-bold text-right group relative cursor-pointer">
              <div className="text-gray-500">Welcome</div>
@@ -166,17 +171,18 @@ function App() {
              </div>
           </div>
 
-          <button 
+          <AnimatedButton 
+            variant="icon"
             onClick={() => setIsCartOpen(true)}
-            className="relative p-3 bg-black text-white rounded-lg hover:scale-105 transition-transform"
+            className="relative p-3"
           >
             <ShoppingCart size={20} />
             {cart.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-yellow-400 text-black text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-black">
+              <span className="absolute -top-1 -right-1 bg-yellow-400 text-black text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-black z-20">
                 {cart.length}
               </span>
             )}
-          </button>
+          </AnimatedButton>
         </div>
       </header>
 
@@ -195,17 +201,13 @@ function App() {
             </h3>
             <div className="space-y-2">
               {IPS.map(ip => (
-                <button
+                <SidebarFilterButton
                   key={ip}
+                  isSelected={selectedIP === ip}
                   onClick={() => setSelectedIP(ip)}
-                  className={`w-full text-left px-4 py-3 rounded-lg font-bold text-sm transition-all border-2 ${
-                    selectedIP === ip 
-                      ? 'bg-yellow-400 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]' 
-                      : 'bg-white border-transparent hover:bg-gray-100 text-gray-500 hover:text-black'
-                  }`}
                 >
                   {ip}
-                </button>
+                </SidebarFilterButton>
               ))}
             </div>
           </div>
@@ -216,13 +218,14 @@ function App() {
               <span>v1.0.0 Alpha</span>
             </div>
             {/* Mobile Admin Button */}
-            <button
+            <AnimatedButton
+              variant="outline"
               onClick={() => setViewMode('admin')}
-              className="md:hidden w-full mt-4 flex items-center justify-center gap-2 px-3 py-2 border-2 border-black rounded bg-gray-50 hover:bg-yellow-400 transition-colors text-xs font-bold"
+              className="md:hidden w-full mt-4 flex items-center justify-center gap-2 px-3 py-2 text-xs"
             >
               <Database size={14} />
               <span>后台管理</span>
-            </button>
+            </AnimatedButton>
           </div>
         </aside>
 
@@ -233,17 +236,18 @@ function App() {
           <div className="mb-8 overflow-x-auto pb-2">
             <div className="flex gap-2 min-w-max">
               {CATEGORIES.map(cat => (
-                <button
+                <AnimatedButton
                   key={cat}
+                  variant={selectedCategory === cat ? 'primary' : 'outline'}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-6 py-2 rounded-full border-2 font-bold whitespace-nowrap transition-all ${
+                  className={`px-6 py-2 rounded-full whitespace-nowrap ${
                     selectedCategory === cat
-                      ? 'bg-black text-white border-black'
-                      : 'bg-white text-gray-500 border-gray-200 hover:border-black hover:text-black'
+                      ? ''
+                      : 'text-gray-500 hover:text-black'
                   }`}
                 >
                   {cat}
-                </button>
+                </AnimatedButton>
               ))}
             </div>
           </div>
