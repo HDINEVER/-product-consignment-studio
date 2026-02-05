@@ -1,11 +1,14 @@
--- Consignment Items 寄售物品表
 CREATE TABLE IF NOT EXISTS consignment_items (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   description TEXT,
   price REAL NOT NULL,
+  stock_quantity INTEGER DEFAULT 0,
+  image_url TEXT,
+  ip_category TEXT,
+  material_type TEXT,
   status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'approved', 'sold', 'returned')),
-  seller_name TEXT NOT NULL,
+  seller_name TEXT,
   seller_contact TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP

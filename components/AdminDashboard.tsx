@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, ArrowLeft, Save, X, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, ArrowLeft, Save, X, Image as ImageIcon, LayoutGrid, List } from 'lucide-react';
 import { Product, ProductVariant, CATEGORIES, IPS, Category } from '../types';
 
 interface AdminDashboardProps {
@@ -17,18 +17,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onDeleteProduct,
   onExit
 }) => {
-  const [view, setView] = useState<'list' | 'form'>('list');
+  const [view, setView] = useState<'list' | 'gallery' | 'form'>('list');
   const [editingId, setEditingId] = useState<string | null>(null);
   
   // Form State
   const initialFormState: Product = {
     id: '',
     title: '',
-    ip: IPS[1], // Default to first actual IP
-    category: CATEGORIES[1], // Default to first actual category
+    ip: IPS[1], 
+    category: CATEGORIES[1], 
     image: '',
     description: '',
     basePrice: 0,
+    stockQuantity: 1,
+    materialType: '纸制品', // Default
     variants: [{ name: 'Default', price: 0 }]
   };
   const [formData, setFormData] = useState<Product>(initialFormState);
@@ -40,7 +42,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   const handleCreate = () => {
-    setFormData({ ...initialFormState, id: Date.now().toString() });
+    setFormData({ ...initialFormState, id: '' }); // ID handles by backend usually, but for local state we relied on Date.now(). Backend will assign ID.
     setEditingId(null);
     setView('form');
   };
@@ -55,26 +57,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setView('list');
   };
 
-  const handleVariantChange = (index: number, field: keyof ProductVariant, value: string | number) => {
-    const newVariants = [...formData.variants];
-    newVariants[index] = { ...newVariants[index], [field]: value };
-    setFormData({ ...formData, variants: newVariants });
-  };
-
-  const addVariant = () => {
-    setFormData({
-      ...formData,
-      variants: [...formData.variants, { name: '', price: 0 }]
-    });
-  };
-
-  const removeVariant = (index: number) => {
-    setFormData({
-      ...formData,
-      variants: formData.variants.filter((_, i) => i !== index)
-    });
-  };
-
+  // Legacy variants handler if needed, currently we focus on top-level props
+  // But for compatibility with existing UI (if it uses variants), we keep this.
+  // Ideally backend should support variants table, but for now we map single price.
+  
   if (view === 'form') {
     return (
       <div className="bg-[#f3f3f3] min-h-screen p-8">
@@ -103,13 +89,35 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-sm uppercase mb-2">基础价格 (展示用)</label>
+                  <label className="block font-bold text-sm uppercase mb-2">价格 (CNY)</label>
                   <input 
                     type="number"
                     required
                     className="w-full border-2 border-black p-3 rounded font-bold focus:ring-4 focus:ring-yellow-400 outline-none"
                     value={formData.basePrice}
                     onChange={e => setFormData({...formData, basePrice: Number(e.target.value)})}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div>
+                  <label className="block font-bold text-sm uppercase mb-2">库存数量</label>
+                  <input 
+                    type="number"
+                    required
+                    className="w-full border-2 border-black p-3 rounded font-bold focus:ring-4 focus:ring-yellow-400 outline-none"
+                    value={formData.stockQuantity || 0}
+                    onChange={e => setFormData({...formData, stockQuantity: Number(e.target.value)})}
+                  />
+                </div>
+                 <div>
+                  <label className="block font-bold text-sm uppercase mb-2">材质类型</label>
+                  <input 
+                    className="w-full border-2 border-black p-3 rounded font-bold focus:ring-4 focus:ring-yellow-400 outline-none"
+                    value={formData.materialType || ''}
+                    placeholder="e.g. 珠光纸, 亚克力"
+                    onChange={e => setFormData({...formData, materialType: e.target.value})}
                   />
                 </div>
               </div>
@@ -128,10 +136,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-sm uppercase mb-2">产品分类</label>
+                  <label className="block font-bold text-sm uppercase mb-2">产品分类 (Tags)</label>
                   <select 
                     className="w-full border-2 border-black p-3 rounded font-bold focus:ring-4 focus:ring-yellow-400 outline-none bg-white"
-                    value={formData.category}
+                    value={formData.category} // Mapping category to material type roughly or keeping generic
                     onChange={e => setFormData({...formData, category: e.target.value as Category})}
                   >
                     {CATEGORIES.filter(c => c !== '全部').map(c => (
@@ -172,47 +180,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 />
               </div>
 
-              <div className="bg-gray-50 p-6 rounded-lg border-2 border-black border-dashed">
-                <div className="flex justify-between items-center mb-4">
-                  <label className="block font-black text-lg uppercase">SKU / 款式列表</label>
-                  <button 
-                    type="button"
-                    onClick={addVariant}
-                    className="flex items-center gap-1 text-sm font-bold bg-black text-white px-3 py-1 rounded hover:bg-gray-800"
-                  >
-                    <Plus size={14} /> 添加款式
-                  </button>
-                </div>
-                
-                <div className="space-y-3">
-                  {formData.variants.map((variant, idx) => (
-                    <div key={idx} className="flex gap-4 items-center">
-                      <input 
-                        placeholder="款式名称 (e.g. A款)"
-                        className="flex-1 border-2 border-gray-300 p-2 rounded font-bold focus:border-black outline-none"
-                        value={variant.name}
-                        onChange={e => handleVariantChange(idx, 'name', e.target.value)}
-                      />
-                      <input 
-                        type="number"
-                        placeholder="价格"
-                        className="w-24 border-2 border-gray-300 p-2 rounded font-bold focus:border-black outline-none"
-                        value={variant.price}
-                        onChange={e => handleVariantChange(idx, 'price', Number(e.target.value))}
-                      />
-                      <button 
-                        type="button"
-                        onClick={() => removeVariant(idx)}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded"
-                        disabled={formData.variants.length === 1}
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
               <div className="flex justify-end gap-4 pt-4">
                 <button 
                   type="button"
@@ -236,98 +203,167 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     );
   }
 
+  // --- Main View (List or Gallery) ---
+
   return (
-    <div className="bg-[#f3f3f3] min-h-screen p-4 md:p-8">
+    <div className="bg-[#f3f3f3] min-h-screen p-4 md:p-8 font-sans">
       <div className="max-w-7xl mx-auto">
         
         <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
           <div>
-            <h1 className="text-4xl font-black uppercase tracking-tighter">后台管理系统</h1>
-            <p className="font-bold text-gray-500">产品数据库管理 v1.0</p>
+            <h1 className="text-4xl font-black uppercase tracking-tighter">Admin Dashboard</h1>
+            <p className="font-bold text-gray-500">Inventory & Consignment Management</p>
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-center">
+             {/* View Toggle */}
+             <div className="bg-white border-2 border-black rounded-lg p-1 flex items-center mr-4 shadow-sm">
+                <button 
+                  onClick={() => setView('list')}
+                  className={`p-2 rounded flex items-center gap-2 text-sm font-bold transition-all ${view !== 'gallery' ? 'bg-black text-white' : 'hover:bg-gray-100'}`}
+                >
+                  <List size={16} /> 表格
+                </button>
+                <button 
+                  onClick={() => setView('gallery')}
+                  className={`p-2 rounded flex items-center gap-2 text-sm font-bold transition-all ${view === 'gallery' ? 'bg-black text-white' : 'hover:bg-gray-100'}`}
+                >
+                  <LayoutGrid size={16} /> 画廊
+                </button>
+             </div>
+
             <button 
               onClick={onExit}
               className="px-6 py-3 border-2 border-black font-bold rounded hover:bg-gray-100 bg-white"
             >
-              退出系统
+              Back to Shop
             </button>
             <button 
               onClick={handleCreate}
               className="px-6 py-3 bg-black text-white font-bold rounded shadow-[4px_4px_0px_0px_rgba(255,255,0,1)] hover:translate-y-1 hover:shadow-none transition-all flex items-center gap-2"
             >
-              <Plus size={20} /> 新增产品
+              <Plus size={20} /> New Item
             </button>
           </div>
         </div>
 
-        <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-black text-white">
-                <tr>
-                  <th className="p-4 text-left font-black uppercase tracking-wider">图片</th>
-                  <th className="p-4 text-left font-black uppercase tracking-wider">名称</th>
-                  <th className="p-4 text-left font-black uppercase tracking-wider">IP / 分类</th>
-                  <th className="p-4 text-left font-black uppercase tracking-wider">价格区间</th>
-                  <th className="p-4 text-right font-black uppercase tracking-wider">操作</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y-2 divide-gray-100">
-                {products.map(product => (
-                  <tr key={product.id} className="hover:bg-yellow-50 transition-colors">
-                    <td className="p-4 w-24">
-                      <div className="w-16 h-16 border-2 border-black rounded overflow-hidden">
-                        <img src={product.image} alt={product.title} className="w-full h-full object-cover" />
-                      </div>
-                    </td>
-                    <td className="p-4 font-bold">
-                      {product.title}
-                      <div className="text-xs text-gray-400 font-normal mt-1 truncate max-w-xs">{product.description}</div>
-                    </td>
-                    <td className="p-4">
-                      <div className="inline-block px-2 py-1 bg-gray-100 rounded border border-black text-xs font-bold mb-1 mr-2">
-                        {product.ip}
-                      </div>
-                      <div className="inline-block px-2 py-1 bg-yellow-200 rounded border border-black text-xs font-bold">
-                        {product.category}
-                      </div>
-                    </td>
-                    <td className="p-4 font-mono font-bold">
-                      {product.variants.length > 1 
-                        ? `¥${Math.min(...product.variants.map(v => v.price))} - ¥${Math.max(...product.variants.map(v => v.price))}`
-                        : `¥${product.variants[0].price}`
-                      }
-                    </td>
-                    <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button 
-                          onClick={() => handleEdit(product)}
-                          className="p-2 border-2 border-black rounded hover:bg-black hover:text-white transition-colors"
-                        >
-                          <Edit size={16} />
-                        </button>
-                        <button 
-                          onClick={() => {
-                            if(window.confirm('确定要删除这个产品吗?')) onDeleteProduct(product.id);
-                          }}
-                          className="p-2 border-2 border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        {/* --- Content Area --- */}
+        <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-xl overflow-hidden min-h-[600px]">
           
-          {products.length === 0 && (
-            <div className="p-12 text-center text-gray-400 font-bold">
-              暂无数据，请点击右上角新增产品
+          {/* Gallery View */}
+          {view === 'gallery' && (
+             <div className="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+               {products.map(product => (
+                 <div key={product.id} className="group relative border-2 border-gray-200 hover:border-black rounded-lg overflow-hidden transition-all hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white flex flex-col">
+                    {/* Cover Image */}
+                    <div className="h-48 bg-gray-100 relative overflow-hidden">
+                      <img src={product.image} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+                      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <button onClick={() => handleEdit(product)} className="p-1.5 bg-white border border-black rounded shadow hover:bg-gray-100"><Edit size={14}/></button>
+                         <button onClick={() => { if(window.confirm('Delete?')) onDeleteProduct(product.id)}} className="p-1.5 bg-white border border-black rounded shadow hover:bg-red-50 text-red-500"><Trash2 size={14}/></button>
+                      </div>
+                    </div>
+                    {/* Card Content (Notion style) */}
+                    <div className="p-4 flex-1 flex flex-col gap-2">
+                       <h3 className="font-bold text-lg leading-tight">{product.title}</h3>
+                       
+                       <div className="space-y-1 text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-400 w-12 shrink-0">IP</span>
+                            <span className="px-1.5 py-0.5 bg-purple-50 text-purple-700 rounded border border-purple-100 truncate">{product.ip}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-400 w-12 shrink-0">价格</span>
+                            <span className="font-mono">¥{product.basePrice}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-400 w-12 shrink-0">库存</span>
+                            <span className={`font-mono ${!product.stockQuantity ? 'text-red-500' : ''}`}>
+                               {product.stockQuantity || 0}
+                            </span>
+                          </div>
+                           <div className="flex items-center gap-2">
+                            <span className="text-gray-400 w-12 shrink-0">材质</span>
+                            <span className="truncate text-gray-600">{product.materialType || '-'}</span>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+               ))}
+               
+               {products.length === 0 && (
+                 <div className="col-span-full flex flex-col items-center justify-center h-64 text-gray-400">
+                    <p>No items in gallery.</p>
+                 </div>
+               )}
+             </div>
+          )}
+
+          {/* Table View */}
+          {view !== 'gallery' && (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b-2 border-black text-xs uppercase text-gray-500 font-bold tracking-wider">
+                  <tr>
+                    <th className="p-4 text-left w-16">Cover</th>
+                    <th className="p-4 text-left">Product Name</th>
+                    <th className="p-4 text-left w-32">Attributes</th>
+                    <th className="p-4 text-left w-24">Price</th>
+                    <th className="p-4 text-left w-24">Stock</th>
+                    <th className="p-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {products.map(product => (
+                    <tr key={product.id} className="hover:bg-gray-50 transition-colors group">
+                      <td className="p-4">
+                        <div className="w-10 h-10 border border-black rounded overflow-hidden bg-gray-100">
+                          <img src={product.image} alt="" className="w-full h-full object-cover" />
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="font-bold text-sm">{product.title}</div>
+                        <div className="text-xs text-gray-400 truncate max-w-[200px]">{product.description}</div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex flex-col gap-1 items-start">
+                          <span className="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded text-[10px] font-bold text-gray-600">{product.ip}</span>
+                          {product.materialType && <span className="text-[10px] text-gray-400">{product.materialType}</span>}
+                        </div>
+                      </td>
+                      <td className="p-4 font-mono text-sm">¥{product.basePrice}</td>
+                      <td className="p-4 font-mono text-sm">
+                        {product.stockQuantity || 0}
+                      </td>
+                      <td className="p-4 text-right">
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={() => handleEdit(product)}
+                            className="p-1.5 hover:bg-black hover:text-white rounded transition-colors"
+                          >
+                            <Edit size={14} />
+                          </button>
+                          <button 
+                            onClick={() => {
+                              if(window.confirm('Delete?')) onDeleteProduct(product.id);
+                            }}
+                            className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {products.length === 0 && (
+                <div className="p-12 text-center text-gray-400 font-bold">
+                  No products found.
+                </div>
+              )}
             </div>
           )}
+          
         </div>
 
       </div>

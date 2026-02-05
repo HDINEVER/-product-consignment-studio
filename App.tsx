@@ -13,9 +13,51 @@ import SidebarFilterButton from './components/SidebarFilterButton';
 function App() {
   const [user, setUser] = useState<User | null>(null);
   
+  // API Base URL
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+
   // App State
-  const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
+  // Initialize with empty array, fetch from API
+  const [products, setProducts] = useState<Product[]>([]);
   const [viewMode, setViewMode] = useState<'shop' | 'admin'>('shop');
+  
+  // Fetch Products
+  React.useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/items`);
+      const data = await res.json();
+      // Map API data to Product type if needed, or if API returns correct shape
+      // Data from D1 is flat. We need to adapting mapping if needed.
+      // Current Worker API returns: 
+      // { id, name, description, price, stock_quantity, image_url, ip_category, material_type, status, ... }
+      // Frontend expects: Product interface
+      
+      const mappedProducts: Product[] = Array.isArray(data) ? data.map((item: any) => ({
+        id: item.id.toString(),
+        title: item.name,
+        ip: item.ip_category || '其他',
+        category: '全部', // You might want to map this or store it in DB (material_type vs category)
+        // Let's assume 'material_type' maps to 'category' for now, or we keep category static.
+        // Actually, the user asked for "Product Category" (IP) and "Material Type".
+        // Let's map material_type -> category if it matches, or default.
+        image: item.image_url || 'https://via.placeholder.com/400',
+        description: item.description || '',
+        basePrice: item.price,
+        stockQuantity: item.stock_quantity,
+        materialType: item.material_type,
+        // Construct variants from single price/stock
+        variants: [{ name: '默认', price: item.price }]
+      })) : [];
+      
+      setProducts(mappedProducts);
+    } catch (error) {
+      console.error('Failed to fetch products:', error);
+    }
+  };
   
   // Shop State
   const [selectedCategory, setSelectedCategory] = useState<Category>('全部');
@@ -62,16 +104,75 @@ function App() {
   };
 
   // Admin Handlers
-  const handleAddProduct = (newProduct: Product) => {
-    setProducts(prev => [newProduct, ...prev]);
+  // Admin Handlers - Now Async
+  const handleAddProduct = async (newProduct: Product) => {
+    try {
+      const payload = {
+        name: newProduct.title,
+        description: newProduct.description,
+        price: newProduct.basePrice,
+        stock_quantity: newProduct.stockQuantity || 0,
+        image_url: newProduct.image,
+        ip_category: newProduct.ip,
+        material_type: newProduct.materialType || newProduct.category, // Map category/material
+        status: 'approved'
+      };
+      
+      const res = await fetch(`${API_BASE_URL}/api/items`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+      
+      if (res.ok) {
+        fetchProducts(); // Refresh list
+      }
+    } catch (e) {
+      console.error(e);
+      alert('添加失败');
+    }
   };
 
-  const handleUpdateProduct = (updatedProduct: Product) => {
-    setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+  const handleUpdateProduct = async (updatedProduct: Product) => {
+    try {
+      const payload = {
+        name: updatedProduct.title,
+        description: updatedProduct.description,
+        price: updatedProduct.basePrice,
+        stock_quantity: updatedProduct.stockQuantity || 0,
+        image_url: updatedProduct.image,
+        ip_category: updatedProduct.ip,
+        material_type: updatedProduct.category, 
+        status: 'approved'
+      };
+
+      const res = await fetch(`${API_BASE_URL}/api/items/${updatedProduct.id}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        fetchProducts();
+      }
+    } catch (e) {
+      console.error(e);
+      alert('更新失败');
+    }
   };
 
-  const handleDeleteProduct = (id: string) => {
-    setProducts(prev => prev.filter(p => p.id !== id));
+  const handleDeleteProduct = async (id: string) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/items/${id}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        fetchProducts();
+      }
+    } catch (e) {
+      console.error(e);
+      alert('删除失败');
+    }
   };
 
   // Grid Layout Helper

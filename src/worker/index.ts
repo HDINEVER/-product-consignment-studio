@@ -12,8 +12,12 @@ interface ConsignmentItem {
   name: string;
   description?: string;
   price: number;
+  stock_quantity?: number;
+  image_url?: string;
+  ip_category?: string;
+  material_type?: string;
   status: "pending" | "approved" | "sold" | "returned";
-  seller_name: string;
+  seller_name?: string;
   seller_contact?: string;
   created_at?: string;
   updated_at?: string;
@@ -104,15 +108,19 @@ async function createItem(
 ): Promise<Response> {
   const result = await db
     .prepare(
-      `INSERT INTO consignment_items (name, description, price, status, seller_name, seller_contact, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+      `INSERT INTO consignment_items (name, description, price, stock_quantity, image_url, ip_category, material_type, status, seller_name, seller_contact, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
     )
     .bind(
       item.name,
       item.description || null,
       item.price,
+      item.stock_quantity || 0,
+      item.image_url || null,
+      item.ip_category || null,
+      item.material_type || null,
       item.status || "pending",
-      item.seller_name,
+      item.seller_name || "Admin",
       item.seller_contact || null,
     )
     .run();
@@ -129,15 +137,19 @@ async function updateItem(
   const result = await db
     .prepare(
       `UPDATE consignment_items 
-     SET name = ?, description = ?, price = ?, status = ?, seller_name = ?, seller_contact = ?, updated_at = datetime('now')
+     SET name = ?, description = ?, price = ?, stock_quantity = ?, image_url = ?, ip_category = ?, material_type = ?, status = ?, seller_name = ?, seller_contact = ?, updated_at = datetime('now')
      WHERE id = ?`,
     )
     .bind(
       item.name,
       item.description || null,
       item.price,
+      item.stock_quantity || 0,
+      item.image_url || null,
+      item.ip_category || null,
+      item.material_type || null,
       item.status,
-      item.seller_name,
+      item.seller_name || "Admin",
       item.seller_contact || null,
       id,
     )

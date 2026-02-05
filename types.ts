@@ -7,10 +7,12 @@ export interface Product {
   id: string;
   title: string;
   ip: string;
-  category: string;
+  category: Category;
   image: string;
   description: string;
   basePrice: number;
+  stockQuantity?: number;
+  materialType?: string;
   variants: ProductVariant[];
 }
 
