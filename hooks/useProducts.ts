@@ -113,7 +113,7 @@ const AdminDashboard: React.FC = () => {
           </button>
           <button 
             onClick={() => {
-              if(window.confirm('确定要删除这个产品吗?')) deleteProduct(info.row.original.id);
+              if(window.confirm('确定要删除这个产品吗？')) deleteProduct(info.row.original.id);
             }}
             className="p-2 hover:bg-red-50 text-red-500 rounded-lg transition-colors"
             title="删除"
@@ -453,7 +453,7 @@ const AdminDashboard: React.FC = () => {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <div className="absolute bottom-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
                         <button onClick={() => handleEdit(product)} className="p-2 bg-white/90 backdrop-blur rounded-lg shadow-lg hover:bg-white transition-colors" title="编辑"><Edit size={16}/></button>
-                        <button onClick={() => { if(window.confirm('删除?')) deleteProduct(product.id)}} className="p-2 bg-white/90 backdrop-blur rounded-lg shadow-lg hover:bg-red-50 text-red-500 transition-colors" title="删除"><Trash2 size={16}/></button>
+                        <button onClick={() => { if(window.confirm('删除？')) deleteProduct(product.id)}} className="p-2 bg-white/90 backdrop-blur rounded-lg shadow-lg hover:bg-red-50 text-red-500 transition-colors" title="删除"><Trash2 size={16}/></button>
                       </div>
                     </div>
                     <div className="p-4">
@@ -461,7 +461,7 @@ const AdminDashboard: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <span className="text-lg font-bold text-indigo-600">¥{product.basePrice}</span>
                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${!product.stockQuantity ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                          库存: {product.stockQuantity || 0}
+                          库存：{product.stockQuantity || 0}
                         </span>
                       </div>
                     </div>
