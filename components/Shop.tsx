@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { Menu, Search, ShoppingCart, LayoutGrid, Filter } from 'lucide-react';
+import { Menu, Search, ShoppingCart, LayoutGrid, Filter, Package } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { CATEGORIES, IPS, Product, CartItem, User, Category } from '../types';
 import AtroposCard from './AtroposCard';
 import ProductModal from './ProductModal';
@@ -116,18 +117,28 @@ const Shop = () => {
                 </div>
             </div>
 
-            <AnimatedButton 
-                variant="icon"
-                onClick={() => setIsCartOpen(true)}
-                className="relative p-3"
-            >
-                <ShoppingCart size={20} />
-                {cart.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-yellow-400 text-black text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-black z-20">
-                    {cart.length}
-                </span>
-                )}
-            </AnimatedButton>
+            <Link to="/orders">
+              <AnimatedButton 
+                  variant="icon"
+                  className="relative p-3"
+              >
+                  <Package size={20} />
+              </AnimatedButton>
+            </Link>
+
+            <Link to="/cart">
+              <AnimatedButton 
+                  variant="icon"
+                  className="relative p-3"
+              >
+                  <ShoppingCart size={20} />
+                  {cart.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-yellow-400 text-black text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-black z-20">
+                      {cart.length}
+                  </span>
+                  )}
+              </AnimatedButton>
+            </Link>
             </div>
         </header>
 
@@ -198,16 +209,15 @@ const Shop = () => {
                 const { span, intensity } = getGridConfig(idx);
                 
                 return (
-                    <AtroposCard 
-                    key={product.id} 
-                    className={`
-                        h-full 
-                        ${span} 
-                        ${!isBentoLayout ? 'aspect-[3/4]' : ''}
-                    `} 
-                    onClick={() => setViewProduct(product)}
-                    intensity={intensity}
-                    >
+                    <Link to={`/product/${product.id}`} key={product.id}>
+                      <AtroposCard 
+                      className={`
+                          h-full 
+                          ${span} 
+                          ${!isBentoLayout ? 'aspect-[3/4]' : ''}
+                      `} 
+                      intensity={intensity}
+                      >
                     <div className="flex flex-col h-full">
                         {/* Image takes remaining space */}
                         <div className="flex-1 bg-gray-200 overflow-hidden relative border-b-2 border-black group">
@@ -235,6 +245,7 @@ const Shop = () => {
                         </div>
                     </div>
                     </AtroposCard>
+                    </Link>
                 );
                 })}
             </div>

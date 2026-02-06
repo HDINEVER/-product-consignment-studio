@@ -1,24 +1,30 @@
 import React, { useState } from 'react';
 import { Lock, ArrowRight } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
-interface AdminLoginProps {
-  onLogin: () => void;
-}
-
-const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
+const AdminLogin: React.FC = () => {
+  const { login } = useAuth();
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // Simple client-side check. 
-  // For higher security, this should be validated by the backend API.
-  const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123';
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
-      onLogin();
-    } else {
-      setError(true);
+    setError('');
+    
+    if (!email || !password) {
+      setError('请填写完整信息');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await login(email, password);
+    } catch (err: any) {
+      setError(err.message || '登录失败');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -31,36 +37,68 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
           </div>
         </div>
         
-        <h2 className="text-2xl font-black text-center mb-2 uppercase">Admin Access</h2>
-        <p className="text-gray-500 text-center mb-8 font-bold text-sm">Please enter the security code</p>
+        <h2 className="text-2xl font-black text-center mb-2 uppercase">管理员登录</h2>
+        <p className="text-gray-500 text-center mb-8 font-bold text-sm">请输入管理员账号密码</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
+            <label className="block font-bold mb-2 text-sm">邮箱</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setError('');
+              }}
+              placeholder="admin@example.com"
+              className="w-full border-2 border-black p-3 rounded font-bold outline-none focus:ring-4 focus:ring-yellow-400 transition-all"
+              autoFocus
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold mb-2 text-sm">密码</label>
             <input
               type="password"
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
-                setError(false);
+                setError('');
               }}
-              placeholder="Enter password..."
+              placeholder="请输入密码"
               className="w-full border-2 border-black p-3 rounded font-bold outline-none focus:ring-4 focus:ring-yellow-400 transition-all"
-              autoFocus
             />
-            {error && (
-              <p className="text-red-500 text-xs font-bold mt-2 animate-bounce">
-                Incorrect password!
-              </p>
-            )}
           </div>
+
+          {error && (
+            <p className="text-red-500 text-xs font-bold animate-bounce">
+              {error}
+            </p>
+          )}
 
           <button
             type="submit"
-            className="w-full bg-black text-white font-black py-3 rounded border-2 border-transparent hover:bg-gray-800 transition-all flex items-center justify-center gap-2 group"
+            disabled={loading}
+            className="w-full bg-black text-white font-black py-3 rounded border-2 border-transparent hover:bg-gray-800 transition-all flex items-center justify-center gap-2 group disabled:opacity-50"
           >
-            UNLOCK <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform"/>
+            {loading ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                登录中...
+              </>
+            ) : (
+              <>
+                登录 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform"/>
+              </>
+            )}
           </button>
         </form>
+
+        <div className="mt-6 p-4 bg-yellow-50 border-2 border-yellow-400 rounded text-xs">
+          <p className="font-bold text-yellow-800">测试账号</p>
+          <p className="text-yellow-700 mt-1">邮箱：admin@example.com</p>
+          <p className="text-yellow-700">密码：admin123</p>
+        </div>
       </div>
     </div>
   );
