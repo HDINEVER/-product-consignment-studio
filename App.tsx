@@ -4,10 +4,14 @@ import { AuthProvider } from './contexts/AuthContext';
 import Shop from './components/Shop';
 import AdminDashboard from './components/AdminDashboard';
 import AdminOrders from './components/AdminOrders';
+import AdminProducts from './components/AdminProducts';
+import AdminUsers from './components/AdminUsers';
 import ProductDetail from './components/ProductDetail';
 import Cart from './components/Cart';
 import Checkout from './components/Checkout';
 import Orders from './components/Orders';
+import UserProfile from './components/UserProfile';
+import AddressList from './components/AddressList';
 
 function App() {
   return (
@@ -21,10 +25,16 @@ function App() {
           <Route path="/orders" element={<Orders />} />
           <Route path="/orders/:id" element={<Orders />} />
           
+          {/* User Profile Routes */}
+          <Route path="/profile" element={<UserProfile />} />
+          <Route path="/profile/addresses" element={<AddressList />} />
+          
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/orders" element={<AdminOrders />} />
           <Route path="/admin/orders/:id" element={<AdminOrders />} />
+          <Route path="/admin/products" element={<AdminProducts />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
           
           {/* Redirect unknown routes to Shop */}
           <Route path="*" element={<Navigate to="/" replace />} />

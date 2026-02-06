@@ -53,7 +53,13 @@ export const authAPI = {
 
   // 登录
   login: (data: { email: string; password: string }) =>
-    request<{ token: string; user: any }>('/auth/login', {
+    request<{
+      success: boolean;
+      data: {
+        token: string;
+        user: any;
+      };
+    }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
     }),

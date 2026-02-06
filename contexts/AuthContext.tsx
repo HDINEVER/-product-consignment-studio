@@ -46,8 +46,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, password: string) => {
     try {
       const response = await authAPI.login({ email, password });
-      localStorage.setItem('auth_token', response.token);
-      setUser(response.user);
+      // 后端返回结构为 { success, data: { user, token } }
+      const { token, user } = response.data;
+      localStorage.setItem('auth_token', token);
+      setUser(user);
     } catch (error: any) {
       throw new Error(error.message || '登录失败');
     }

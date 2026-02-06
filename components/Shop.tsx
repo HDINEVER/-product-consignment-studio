@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Menu, Search, ShoppingCart, LayoutGrid, Filter, Package } from 'lucide-react';
+import { Menu, Search, ShoppingCart, LayoutGrid, Filter, Package, User as UserIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { CATEGORIES, IPS, Product, CartItem, User, Category } from '../types';
 import AtroposCard from './AtroposCard';
@@ -9,10 +9,12 @@ import AuthModal from './AuthModal';
 import AnimatedButton from './AnimatedButton';
 import SidebarFilterButton from './SidebarFilterButton';
 import { useProducts } from '../hooks/useProducts';
+import { useAuth } from '../contexts/AuthContext';
 
 const Shop = () => {
     const { products } = useProducts();
-    const [user, setUser] = useState<User | null>(null);
+    const { user, isAuthenticated } = useAuth();
+    const [localUser, setLocalUser] = useState<User | null>(null);
 
     // Shop State
     const [selectedCategory, setSelectedCategory] = useState<Category>('全部');
@@ -33,11 +35,11 @@ const Shop = () => {
 
     // Handlers
     const handleLogin = (email: string) => {
-        setUser({ email, isLoggedIn: true });
+        setLocalUser({ email, isLoggedIn: true });
     };
 
     const handleLogout = () => {
-        setUser(null);
+        setLocalUser(null);
         setCart([]);
     };
 
@@ -75,7 +77,9 @@ const Shop = () => {
         return { span: 'col-span-1 row-span-1', intensity: 'normal' as const };
     };
 
-    if (!user) {
+    // 使用 localUser 或 isAuthenticated 判断登录状态
+    const currentUser = isAuthenticated ? user : localUser;
+    if (!currentUser && !localUser) {
         return <AuthModal onLogin={handleLogin} />;
     }
 
@@ -113,14 +117,25 @@ const Shop = () => {
             <div className="hidden md:block text-xs font-bold text-right group relative cursor-pointer">
                 <div className="text-gray-500">Welcome</div>
                 <div className="flex items-center gap-1">
-                {user.email}
+                {currentUser?.email || currentUser?.name}
                 </div>
             </div>
+
+            <Link to="/profile">
+              <AnimatedButton 
+                  variant="icon"
+                  className="relative p-3"
+                  title="个人中心"
+              >
+                  <UserIcon size={20} />
+              </AnimatedButton>
+            </Link>
 
             <Link to="/orders">
               <AnimatedButton 
                   variant="icon"
                   className="relative p-3"
+                  title="我的订单"
               >
                   <Package size={20} />
               </AnimatedButton>
@@ -130,6 +145,7 @@ const Shop = () => {
               <AnimatedButton 
                   variant="icon"
                   className="relative p-3"
+                  title="购物车"
               >
                   <ShoppingCart size={20} />
                   {cart.length > 0 && (

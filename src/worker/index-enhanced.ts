@@ -135,6 +135,41 @@ export default {
         return await handleAdminUpdateOrderStatus(request, env, id);
       }
 
+      if (path === '/api/admin/users' && method === 'GET') {
+        return await handleAdminGetUsers(request, env);
+      }
+
+      if (path.match(/^\/api\/admin\/users\/\d+\/status$/) && method === 'PATCH') {
+        const id = parseInt(path.split('/')[4]);
+        return await handleAdminUpdateUserStatus(request, env, id);
+      }
+
+      if (path.match(/^\/api\/admin\/products\/\d+$/) && method === 'DELETE') {
+        const id = parseInt(path.split('/').pop()!);
+        return await handleAdminDeleteProduct(request, env, id);
+      }
+
+      // ========================================
+      // Address Routes
+      // ========================================
+      if (path === '/api/addresses' && method === 'GET') {
+        return await handleGetAddresses(request, env);
+      }
+
+      if (path === '/api/addresses' && method === 'POST') {
+        return await handleCreateAddress(request, env);
+      }
+
+      if (path.match(/^\/api\/addresses\/\d+$/) && method === 'DELETE') {
+        const id = parseInt(path.split('/').pop()!);
+        return await handleDeleteAddress(request, env, id);
+      }
+
+      if (path.match(/^\/api\/addresses\/\d+\/default$/) && method === 'PATCH') {
+        const id = parseInt(path.split('/')[3]);
+        return await handleSetDefaultAddress(request, env, id);
+      }
+
       // 404 Not Found
       return notFoundResponse('Endpoint');
 
@@ -955,6 +990,163 @@ async function handleAdminUpdateOrderStatus(request: Request, env: Env, id: numb
   await env.DB.prepare(`
     UPDATE orders SET ${updateFields.join(', ')} WHERE id = ?
   `).bind(...params).run();
+
+  return successResponse({ success: true });
+}
+// ============================================================================
+// Admin User Management Handlers
+// ============================================================================
+
+async function handleAdminGetUsers(request: Request, env: Env): Promise<Response> {
+  const auth = await authenticate(request, env.JWT_SECRET);
+  
+  if (auth.error || !auth.user) {
+    return unauthorizedResponse(auth.error || 'Unauthorized');
+  }
+
+  if (!authorize(auth.user, ['admin'])) {
+    return forbiddenResponse('Admin access required');
+  }
+
+  const users = await env.DB.prepare(`
+    SELECT id, email, name, phone, role, status, created_at 
+    FROM users 
+    ORDER BY created_at DESC
+  `).all();
+
+  return successResponse(users.results || []);
+}
+
+async function handleAdminUpdateUserStatus(request: Request, env: Env, id: number): Promise<Response> {
+  const auth = await authenticate(request, env.JWT_SECRET);
+  
+  if (auth.error || !auth.user) {
+    return unauthorizedResponse(auth.error || 'Unauthorized');
+  }
+
+  if (!authorize(auth.user, ['admin'])) {
+    return forbiddenResponse('Admin access required');
+  }
+
+  const body = await request.json();
+
+  if (!body.status || !['active', 'inactive'].includes(body.status)) {
+    return errorResponse('INVALID_INPUT', 'Invalid status');
+  }
+
+  await env.DB.prepare(`
+    UPDATE users SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
+  `).bind(body.status, id).run();
+
+  return successResponse({ success: true });
+}
+
+async function handleAdminDeleteProduct(request: Request, env: Env, id: number): Promise<Response> {
+  const auth = await authenticate(request, env.JWT_SECRET);
+  
+  if (auth.error || !auth.user) {
+    return unauthorizedResponse(auth.error || 'Unauthorized');
+  }
+
+  if (!authorize(auth.user, ['admin'])) {
+    return forbiddenResponse('Admin access required');
+  }
+
+  await env.DB.prepare(`DELETE FROM products WHERE id = ?`).bind(id).run();
+
+  return successResponse({ success: true });
+}
+
+// ============================================================================
+// Address Management Handlers
+// ============================================================================
+
+async function handleGetAddresses(request: Request, env: Env): Promise<Response> {
+  const auth = await authenticate(request, env.JWT_SECRET);
+  
+  if (auth.error || !auth.user) {
+    return unauthorizedResponse(auth.error || 'Unauthorized');
+  }
+
+  const addresses = await env.DB.prepare(`
+    SELECT * FROM addresses 
+    WHERE user_id = ? 
+    ORDER BY is_default DESC, created_at DESC
+  `).bind(auth.user.userId).all();
+
+  return successResponse(addresses.results || []);
+}
+
+async function handleCreateAddress(request: Request, env: Env): Promise<Response> {
+  const auth = await authenticate(request, env.JWT_SECRET);
+  
+  if (auth.error || !auth.user) {
+    return unauthorizedResponse(auth.error || 'Unauthorized');
+  }
+
+  const body = await request.json();
+
+  if (!body.contact_name || !body.contact_phone || !body.province || !body.city || !body.address) {
+    return errorResponse('INVALID_INPUT', 'Required fields missing');
+  }
+
+  // If this is set as default, unset other default addresses
+  if (body.is_default) {
+    await env.DB.prepare(`
+      UPDATE addresses SET is_default = 0 WHERE user_id = ?
+    `).bind(auth.user.userId).run();
+  }
+
+  const result = await env.DB.prepare(`
+    INSERT INTO addresses (
+      user_id, contact_name, contact_phone, province, city, district, 
+      address, zipcode, is_default
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    auth.user.userId,
+    body.contact_name,
+    body.contact_phone,
+    body.province,
+    body.city,
+    body.district || '',
+    body.address,
+    body.zipcode || null,
+    body.is_default ? 1 : 0
+  ).run();
+
+  return successResponse({ id: result.meta.last_row_id }, undefined, 201);
+}
+
+async function handleDeleteAddress(request: Request, env: Env, id: number): Promise<Response> {
+  const auth = await authenticate(request, env.JWT_SECRET);
+  
+  if (auth.error || !auth.user) {
+    return unauthorizedResponse(auth.error || 'Unauthorized');
+  }
+
+  await env.DB.prepare(`
+    DELETE FROM addresses WHERE id = ? AND user_id = ?
+  `).bind(id, auth.user.userId).run();
+
+  return successResponse({ success: true });
+}
+
+async function handleSetDefaultAddress(request: Request, env: Env, id: number): Promise<Response> {
+  const auth = await authenticate(request, env.JWT_SECRET);
+  
+  if (auth.error || !auth.user) {
+    return unauthorizedResponse(auth.error || 'Unauthorized');
+  }
+
+  // Unset all default addresses for this user
+  await env.DB.prepare(`
+    UPDATE addresses SET is_default = 0 WHERE user_id = ?
+  `).bind(auth.user.userId).run();
+
+  // Set this address as default
+  await env.DB.prepare(`
+    UPDATE addresses SET is_default = 1 WHERE id = ? AND user_id = ?
+  `).bind(id, auth.user.userId).run();
 
   return successResponse({ success: true });
 }
