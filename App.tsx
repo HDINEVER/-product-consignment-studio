@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { verifyConnection } from './lib/appwrite';
+import AppwriteTest from './components/AppwriteTest';
 import Shop from './components/Shop';
 import AdminDashboard from './components/AdminDashboard';
 import AdminOrders from './components/AdminOrders';
@@ -14,8 +16,16 @@ import UserProfile from './components/UserProfile';
 import AddressList from './components/AddressList';
 
 function App() {
+  // 验证 Appwrite 连接
+  useEffect(() => {
+    verifyConnection();
+  }, []);
+
   return (
     <AuthProvider>
+      {/* Appwrite 连接测试组件（右上角浮动显示） */}
+      <AppwriteTest />
+      
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Shop />} />
