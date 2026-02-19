@@ -1,49 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowLeft, MapPin, CreditCard, Package, CheckCircle } from 'lucide-react';
-import { cartAPI, orderAPI } from '../utils/api';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, MapPin, CreditCard, Package, CheckCircle, Plus, Loader, AlertCircle } from 'lucide-react';
+import { databases, DATABASE_ID, COLLECTIONS, Query, ID, Permission, Role } from '../lib/appwrite';
+import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../hooks/useCart';
 import AnimatedButton from './AnimatedButton';
 
-interface CartItem {
-  id: number;
-  sku_id: number;
-  quantity: number;
-  product: {
-    id: number;
-    name: string;
-    image: string;
-  };
-  sku: {
-    sku_code: string;
-    price: number;
-    variant_values?: Record<string, string>;
-  };
-  subtotal: number;
-}
-
-interface Cart {
-  items: CartItem[];
-  total_amount: number;
-}
-
-interface ShippingAddress {
+// ========== 类型定义 ==========
+interface Address {
+  $id: string;
+  user_id: string;
   contact_name: string;
   contact_phone: string;
   province: string;
   city: string;
   district: string;
   address: string;
-  zipcode: string;
+  zipcode?: string;
+  is_default: boolean;
 }
 
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
-  const [cart, setCart] = useState<Cart | null>(null);
+  const { user, isGuest } = useAuth();
+  const { cartItems, cartTotal, clearCart } = useCart();
+  
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('');
+  const [showAddressForm, setShowAddressForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string>('');
   
-  const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
+  // 新地址表单
+  const [newAddress, setNewAddress] = useState({
     contact_name: '',
     contact_phone: '',
     province: '',
@@ -51,77 +42,213 @@ const Checkout: React.FC = () => {
     district: '',
     address: '',
     zipcode: '',
+    is_default: false,
   });
   
-  const [paymentMethod, setPaymentMethod] = useState('alipay');
   const [remark, setRemark] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('wechat');
 
+  // ========== 检查登录状态 ==========
   useEffect(() => {
-    loadCart();
-  }, []);
-
-  const loadCart = async () => {
-    try {
-      setLoading(true);
-      const response = await cartAPI.getCart();
-      if (!response.data || response.data.items.length === 0) {
-        alert('购物车是空的');
-        navigate('/cart');
-        return;
-      }
-      setCart(response.data);
-    } catch (error) {
-      console.error('Failed to load cart:', error);
-      alert('加载购物车失败');
+    if (isGuest) {
+      alert('请先登录后再结算');
+      navigate('/');
+      return;
+    }
+    
+    if (cartItems.length === 0) {
+      alert('购物车是空的');
       navigate('/cart');
+      return;
+    }
+    
+    loadAddresses();
+  }, [isGuest, cartItems.length, navigate]);
+
+  // ========== 加载收货地址 ==========
+  const loadAddresses = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const response = await databases.listDocuments(
+        DATABASE_ID,
+        COLLECTIONS.ADDRESSES,
+        [
+          Query.equal('user_id', user.$id),
+          Query.orderDesc('is_default'),
+        ]
+      );
+
+      const fetchedAddresses = response.documents as unknown as Address[];
+      setAddresses(fetchedAddresses);
+      
+      // 自动选择默认地址
+      const defaultAddress = fetchedAddresses.find(addr => addr.is_default);
+      if (defaultAddress) {
+        setSelectedAddressId(defaultAddress.$id);
+      } else if (fetchedAddresses.length > 0) {
+        setSelectedAddressId(fetchedAddresses[0].$id);
+      }
+    } catch (err: any) {
+      console.error('❌ 加载地址失败:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmitOrder = async (e: React.FormEvent) => {
+  // ========== 添加新地址 ==========
+  const handleAddAddress = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!cart || cart.items.length === 0) {
-      alert('购物车是空的');
-      return;
-    }
+    if (!user) return;
 
     // 验证表单
-    if (!shippingAddress.contact_name) {
-      alert('请填写收货人姓名');
-      return;
-    }
-    if (!shippingAddress.contact_phone || !/^1[3-9]\d{9}$/.test(shippingAddress.contact_phone)) {
-      alert('请填写正确的手机号');
-      return;
-    }
-    if (!shippingAddress.province || !shippingAddress.city || !shippingAddress.address) {
-      alert('请填写完整的收货地址');
+    if (!newAddress.contact_name || !newAddress.contact_phone || !newAddress.address) {
+      alert('请填写必填项');
       return;
     }
 
     try {
-      setSubmitting(true);
-      
-      const orderData = {
-        items: cart.items.map(item => ({
-          sku_id: item.sku_id,
-          quantity: item.quantity,
-          price: item.sku.price,
-        })),
-        shipping_address: shippingAddress,
-        remark,
-        payment_method: paymentMethod,
-      };
+      const addressDoc = await databases.createDocument(
+        DATABASE_ID,
+        COLLECTIONS.ADDRESSES,
+        ID.unique(),
+        {
+          user_id: user.$id,
+          ...newAddress,
+          created_at: new Date().toISOString(),
+        },
+        [
+          // 行级安全：只有该用户可以读取、更新、删除
+          Permission.read(Role.user(user.$id)),
+          Permission.update(Role.user(user.$id)),
+          Permission.delete(Role.user(user.$id)),
+        ]
+      );
 
-      const response = await orderAPI.createOrder(orderData);
+      console.log('✅ 地址添加成功');
       
-      // 订单创建成功
-      alert('订单提交成功！');
-      navigate(`/orders/${response.data.id}`);
-    } catch (error: any) {
-      alert(error.message || '订单提交失败');
+      // 刷新地址列表
+      await loadAddresses();
+      
+      // 自动选择新地址
+      setSelectedAddressId(addressDoc.$id);
+      
+      // 关闭表单
+      setShowAddressForm(false);
+      
+      // 重置表单
+      setNewAddress({
+        contact_name: '',
+        contact_phone: '',
+        province: '',
+        city: '',
+        district: '',
+        address: '',
+        zipcode: '',
+        is_default: false,
+      });
+    } catch (err: any) {
+      console.error('❌ 添加地址失败:', err);
+      alert(err.message || '添加地址失败');
+    }
+  };
+
+  // ========== 提交订单 ==========
+  const handleSubmitOrder = async () => {
+    if (!user) return;
+    
+    // 验证
+    if (cartItems.length === 0) {
+      alert('购物车是空的');
+      return;
+    }
+    
+    if (!selectedAddressId) {
+      alert('请选择收货地址');
+      return;
+    }
+
+    setSubmitting(true);
+    setError('');
+
+    try {
+      console.log('📝 开始创建订单...');
+      
+      const selectedAddress = addresses.find(addr => addr.$id === selectedAddressId);
+      if (!selectedAddress) {
+        throw new Error('地址不存在');
+      }
+
+      // 1️⃣ 创建订单主表
+      const order = await databases.createDocument(
+        DATABASE_ID,
+        COLLECTIONS.ORDERS,
+        ID.unique(),
+        {
+          user_id: user.$id,
+          status: 'pending',
+          total_amount: cartTotal,
+          payment_method: paymentMethod,
+          remark: remark,
+          
+          // 收货地址快照
+          shipping_contact_name: selectedAddress.contact_name,
+          shipping_contact_phone: selectedAddress.contact_phone,
+          shipping_province: selectedAddress.province,
+          shipping_city: selectedAddress.city,
+          shipping_district: selectedAddress.district,
+          shipping_address: selectedAddress.address,
+          shipping_zipcode: selectedAddress.zipcode || '',
+          
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        [
+          // 行级安全：只有该用户可以读取、更新
+          Permission.read(Role.user(user.$id)),
+          Permission.update(Role.user(user.$id)),
+        ]
+      );
+
+      console.log('✅ 订单创建成功:', order.$id);
+
+      // 2️⃣ 创建订单明细
+      await Promise.all(
+        cartItems.map((item) =>
+          databases.createDocument(
+            DATABASE_ID,
+            COLLECTIONS.ORDER_ITEMS,
+            ID.unique(),
+            {
+              order_id: order.$id,
+              product_id: item.productId,
+              product_name: item.productTitle,
+              product_image: item.image,
+              variant_name: item.variantName || '',
+              price: item.price,  // 价格快照
+              quantity: item.quantity,
+              created_at: new Date().toISOString(),
+            },
+            [
+              Permission.read(Role.user(user.$id)),
+            ]
+          )
+        )
+      );
+
+      console.log('✅ 订单明细创建成功');
+
+      // 3️⃣ 清空购物车
+      await clearCart();
+      console.log('✅ 购物车已清空');
+
+      // 成功提示并跳转
+      alert('🎉 订单提交成功！');
+      navigate(`/orders/${order.$id}`);
+    } catch (err: any) {
+      console.error('❌ 订单提交失败:', err);
+      setError(err.message || '订单提交失败，请重试');
     } finally {
       setSubmitting(false);
     }
@@ -129,131 +256,205 @@ const Checkout: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-yellow-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-black mx-auto mb-4"></div>
-          <p className="text-gray-600 font-bold">加载中...</p>
+          <Loader className="animate-spin mx-auto mb-4" size={48} />
+          <p className="text-gray-600 font-bold text-lg">加载中...</p>
         </div>
       </div>
     );
   }
 
-  if (!cart) return null;
+  if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
+    <div className="min-h-screen bg-yellow-50">
       {/* Header */}
       <div className="bg-white border-b-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <button
             onClick={() => navigate('/cart')}
-            className="flex items-center gap-2 text-gray-700 hover:text-black transition-colors"
+            className="flex items-center gap-2 text-gray-700 hover:text-black transition-colors font-bold"
           >
             <ArrowLeft size={20} />
-            <span className="font-bold">返回购物车</span>
+            返回购物车
           </button>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <form onSubmit={handleSubmitOrder} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* 左侧：表单 */}
+        {/* 错误提示 */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-red-400 border-4 border-black p-4 mb-6 flex items-center gap-3"
+          >
+            <AlertCircle size={24} />
+            <p className="font-bold">{error}</p>
+          </motion.div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* 左侧：地址和订单信息 */}
           <div className="lg:col-span-2 space-y-6">
             {/* 收货地址 */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white border-4 border-black rounded-2xl p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
+              className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
             >
-              <h2 className="flex items-center gap-2 text-2xl font-black mb-6">
-                <MapPin size={24} />
-                收货地址
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold mb-2">收货人 *</label>
-                  <input
-                    type="text"
-                    required
-                    value={shippingAddress.contact_name}
-                    onChange={(e) => setShippingAddress({ ...shippingAddress, contact_name: e.target.value })}
-                    className="w-full px-4 py-3 border-3 border-black rounded-xl font-medium focus:ring-4 focus:ring-yellow-400 outline-none transition-all"
-                    placeholder="请输入收货人姓名"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold mb-2">手机号 *</label>
-                  <input
-                    type="tel"
-                    required
-                    pattern="^1[3-9]\d{9}$"
-                    value={shippingAddress.contact_phone}
-                    onChange={(e) => setShippingAddress({ ...shippingAddress, contact_phone: e.target.value })}
-                    className="w-full px-4 py-3 border-3 border-black rounded-xl font-medium focus:ring-4 focus:ring-yellow-400 outline-none transition-all"
-                    placeholder="请输入手机号"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold mb-2">省份 *</label>
-                  <input
-                    type="text"
-                    required
-                    value={shippingAddress.province}
-                    onChange={(e) => setShippingAddress({ ...shippingAddress, province: e.target.value })}
-                    className="w-full px-4 py-3 border-3 border-black rounded-xl font-medium focus:ring-4 focus:ring-yellow-400 outline-none transition-all"
-                    placeholder="请输入省份"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold mb-2">城市 *</label>
-                  <input
-                    type="text"
-                    required
-                    value={shippingAddress.city}
-                    onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
-                    className="w-full px-4 py-3 border-3 border-black rounded-xl font-medium focus:ring-4 focus:ring-yellow-400 outline-none transition-all"
-                    placeholder="请输入城市"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold mb-2">区/县</label>
-                  <input
-                    type="text"
-                    value={shippingAddress.district}
-                    onChange={(e) => setShippingAddress({ ...shippingAddress, district: e.target.value })}
-                    className="w-full px-4 py-3 border-3 border-black rounded-xl font-medium focus:ring-4 focus:ring-yellow-400 outline-none transition-all"
-                    placeholder="请输入区/县"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold mb-2">邮编</label>
-                  <input
-                    type="text"
-                    value={shippingAddress.zipcode}
-                    onChange={(e) => setShippingAddress({ ...shippingAddress, zipcode: e.target.value })}
-                    className="w-full px-4 py-3 border-3 border-black rounded-xl font-medium focus:ring-4 focus:ring-yellow-400 outline-none transition-all"
-                    placeholder="请输入邮编"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block font-bold mb-2">详细地址 *</label>
-                  <textarea
-                    required
-                    value={shippingAddress.address}
-                    onChange={(e) => setShippingAddress({ ...shippingAddress, address: e.target.value })}
-                    className="w-full px-4 py-3 border-3 border-black rounded-xl font-medium focus:ring-4 focus:ring-yellow-400 outline-none transition-all resize-none"
-                    rows={3}
-                    placeholder="请输入详细地址（街道、楼栋、门牌号等）"
-                  />
-                </div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="flex items-center gap-2 text-2xl font-black">
+                  <MapPin size={24} />
+                  收货地址
+                </h2>
+                <button
+                  onClick={() => setShowAddressForm(!showAddressForm)}
+                  className="flex items-center gap-2 px-4 py-2 bg-yellow-400 text-black font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                >
+                  <Plus size={18} />
+                  新增地址
+                </button>
               </div>
+
+              {/* 新增地址表单 */}
+              <AnimatePresence>
+                {showAddressForm && (
+                  <motion.form
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    onSubmit={handleAddAddress}
+                    className="bg-yellow-50 border-4 border-black p-4 mb-6"
+                  >
+                    <h3 className="font-black text-lg mb-4">新增收货地址</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block font-bold mb-2">收货人 *</label>
+                        <input
+                          type="text"
+                          required
+                          value={newAddress.contact_name}
+                          onChange={(e) => setNewAddress({ ...newAddress, contact_name: e.target.value })}
+                          className="w-full px-4 py-2 border-4 border-black font-bold focus:outline-none focus:bg-white"
+                          placeholder="请输入收货人姓名"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold mb-2">手机号 *</label>
+                        <input
+                          type="tel"
+                          required
+                          value={newAddress.contact_phone}
+                          onChange={(e) => setNewAddress({ ...newAddress, contact_phone: e.target.value })}
+                          className="w-full px-4 py-2 border-4 border-black font-bold focus:outline-none focus:bg-white"
+                          placeholder="请输入手机号"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold mb-2">省份 *</label>
+                        <input
+                          type="text"
+                          required
+                          value={newAddress.province}
+                          onChange={(e) => setNewAddress({ ...newAddress, province: e.target.value })}
+                          className="w-full px-4 py-2 border-4 border-black font-bold focus:outline-none focus:bg-white"
+                          placeholder="请输入省份"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold mb-2">城市 *</label>
+                        <input
+                          type="text"
+                          required
+                          value={newAddress.city}
+                          onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
+                          className="w-full px-4 py-2 border-4 border-black font-bold focus:outline-none focus:bg-white"
+                          placeholder="请输入城市"
+                        />
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <label className="block font-bold mb-2">详细地址 *</label>
+                        <textarea
+                          required
+                          value={newAddress.address}
+                          onChange={(e) => setNewAddress({ ...newAddress, address: e.target.value })}
+                          className="w-full px-4 py-2 border-4 border-black font-bold focus:outline-none focus:bg-white resize-none"
+                          rows={3}
+                          placeholder="请输入详细地址（街道、楼栋、门牌号等）"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-2 mt-4">
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-black text-white font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                      >
+                        保存地址
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowAddressForm(false)}
+                        className="px-4 py-2 bg-white text-black font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                      >
+                        取消
+                      </button>
+                    </div>
+                  </motion.form>
+                )}
+              </AnimatePresence>
+
+              {/* 地址列表 */}
+              {addresses.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <MapPin size={48} className="mx-auto mb-4 opacity-50" />
+                  <p className="font-bold">还没有收货地址，请添加</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {addresses.map((addr) => (
+                    <label
+                      key={addr.$id}
+                      className={`block p-4 border-4 border-black cursor-pointer transition-all ${
+                        selectedAddressId === addr.$id
+                          ? 'bg-yellow-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
+                          : 'bg-white hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="radio"
+                          name="address"
+                          value={addr.$id}
+                          checked={selectedAddressId === addr.$id}
+                          onChange={(e) => setSelectedAddressId(e.target.value)}
+                          className="mt-1"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-black">{addr.contact_name}</span>
+                            <span className="font-bold text-gray-600">{addr.contact_phone}</span>
+                            {addr.is_default && (
+                              <span className="px-2 py-0.5 bg-red-400 text-white text-xs font-bold border border-black">
+                                默认
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm font-bold text-gray-700">
+                            {addr.province} {addr.city} {addr.district} {addr.address}
+                          </p>
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
             </motion.div>
 
             {/* 支付方式 */}
@@ -261,7 +462,7 @@ const Checkout: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white border-4 border-black rounded-2xl p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
+              className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
             >
               <h2 className="flex items-center gap-2 text-2xl font-black mb-6">
                 <CreditCard size={24} />
@@ -276,10 +477,10 @@ const Checkout: React.FC = () => {
                 ].map((method) => (
                   <label
                     key={method.value}
-                    className={`flex items-center gap-3 p-4 border-3 border-black rounded-xl cursor-pointer transition-all ${
+                    className={`flex items-center gap-3 p-4 border-4 border-black cursor-pointer transition-all ${
                       paymentMethod === method.value
-                        ? 'bg-yellow-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] scale-105'
-                        : 'bg-white hover:bg-gray-50 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
+                        ? 'bg-yellow-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
+                        : 'bg-white hover:bg-gray-50'
                     }`}
                   >
                     <input
@@ -288,7 +489,7 @@ const Checkout: React.FC = () => {
                       value={method.value}
                       checked={paymentMethod === method.value}
                       onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="w-5 h-5"
+                      className="w-4 h-4"
                     />
                     <span className="text-2xl">{method.icon}</span>
                     <span className="font-bold">{method.label}</span>
@@ -302,108 +503,85 @@ const Checkout: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white border-4 border-black rounded-2xl p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
+              className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
             >
               <h2 className="text-2xl font-black mb-4">订单备注</h2>
               <textarea
                 value={remark}
                 onChange={(e) => setRemark(e.target.value)}
-                className="w-full px-4 py-3 border-3 border-black rounded-xl font-medium focus:ring-4 focus:ring-yellow-400 outline-none transition-all resize-none"
-                rows={3}
-                placeholder="如有特殊需求，请在此备注（选填）"
+                className="w-full px-4 py-3 border-4 border-black font-bold focus:outline-none focus:bg-yellow-50 resize-none"
+                rows={4}
+                placeholder="给卖家留言（选填）"
               />
             </motion.div>
           </div>
 
-          {/* 右侧：订单摘要 */}
+          {/* 右侧：订单汇总 */}
           <div className="lg:col-span-1">
-            <div className="sticky top-8 space-y-6">
-              {/* 商品清单 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-white border-4 border-black rounded-2xl p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
-              >
-                <h3 className="flex items-center gap-2 font-black text-xl mb-4">
-                  <Package size={20} />
-                  商品清单
-                </h3>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] sticky top-8"
+            >
+              <h2 className="flex items-center gap-2 text-2xl font-black mb-6">
+                <Package size={24} />
+                订单汇总
+              </h2>
 
-                <div className="space-y-4 mb-4 max-h-96 overflow-y-auto">
-                  {cart.items.map((item) => (
-                    <div key={item.id} className="flex gap-3">
-                      <div className="w-16 h-16 bg-gray-100 border-2 border-black rounded-lg overflow-hidden flex-shrink-0">
-                        <img
-                          src={item.product.image}
-                          alt={item.product.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm truncate">{item.product.name}</p>
-                        {item.sku.variant_values && (
-                          <p className="text-xs text-gray-600">
-                            {Object.values(item.sku.variant_values).join(' / ')}
-                          </p>
-                        )}
-                        <div className="flex justify-between items-center mt-1">
-                          <span className="text-sm">×{item.quantity}</span>
-                          <span className="font-bold">¥{item.subtotal.toFixed(2)}</span>
-                        </div>
+              {/* 商品列表 */}
+              <div className="space-y-4 mb-6 max-h-96 overflow-y-auto">
+                {cartItems.map((item, idx) => (
+                  <div key={idx} className="flex gap-3 border-2 border-black p-3 bg-gray-50">
+                    <div className="w-16 h-16 border-2 border-black overflow-hidden shrink-0 bg-white">
+                      <img src={item.image} alt={item.productTitle} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-black text-sm line-clamp-1">{item.productTitle}</h3>
+                      <p className="text-xs text-gray-600 font-bold">{item.variantName}</p>
+                      <div className="flex justify-between items-center mt-1">
+                        <span className="font-bold text-sm">¥{item.price}</span>
+                        <span className="text-xs text-gray-500">x{item.quantity}</span>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
+              </div>
 
-                <div className="border-t-3 border-black pt-4 space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">商品总价</span>
-                    <span className="font-bold">¥{cart.total_amount.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-green-600">
-                    <span>运费</span>
-                    <span className="font-bold">免运费</span>
-                  </div>
-                  <div className="border-t-2 border-gray-200 pt-2 flex justify-between items-baseline">
-                    <span className="text-lg font-bold">应付总额</span>
-                    <div>
-                      <span className="text-sm">¥</span>
-                      <span className="text-3xl font-black text-yellow-600">
-                        {cart.total_amount.toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
+              {/* 价格明细 */}
+              <div className="border-t-4 border-black pt-4 space-y-2">
+                <div className="flex justify-between font-bold">
+                  <span>商品总计</span>
+                  <span>¥{cartTotal}</span>
                 </div>
-              </motion.div>
+                <div className="flex justify-between font-bold text-gray-600">
+                  <span>运费</span>
+                  <span>待计算</span>
+                </div>
+                <div className="flex justify-between text-2xl font-black pt-2 border-t-2 border-black">
+                  <span>合计</span>
+                  <span className="text-red-600">¥{cartTotal}</span>
+                </div>
+              </div>
 
               {/* 提交按钮 */}
-              <AnimatedButton
-                type="submit"
-                disabled={submitting}
-                className="w-full bg-yellow-400 text-lg flex items-center justify-center gap-2"
+              <button
+                onClick={handleSubmitOrder}
+                disabled={submitting || !selectedAddressId}
+                className="w-full mt-6 px-6 py-4 bg-yellow-400 text-black font-black text-lg border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
                 {submitting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black"></div>
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader className="animate-spin" size={20} />
                     提交中...
-                  </>
+                  </span>
                 ) : (
-                  <>
-                    <CheckCircle size={20} />
-                    提交订单
-                  </>
+                  '🚀 提交订单'
                 )}
-              </AnimatedButton>
-
-              <p className="text-xs text-gray-500 text-center">
-                点击提交订单表示您已阅读并同意
-                <br />
-                <span className="underline">用户协议</span> 和 <span className="underline">隐私政策</span>
-              </p>
-            </div>
+              </button>
+            </motion.div>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 /**
  * Appwrite SDK 配置和初始化
  */
-import { Client, Account, Databases, Storage, Query, ID } from 'appwrite';
+import { Client, Account, Databases, Storage, Teams, Query, ID, Permission, Role } from 'appwrite';
 
 // 初始化 Appwrite Client
 const client = new Client()
@@ -12,9 +12,10 @@ const client = new Client()
 export const account = new Account(client);
 export const databases = new Databases(client);
 export const storage = new Storage(client);
+export const teams = new Teams(client);
 
 // 导出工具
-export { Query, ID };
+export { Query, ID, Permission, Role };
 
 // 数据库和集合 ID
 export const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;

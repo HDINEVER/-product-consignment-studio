@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Menu, Search, ShoppingCart, LayoutGrid, Filter, Package, User as UserIcon, AlertTriangle, LogIn } from 'lucide-react';
+import { Menu, Search, ShoppingCart, LayoutGrid, Filter, Package, User as UserIcon, AlertTriangle, LogIn, Plus, Edit, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { CATEGORIES, IPS, Product, CartItem, Category } from '../types';
 import AtroposCard from './AtroposCard';
@@ -8,86 +8,81 @@ import CartDrawer from './CartDrawer';
 import AuthModal from './AuthModal';
 import AnimatedButton from './AnimatedButton';
 import SidebarFilterButton from './SidebarFilterButton';
-import { useProducts } from '../hooks/useProducts';
+import ProductUploadModal from './ProductUploadModal';
+import { useProducts, ProductFilters } from '../hooks/useProducts';
+import { useCart } from '../hooks/useCart';
 import { useAuth } from '../contexts/AuthContext';
-import { 
-  getGuestCartCount, 
-  addToGuestCart, 
-  getGuestCart,
-  removeFromGuestCart,
-  hasGuestCartItems 
-} from '../utils/guestCart';
+import { hasGuestCartItems } from '../utils/guestCart';
 
 const Shop = () => {
-    const { products } = useProducts();
-    const { user, isAuthenticated, hasGuestCart } = useAuth();
+    // 使用重构后的 hooks
+    const { products, loading: productsLoading, error: productsError, fetchProducts, deleteProduct } = useProducts();
+    const { cartItems, cartCount, addToCart, removeFromCart, updateQuantity, loading: cartLoading } = useCart();
+    const { user, isAuthenticated, isGuest, isAdmin, hasGuestCart } = useAuth();
 
     // Shop State
     const [selectedCategory, setSelectedCategory] = useState<Category>('全部');
     const [selectedIP, setSelectedIP] = useState<string>('全部');
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-    const [cart, setCart] = useState<CartItem[]>([]);
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [viewProduct, setViewProduct] = useState<Product | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
     
     // Auth Modal State
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [authModalWarning, setAuthModalWarning] = useState(false);
-    
-    // Guest cart count for badge
-    const [guestCartCount, setGuestCartCount] = useState(0);
 
-    // Sync guest cart count on mount and changes
+    // Product Upload Modal State (Admin)
+    const [showProductUploadModal, setShowProductUploadModal] = useState(false);
+
+    // 当筛选条件变化时重新获取商品
     useEffect(() => {
-      setGuestCartCount(getGuestCartCount());
-    }, [cart]);
+      const filters: ProductFilters = {};
+      if (selectedCategory !== '全部') {
+        filters.category = selectedCategory;
+      }
+      if (selectedIP !== '全部') {
+        filters.ip = selectedIP;
+      }
+      if (searchQuery.trim()) {
+        filters.search = searchQuery.trim();
+      }
+      fetchProducts(filters);
+    }, [selectedCategory, selectedIP, searchQuery, fetchProducts]);
 
-    // Filter Logic
-    const filteredProducts = useMemo(() => {
-        return products.filter(product => {
-            const catMatch = selectedCategory === '全部' || product.category === selectedCategory;
-            const ipMatch = selectedIP === '全部' || product.ip === selectedIP;
-            return catMatch && ipMatch;
+    // Handlers - 使用 useCart hook
+    const handleAddToCart = async (product: Product, variantName: string, price: number, quantity: number) => {
+        const success = await addToCart({
+          product_id: String(product.id),
+          product_name: product.title,
+          product_image: product.image,
+          variant_name: variantName,
+          price: price,
+          quantity: quantity,
         });
-    }, [products, selectedCategory, selectedIP]);
-
-    // Handlers
-    const addToCart = (product: Product, variantName: string, price: number, quantity: number) => {
-        if (!isAuthenticated) {
-          // 游客模式：保存到 sessionStorage
-          addToGuestCart({
-            product_id: String(product.id),
-            product_name: product.title,
-            product_image: product.image,
-            variant_name: variantName,
-            price: price,
-            quantity: quantity,
-          });
-          setGuestCartCount(getGuestCartCount());
-        } else {
-          // 已登录用户：保存到本地状态（后续会同步到 Appwrite）
-          setCart(prev => [...prev, {
-              productId: product.id,
-              productTitle: product.title,
-              variantName,
-              price,
-              quantity,
-              image: product.image
-          }]);
+        if (success) {
+          setIsCartOpen(true);
         }
-        setIsCartOpen(true);
     };
 
-    const removeFromCart = (index: number) => {
-        if (!isAuthenticated) {
-          // 游客模式：从 sessionStorage 移除
-          const guestCart = getGuestCart();
-          if (guestCart[index]) {
-            removeFromGuestCart(guestCart[index].product_id);
-            setGuestCartCount(getGuestCartCount());
-          }
-        } else {
-          setCart(prev => prev.filter((_, i) => i !== index));
+    const handleRemoveFromCart = async (itemId: string) => {
+        await removeFromCart(itemId);
+    };
+    
+    const handleUpdateQuantity = async (index: number, quantity: number) => {
+        const item = cartItems[index];
+        if (item) {
+          await updateQuantity(item.id, quantity);
+        }
+    };
+    
+    // 管理员: 删除商品
+    const handleDeleteProduct = async (productId: string) => {
+        if (!confirm('确认删除该商品?删除后将无法恢复。')) return;
+        const success = await deleteProduct(productId);
+        if (success) {
+          alert('商品已删除');
+          fetchProducts();
         }
     };
 
@@ -115,24 +110,24 @@ const Shop = () => {
         return { span: 'col-span-1 row-span-1', intensity: 'normal' as const };
     };
 
-    // Get total cart count (guest + logged in)
-    const totalCartCount = isAuthenticated ? cart.length : guestCartCount;
+    // 购物车数量现在由 useCart hook 提供
+    const totalCartCount = cartCount;
 
     return (
         <div className="min-h-screen bg-brutal-bg text-gray-900 font-sans selection:bg-brutal-yellow selection:text-black">
         
-        {/* 游客模式提示横幅 */}
-        {!isAuthenticated && (
+        {/* 游客模式提示横幅 - 仅在游客有购物车时显示 */}
+        {isGuest && (hasGuestCart || hasGuestCartItems()) && (
           <div className="fixed top-0 left-0 right-0 bg-brutal-yellow border-b-4 border-black px-4 py-2 z-40 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AlertTriangle size={18} className="text-black" />
               <span className="font-bold text-sm">
-                游客模式 - 购物车数据保存在本地，登录后自动同步
+                ⚠️ 游客模式：购物车数据保存在本地，登录后自动同步
               </span>
             </div>
             <button
               onClick={handleLoginClick}
-              className="btn-brutal bg-black text-white px-4 py-1 text-sm flex items-center gap-2"
+              className="px-4 py-1 text-sm flex items-center gap-2 bg-black text-white font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
             >
               <LogIn size={16} />
               登录 / 注册
@@ -162,7 +157,9 @@ const Shop = () => {
             <input 
                 type="text" 
                 placeholder="搜索周边商品..." 
-                className="bg-transparent border-none outline-none ml-2 w-full font-medium" 
+                className="bg-transparent border-none outline-none ml-2 w-full font-medium"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
             />
             </div>
 
@@ -263,7 +260,7 @@ const Shop = () => {
             
             {/* Category Tabs (Like Browser Tabs) */}
             <div className="mb-8 overflow-x-auto pb-2">
-                <div className="flex gap-2 min-w-max">
+                <div className="flex gap-2 min-w-max items-center">
                 {CATEGORIES.map(cat => (
                     <AnimatedButton
                     key={cat}
@@ -278,20 +275,56 @@ const Shop = () => {
                     {cat}
                     </AnimatedButton>
                 ))}
+                
+                {/* 管理员: 发布新商品按钮 */}
+                {isAdmin && (
+                  <button
+                    onClick={() => setShowProductUploadModal(true)}
+                    className="ml-auto px-4 py-2 rounded-full flex items-center gap-2 bg-brutal-black text-brutal-yellow font-black border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                  >
+                    <Plus size={18} />
+                    发布新商品
+                  </button>
+                )}
                 </div>
             </div>
 
+            {/* Loading 状态 */}
+            {productsLoading && (
+              <div className="flex items-center justify-center py-20">
+                <div className="animate-spin w-8 h-8 border-4 border-brutal-black border-t-brutal-yellow rounded-full"></div>
+                <span className="ml-3 font-bold">加载中...</span>
+              </div>
+            )}
+
+            {/* Error 状态 */}
+            {productsError && !productsLoading && (
+              <div className="bg-red-100 border-4 border-red-600 p-6 rounded-xl text-center">
+                <AlertTriangle size={48} className="mx-auto text-red-600 mb-4" />
+                <p className="font-bold text-red-600">{productsError}</p>
+                <AnimatedButton
+                  variant="outline"
+                  onClick={() => fetchProducts()}
+                  className="mt-4"
+                >
+                  重试
+                </AnimatedButton>
+              </div>
+            )}
+
             {/* Products Grid - Conditional Layout */}
+            {!productsLoading && !productsError && (
             <div className={`grid gap-6 pb-24 ${
                 isBentoLayout 
                 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 auto-rows-[280px] grid-flow-dense' 
                 : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
             }`}>
-                {filteredProducts.map((product, idx) => {
+                {products.map((product, idx) => {
                 const { span, intensity } = getGridConfig(idx);
                 
                 return (
-                    <Link to={`/product/${product.id}`} key={product.id}>
+                    <div key={product.id} className="relative group">
+                      <Link to={`/product/${product.id}`}>
                       <AtroposCard 
                       className={`
                           h-full 
@@ -320,7 +353,10 @@ const Shop = () => {
                         </div>
                         <div className="flex items-center justify-between mt-1">
                             <span className="font-mono font-bold text-xl">¥{product.basePrice}+</span>
-                            <button className="bg-black text-white p-2 rounded-full hover:bg-gray-800 transition-colors">
+                            <button 
+                              className="bg-black text-white p-2 rounded-full hover:bg-gray-800 transition-colors"
+                              title="加入购物车"
+                            >
                             <ShoppingCart size={16} />
                             </button>
                         </div>
@@ -328,16 +364,44 @@ const Shop = () => {
                     </div>
                     </AtroposCard>
                     </Link>
+                    
+                    {/* 管理员: 编辑/删除按钮 */}
+                    {isAdmin && (
+                      <div className="absolute top-2 right-2 bg-white border-2 border-black shadow-brutal rounded-lg p-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-10">
+                        <Link to={`/admin/products/${product.id}/edit`}>
+                          <button 
+                            className="p-2 bg-brutal-yellow hover:bg-yellow-500 text-black rounded transition-colors"
+                            title="编辑商品"
+                          >
+                            <Edit size={16} />
+                          </button>
+                        </Link>
+                        <button 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleDeleteProduct(String(product.id));
+                          }}
+                          className="p-2 bg-red-500 hover:bg-red-600 text-white rounded transition-colors"
+                          title="删除商品"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    )}
+                    </div>
                 );
                 })}
             </div>
-            
-            {filteredProducts.length === 0 && (
+            )}
+
+            {/* 空状态 */}
+            {!productsLoading && !productsError && products.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-64 text-gray-400">
                 <div className="text-6xl mb-4">👻</div>
                 <p className="font-bold text-xl">这里什么都没有...</p>
                 <button 
-                    onClick={() => {setSelectedCategory('全部'); setSelectedIP('全部');}}
+                    onClick={() => {setSelectedCategory('全部'); setSelectedIP('全部'); setSearchQuery('');}}
                     className="mt-4 px-6 py-2 bg-black text-white font-bold rounded-xl hover:bg-gray-800 border-2 border-black shadow-brutal"
                 >
                     重置筛选
@@ -353,14 +417,15 @@ const Shop = () => {
             isOpen={!!viewProduct} 
             product={viewProduct} 
             onClose={() => setViewProduct(null)} 
-            onAddToCart={addToCart}
+            onAddToCart={handleAddToCart}
         />
         
         <CartDrawer 
             isOpen={isCartOpen} 
             onClose={() => setIsCartOpen(false)} 
-            cart={cart}
-            onRemoveItem={removeFromCart}
+            cart={cartItems}
+            onRemoveItem={(index) => cartItems[index] && handleRemoveFromCart(cartItems[index].id)}
+            onUpdateQuantity={handleUpdateQuantity}
         />
 
         {/* Auth Modal */}
@@ -369,6 +434,17 @@ const Shop = () => {
             onClose={() => setShowAuthModal(false)}
             showGuestWarning={authModalWarning}
         />
+
+        {/* Product Upload Modal (Admin Only) */}
+        {isAdmin && (
+          <ProductUploadModal
+            isOpen={showProductUploadModal}
+            onClose={() => setShowProductUploadModal(false)}
+            onSuccess={() => {
+              fetchProducts(); // 刷新商品列表
+            }}
+          />
+        )}
 
         </div>
     );

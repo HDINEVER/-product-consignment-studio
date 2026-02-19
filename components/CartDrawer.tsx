@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Trash2, FileText, Send, ShoppingBag } from 'lucide-react';
+import { X, Trash2, FileText, Send, ShoppingBag, Plus, Minus } from 'lucide-react';
 import { CartItem } from '../types';
 
 interface CartDrawerProps {
@@ -7,11 +7,24 @@ interface CartDrawerProps {
   onClose: () => void;
   cart: CartItem[];
   onRemoveItem: (index: number) => void;
+  onUpdateQuantity?: (index: number, quantity: number) => void;
 }
 
-const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, cart, onRemoveItem }) => {
+const CartDrawer: React.FC<CartDrawerProps> = ({ 
+  isOpen, 
+  onClose, 
+  cart, 
+  onRemoveItem,
+  onUpdateQuantity 
+}) => {
   const [showBOM, setShowBOM] = useState(false);
   const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+
+  const handleUpdateQuantity = (index: number, newQuantity: number) => {
+    if (onUpdateQuantity && newQuantity >= 1) {
+      onUpdateQuantity(index, newQuantity);
+    }
+  };
 
   const handleGenerateBOM = () => {
     setShowBOM(true);
@@ -111,8 +124,8 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, cart, onRemove
             ) : (
               <div className="space-y-4">
                 {cart.map((item, idx) => (
-                  <div key={idx} className="group relative flex gap-4 p-4 border-2 border-black rounded-xl hover:bg-gray-50 transition-all bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1">
-                    <div className="w-20 h-20 rounded-lg border-2 border-black overflow-hidden shrink-0 bg-gray-100">
+                  <div key={idx} className="group relative flex gap-4 p-4 border-4 border-black rounded-none bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all">
+                    <div className="w-20 h-20 rounded-none border-2 border-black overflow-hidden shrink-0 bg-gray-100">
                       <img src={item.image} alt={item.productTitle} className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 flex flex-col justify-between">
@@ -121,12 +134,32 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, cart, onRemove
                         <p className="text-xs font-bold text-gray-500 mt-1">{item.variantName}</p>
                       </div>
                       <div className="flex justify-between items-center mt-2">
-                        <span className="font-black text-lg">¥{item.price * item.quantity} <span className="text-xs text-gray-400 font-normal">x{item.quantity}</span></span>
+                        <span className="font-black text-lg">¥{item.price * item.quantity}</span>
+                        
+                        {/* 数量调整 */}
+                        {onUpdateQuantity && (
+                          <div className="flex items-center gap-2 border-2 border-black bg-yellow-50">
+                            <button
+                              onClick={() => handleUpdateQuantity(idx, item.quantity - 1)}
+                              disabled={item.quantity <= 1}
+                              className="p-1 hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <Minus size={14} />
+                            </button>
+                            <span className="font-bold text-sm w-8 text-center">{item.quantity}</span>
+                            <button
+                              onClick={() => handleUpdateQuantity(idx, item.quantity + 1)}
+                              className="p-1 hover:bg-yellow-400 transition-colors"
+                            >
+                              <Plus size={14} />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <button 
                       onClick={() => onRemoveItem(idx)}
-                      className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-white hover:bg-red-500 rounded-none transition-colors border-2 border-transparent hover:border-black"
                     >
                       <Trash2 size={16} />
                     </button>
