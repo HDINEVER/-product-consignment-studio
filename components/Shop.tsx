@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
-import { Menu, Search, ShoppingCart, LayoutGrid, Filter, Package, User as UserIcon } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Menu, Search, ShoppingCart, LayoutGrid, Filter, Package, User as UserIcon, AlertTriangle, LogIn } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { CATEGORIES, IPS, Product, CartItem, User, Category } from '../types';
+import { CATEGORIES, IPS, Product, CartItem, Category } from '../types';
 import AtroposCard from './AtroposCard';
 import ProductModal from './ProductModal';
 import CartDrawer from './CartDrawer';
@@ -10,11 +10,17 @@ import AnimatedButton from './AnimatedButton';
 import SidebarFilterButton from './SidebarFilterButton';
 import { useProducts } from '../hooks/useProducts';
 import { useAuth } from '../contexts/AuthContext';
+import { 
+  getGuestCartCount, 
+  addToGuestCart, 
+  getGuestCart,
+  removeFromGuestCart,
+  hasGuestCartItems 
+} from '../utils/guestCart';
 
 const Shop = () => {
     const { products } = useProducts();
-    const { user, isAuthenticated } = useAuth();
-    const [localUser, setLocalUser] = useState<User | null>(null);
+    const { user, isAuthenticated, hasGuestCart } = useAuth();
 
     // Shop State
     const [selectedCategory, setSelectedCategory] = useState<Category>('全部');
@@ -23,6 +29,18 @@ const Shop = () => {
     const [cart, setCart] = useState<CartItem[]>([]);
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [viewProduct, setViewProduct] = useState<Product | null>(null);
+    
+    // Auth Modal State
+    const [showAuthModal, setShowAuthModal] = useState(false);
+    const [authModalWarning, setAuthModalWarning] = useState(false);
+    
+    // Guest cart count for badge
+    const [guestCartCount, setGuestCartCount] = useState(0);
+
+    // Sync guest cart count on mount and changes
+    useEffect(() => {
+      setGuestCartCount(getGuestCartCount());
+    }, [cart]);
 
     // Filter Logic
     const filteredProducts = useMemo(() => {
@@ -34,29 +52,49 @@ const Shop = () => {
     }, [products, selectedCategory, selectedIP]);
 
     // Handlers
-    const handleLogin = (email: string) => {
-        setLocalUser({ email, isLoggedIn: true });
-    };
-
-    const handleLogout = () => {
-        setLocalUser(null);
-        setCart([]);
-    };
-
     const addToCart = (product: Product, variantName: string, price: number, quantity: number) => {
-        setCart(prev => [...prev, {
-            productId: product.id,
-            productTitle: product.title,
-            variantName,
-            price,
-            quantity,
-            image: product.image
-        }]);
+        if (!isAuthenticated) {
+          // 游客模式：保存到 sessionStorage
+          addToGuestCart({
+            product_id: String(product.id),
+            product_name: product.title,
+            product_image: product.image,
+            variant_name: variantName,
+            price: price,
+            quantity: quantity,
+          });
+          setGuestCartCount(getGuestCartCount());
+        } else {
+          // 已登录用户：保存到本地状态（后续会同步到 Appwrite）
+          setCart(prev => [...prev, {
+              productId: product.id,
+              productTitle: product.title,
+              variantName,
+              price,
+              quantity,
+              image: product.image
+          }]);
+        }
         setIsCartOpen(true);
     };
 
     const removeFromCart = (index: number) => {
-        setCart(prev => prev.filter((_, i) => i !== index));
+        if (!isAuthenticated) {
+          // 游客模式：从 sessionStorage 移除
+          const guestCart = getGuestCart();
+          if (guestCart[index]) {
+            removeFromGuestCart(guestCart[index].product_id);
+            setGuestCartCount(getGuestCartCount());
+          }
+        } else {
+          setCart(prev => prev.filter((_, i) => i !== index));
+        }
+    };
+
+    // Handle login button click
+    const handleLoginClick = () => {
+      setAuthModalWarning(hasGuestCartItems());
+      setShowAuthModal(true);
     };
 
     // Grid Layout Helper
@@ -77,17 +115,33 @@ const Shop = () => {
         return { span: 'col-span-1 row-span-1', intensity: 'normal' as const };
     };
 
-    // 使用 localUser 或 isAuthenticated 判断登录状态
-    const currentUser = isAuthenticated ? user : localUser;
-    if (!currentUser && !localUser) {
-        return <AuthModal onLogin={handleLogin} />;
-    }
+    // Get total cart count (guest + logged in)
+    const totalCartCount = isAuthenticated ? cart.length : guestCartCount;
 
     return (
-        <div className="min-h-screen bg-[#f3f3f3] text-gray-900 font-sans selection:bg-yellow-400 selection:text-black">
+        <div className="min-h-screen bg-brutal-bg text-gray-900 font-sans selection:bg-brutal-yellow selection:text-black">
         
+        {/* 游客模式提示横幅 */}
+        {!isAuthenticated && (
+          <div className="fixed top-0 left-0 right-0 bg-brutal-yellow border-b-4 border-black px-4 py-2 z-40 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertTriangle size={18} className="text-black" />
+              <span className="font-bold text-sm">
+                游客模式 - 购物车数据保存在本地，登录后自动同步
+              </span>
+            </div>
+            <button
+              onClick={handleLoginClick}
+              className="btn-brutal bg-black text-white px-4 py-1 text-sm flex items-center gap-2"
+            >
+              <LogIn size={16} />
+              登录 / 注册
+            </button>
+          </div>
+        )}
+
         {/* Top Navigation Bar */}
-        <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b-2 border-black z-30 flex items-center px-4 justify-between">
+        <header className={`fixed left-0 right-0 h-16 bg-white border-b-4 border-black z-30 flex items-center px-4 justify-between ${!isAuthenticated ? 'top-12' : 'top-0'}`}>
             <div className="flex items-center gap-4">
             <AnimatedButton 
                 variant="ghost"
@@ -98,48 +152,60 @@ const Shop = () => {
                 <Menu size={20} />
             </AnimatedButton>
             <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-black text-white flex items-center justify-center font-bold text-lg rounded-md rotate-3">C</div>
-                <h1 className="font-black text-xl hidden sm:block tracking-tighter">COMIC HUB</h1>
+                <div className="w-10 h-10 bg-brutal-black text-brutal-yellow flex items-center justify-center font-black text-xl border-2 border-black shadow-brutal rounded-xl">寄</div>
+                <h1 className="font-black text-xl hidden sm:block tracking-tight">二次元寄售站</h1>
             </div>
             </div>
 
-            <div className="hidden md:flex items-center bg-gray-100 rounded-full px-4 py-2 border-2 border-transparent hover:border-black transition-all w-96">
+            <div className="hidden md:flex items-center bg-brutal-bg border-2 border-black px-4 py-2 w-96 shadow-brutal rounded-xl">
             <Search size={18} className="text-gray-400" />
             <input 
                 type="text" 
-                placeholder="搜索制品..." 
+                placeholder="搜索周边商品..." 
                 className="bg-transparent border-none outline-none ml-2 w-full font-medium" 
             />
             </div>
 
             <div className="flex items-center gap-4">
             
-            <div className="hidden md:block text-xs font-bold text-right group relative cursor-pointer">
-                <div className="text-gray-500">Welcome</div>
-                <div className="flex items-center gap-1">
-                {currentUser?.email || currentUser?.name}
+            {isAuthenticated ? (
+              <>
+                <div className="hidden md:block text-xs font-bold text-right">
+                    <div className="text-gray-500">欢迎回来</div>
+                    <div className="flex items-center gap-1">
+                    {user?.name || user?.email}
+                    </div>
                 </div>
-            </div>
 
-            <Link to="/profile">
-              <AnimatedButton 
-                  variant="icon"
-                  className="relative p-3"
-                  title="个人中心"
-              >
-                  <UserIcon size={20} />
-              </AnimatedButton>
-            </Link>
+                <Link to="/profile">
+                  <AnimatedButton 
+                      variant="icon"
+                      className="relative p-3"
+                      title="个人中心"
+                  >
+                      <UserIcon size={20} />
+                  </AnimatedButton>
+                </Link>
 
-            <Link to="/orders">
-              <AnimatedButton 
-                  variant="icon"
-                  className="relative p-3"
-                  title="我的订单"
+                <Link to="/orders">
+                  <AnimatedButton 
+                      variant="icon"
+                      className="relative p-3"
+                      title="我的订单"
+                  >
+                      <Package size={20} />
+                  </AnimatedButton>
+                </Link>
+              </>
+            ) : (
+              <button
+                onClick={handleLoginClick}
+                className="hidden md:flex items-center gap-2 font-bold text-brutal-black hover:text-brutal-blue transition-colors"
               >
-                  <Package size={20} />
-              </AnimatedButton>
-            </Link>
+                <UserIcon size={20} />
+                登录
+              </button>
+            )}
 
             <Link to="/cart">
               <AnimatedButton 
@@ -148,9 +214,9 @@ const Shop = () => {
                   title="购物车"
               >
                   <ShoppingCart size={20} />
-                  {cart.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-yellow-400 text-black text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-black z-20">
-                      {cart.length}
+                  {totalCartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-brutal-yellow text-black text-xs font-bold w-5 h-5 flex items-center justify-center border-2 border-black z-20">
+                      {totalCartCount}
                   </span>
                   )}
               </AnimatedButton>
@@ -159,7 +225,7 @@ const Shop = () => {
         </header>
 
         {/* Main Layout */}
-        <div className="pt-16 flex h-screen overflow-hidden">
+        <div className={`flex h-screen overflow-hidden ${!isAuthenticated ? 'pt-28' : 'pt-16'}`}>
             
             {/* Sidebar (IP Selector) */}
             <aside 
@@ -242,7 +308,7 @@ const Shop = () => {
                             alt={product.title} 
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         />
-                        <div className="absolute top-2 left-2 bg-yellow-400 px-2 py-1 text-xs font-black border-2 border-black rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                        <div className="absolute top-2 left-2 bg-yellow-400 px-2 py-1 text-xs font-black border-2 border-black rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                             {product.category}
                         </div>
                         </div>
@@ -272,7 +338,7 @@ const Shop = () => {
                 <p className="font-bold text-xl">这里什么都没有...</p>
                 <button 
                     onClick={() => {setSelectedCategory('全部'); setSelectedIP('全部');}}
-                    className="mt-4 px-6 py-2 bg-black text-white font-bold rounded hover:bg-gray-800"
+                    className="mt-4 px-6 py-2 bg-black text-white font-bold rounded-xl hover:bg-gray-800 border-2 border-black shadow-brutal"
                 >
                     重置筛选
                 </button>
@@ -295,6 +361,13 @@ const Shop = () => {
             onClose={() => setIsCartOpen(false)} 
             cart={cart}
             onRemoveItem={removeFromCart}
+        />
+
+        {/* Auth Modal */}
+        <AuthModal
+            isOpen={showAuthModal}
+            onClose={() => setShowAuthModal(false)}
+            showGuestWarning={authModalWarning}
         />
 
         </div>

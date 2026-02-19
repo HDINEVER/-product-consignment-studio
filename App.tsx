@@ -2,12 +2,12 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { verifyConnection } from './lib/appwrite';
-import AppwriteTest from './components/AppwriteTest';
 import Shop from './components/Shop';
 import AdminDashboard from './components/AdminDashboard';
 import AdminOrders from './components/AdminOrders';
 import AdminProducts from './components/AdminProducts';
 import AdminUsers from './components/AdminUsers';
+import AdminTest from './components/AdminTest';
 import ProductDetail from './components/ProductDetail';
 import Cart from './components/Cart';
 import Checkout from './components/Checkout';
@@ -23,9 +23,6 @@ function App() {
 
   return (
     <AuthProvider>
-      {/* Appwrite 连接测试组件（右上角浮动显示） */}
-      <AppwriteTest />
-      
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Shop />} />
@@ -45,6 +42,7 @@ function App() {
           <Route path="/admin/orders/:id" element={<AdminOrders />} />
           <Route path="/admin/products" element={<AdminProducts />} />
           <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/test" element={<AdminTest />} />
           
           {/* Redirect unknown routes to Shop */}
           <Route path="*" element={<Navigate to="/" replace />} />

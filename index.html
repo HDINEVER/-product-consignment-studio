@@ -3,22 +3,217 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ComicCon Consignment Hub</title>
+    <title>ComicCon Consignment Hub - 二次元寄售站</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              'brutal': ['Space Grotesk', 'Noto Sans SC', 'system-ui', 'sans-serif'],
+            },
+            colors: {
+              // Neo-brutalism 配色 + 明日方舟风格
+              'brutal': {
+                'yellow': '#FFE566',
+                'orange': '#FF6B35',
+                'pink': '#FF4F9A',
+                'cyan': '#00D4FF',
+                'purple': '#7B68EE',
+                'dark': '#1A1A2E',
+                'light': '#FFFEF0',
+              },
+              // 明日方舟配色
+              'arknights': {
+                'gold': '#F5B041',
+                'red': '#E74C3C',
+                'blue': '#3498DB',
+                'gray': '#2C3E50',
+              }
+            },
+            boxShadow: {
+              'brutal': '4px 4px 0px 0px rgba(0,0,0,1)',
+              'brutal-md': '6px 6px 0px 0px rgba(0,0,0,1)',
+              'brutal-lg': '8px 8px 0px 0px rgba(0,0,0,1)',
+              'brutal-xl': '12px 12px 0px 0px rgba(0,0,0,1)',
+              'brutal-hover': '6px 6px 0px 0px rgba(0,0,0,1)',
+              'brutal-active': '2px 2px 0px 0px rgba(0,0,0,1)',
+            },
+            animation: {
+              'shake': 'shake 0.5s ease-in-out',
+              'pulse-brutal': 'pulse-brutal 2s ease-in-out infinite',
+              'slide-up': 'slide-up 0.3s ease-out',
+              'glitch': 'glitch 0.3s ease-in-out',
+            },
+            keyframes: {
+              'shake': {
+                '0%, 100%': { transform: 'translateX(0)' },
+                '25%': { transform: 'translateX(-5px)' },
+                '75%': { transform: 'translateX(5px)' },
+              },
+              'pulse-brutal': {
+                '0%, 100%': { transform: 'scale(1)' },
+                '50%': { transform: 'scale(1.02)' },
+              },
+              'slide-up': {
+                '0%': { transform: 'translateY(20px)', opacity: '0' },
+                '100%': { transform: 'translateY(0)', opacity: '1' },
+              },
+              'glitch': {
+                '0%': { transform: 'translate(0)' },
+                '20%': { transform: 'translate(-2px, 2px)' },
+                '40%': { transform: 'translate(-2px, -2px)' },
+                '60%': { transform: 'translate(2px, 2px)' },
+                '80%': { transform: 'translate(2px, -2px)' },
+                '100%': { transform: 'translate(0)' },
+              },
+            }
+          }
+        }
+      }
+    </script>
     <style>
-      /* Custom font or utilities if needed */
+      /* Neo-brutalism 全局样式 */
+      * {
+        font-family: 'Space Grotesk', 'Noto Sans SC', system-ui, sans-serif;
+      }
+      
       body {
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        background: #FFFEF0;
       }
-      /* Hide scrollbar for Chrome, Safari and Opera */
+
+      /* 斜线装饰背景 */
+      .bg-stripes {
+        background-image: repeating-linear-gradient(
+          -45deg,
+          transparent,
+          transparent 10px,
+          rgba(0, 0, 0, 0.03) 10px,
+          rgba(0, 0, 0, 0.03) 20px
+        );
+      }
+
+      /* Neo-brutalism 按钮悬停效果 - Gumroad 圆角风格 */
+      .btn-brutal {
+        transition: all 0.1s ease;
+        transform: translate(0, 0);
+        border-radius: 12px;
+      }
+      .btn-brutal:hover {
+        transform: translate(-2px, -2px);
+        box-shadow: 6px 6px 0px 0px rgba(0,0,0,1);
+      }
+      .btn-brutal:active {
+        transform: translate(2px, 2px);
+        box-shadow: 2px 2px 0px 0px rgba(0,0,0,1);
+      }
+
+      /* 明日方舟风格装饰线 */
+      .arknights-border {
+        position: relative;
+      }
+      .arknights-border::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #F5B041, #E74C3C, #F5B041);
+      }
+
+      /* 复选框明日方舟风格 - Gumroad 圆角 */
+      .checkbox-brutal {
+        appearance: none;
+        width: 24px;
+        height: 24px;
+        border: 3px solid black;
+        background: white;
+        cursor: pointer;
+        position: relative;
+        border-radius: 6px;
+      }
+      .checkbox-brutal:checked {
+        background: #FFE566;
+      }
+      .checkbox-brutal:checked::after {
+        content: '✓';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-weight: bold;
+      }
+
+      /* 全局卡片圆角 - Gumroad 风格 */
+      .card-brutal {
+        border: 3px solid black;
+        border-radius: 16px;
+        background: white;
+        box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
+        overflow: hidden;
+      }
+
+      /* 模态框圆角 */
+      .modal-brutal {
+        border: 4px solid black;
+        border-radius: 20px;
+        background: white;
+        box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);
+        overflow: hidden;
+      }
+
+      /* 输入框 Neo-brutalism 风格 - Gumroad 圆角 */
+      .input-brutal {
+        border: 3px solid black;
+        background: white;
+        padding: 12px 16px;
+        font-weight: 500;
+        transition: all 0.1s ease;
+        border-radius: 12px;
+        width: 100%;
+      }
+      .input-brutal:focus {
+        outline: none;
+        transform: translate(-2px, -2px);
+        box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
+      }
+
+      /* 隐藏滚动条 */
       .no-scrollbar::-webkit-scrollbar {
-          display: none;
+        display: none;
       }
-      /* Hide scrollbar for IE, Edge and Firefox */
       .no-scrollbar {
-          -ms-overflow-style: none;  /* IE and Edge */
-          scrollbar-width: none;  /* Firefox */
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      /* 闪烁警告动画 */
+      @keyframes blink-warning {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+      }
+      .blink-warning {
+        animation: blink-warning 1.5s ease-in-out infinite;
+      }
+
+      /* 分割线明日方舟风格 */
+      .divider-arknights {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .divider-arknights::before,
+      .divider-arknights::after {
+        content: '';
+        flex: 1;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, black, transparent);
       }
     </style>
   <script type="importmap">
@@ -32,7 +227,7 @@
 }
 </script>
 </head>
-  <body>
+  <body class="bg-brutal-light">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
