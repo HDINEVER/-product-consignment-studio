@@ -10,6 +10,7 @@ interface ImportMetaEnv {
   readonly VITE_APPWRITE_ORDER_ITEMS_COLLECTION_ID: string
   readonly VITE_APPWRITE_ADDRESSES_COLLECTION_ID: string
   readonly VITE_APPWRITE_CART_ITEMS_COLLECTION_ID: string
+  readonly VITE_APPWRITE_TAGS_COLLECTION_ID: string
   readonly VITE_APPWRITE_STORAGE_BUCKET_ID: string
   readonly VITE_APPWRITE_ADMIN_TEAM_ID: string
 }

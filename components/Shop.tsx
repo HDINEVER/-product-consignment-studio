@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Menu, Search, ShoppingCart, LayoutGrid, Filter, Package, User as UserIcon, AlertTriangle, LogIn, Plus, Edit, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { CATEGORIES, IPS, Product, CartItem, Category } from '../types';
+import { Product, CartItem } from '../types';
 import AtroposCard from './AtroposCard';
 import ProductModal from './ProductModal';
 import CartDrawer from './CartDrawer';
@@ -10,9 +10,11 @@ import AuthModal from './AuthModal';
 import AnimatedButton from './AnimatedButton';
 import SidebarFilterButton from './SidebarFilterButton';
 import ProductUploadModal from './ProductUploadModal';
+import TagManager from './TagManager';
 import { useProducts, ProductFilters } from '../hooks/useProducts';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../contexts/AuthContext';
+import { useTags } from '../hooks/useTags';
 import { hasGuestCartItems } from '../utils/guestCart';
 
 const Shop = () => {
@@ -20,9 +22,14 @@ const Shop = () => {
     const { products, loading: productsLoading, error: productsError, fetchProducts, deleteProduct } = useProducts();
     const { cartItems, cartCount, addToCart, removeFromCart, updateQuantity, loading: cartLoading } = useCart();
     const { user, isAuthenticated, isGuest, isAdmin, hasGuestCart } = useAuth();
+    const { tags, loading: tagsLoading, addTag, deleteTag, getCategoryNames, getIPNames } = useTags();
+
+    // 动态获取分类和IP列表
+    const CATEGORIES = getCategoryNames();
+    const IPS = getIPNames();
 
     // Shop State
-    const [selectedCategory, setSelectedCategory] = useState<Category>('全部');
+    const [selectedCategory, setSelectedCategory] = useState<string>('全部');
     const [selectedIP, setSelectedIP] = useState<string>('全部');
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isCartOpen, setIsCartOpen] = useState(false);
@@ -35,6 +42,10 @@ const Shop = () => {
 
     // Product Upload Modal State (Admin)
     const [showProductUploadModal, setShowProductUploadModal] = useState(false);
+
+    // 标签管理状态 (Admin)
+    const [isEditCategoryMode, setIsEditCategoryMode] = useState(false);
+    const [isEditIPMode, setIsEditIPMode] = useState(false);
 
     // 当筛选条件变化时重新获取商品
     useEffect(() => {
@@ -213,24 +224,39 @@ const Shop = () => {
             {/* Sidebar (IP Selector) */}
             <aside 
             className={`bg-white border-r-2 border-black overflow-y-auto transition-all duration-300 ease-in-out flex flex-col ${
-                isSidebarOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full opacity-0'
+                isSidebarOpen ? 'w-80 translate-x-0' : 'w-0 -translate-x-full opacity-0'
             }`}
             >
             <div className="p-6">
                 <h3 className="font-black text-lg mb-4 flex items-center gap-2 uppercase tracking-wider">
                 <Filter size={18} /> IP 筛选
                 </h3>
-                <div className="space-y-2">
-                {IPS.map(ip => (
-                    <SidebarFilterButton
-                    key={ip}
-                    isSelected={selectedIP === ip}
-                    onClick={() => setSelectedIP(ip)}
-                    >
-                    {ip}
-                    </SidebarFilterButton>
-                ))}
-                </div>
+
+                {/* 管理员: IP标签管理 */}
+                {isAdmin ? (
+                  <TagManager
+                    tags={tags.ips}
+                    type="ip"
+                    typeName="IP"
+                    onAdd={async (name) => await addTag('ip', name)}
+                    onDelete={async (tagId, tagName) => await deleteTag(tagId, 'ip', tagName)}
+                    isEditMode={isEditIPMode}
+                    onToggleEditMode={() => setIsEditIPMode(!isEditIPMode)}
+                    vertical={true}
+                  />
+                ) : (
+                  <div className="space-y-2">
+                    {IPS.map(ip => (
+                      <SidebarFilterButton
+                        key={ip}
+                        isSelected={selectedIP === ip}
+                        onClick={() => setSelectedIP(ip)}
+                      >
+                        {ip}
+                      </SidebarFilterButton>
+                    ))}
+                  </div>
+                )}
             </div>
             
             <div className="mt-auto p-6 border-t-2 border-gray-100">
@@ -245,33 +271,51 @@ const Shop = () => {
             <main className="flex-1 overflow-y-auto bg-[#f3f3f3] p-4 md:p-8 relative">
             
             {/* Category Tabs (Like Browser Tabs) */}
-            <div className="mb-8 overflow-x-auto pb-2">
-                <div className="flex gap-2 min-w-max items-center">
-                {CATEGORIES.map(cat => (
-                    <AnimatedButton
-                    key={cat}
-                    variant={selectedCategory === cat ? 'primary' : 'outline'}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-6 py-2 rounded-full whitespace-nowrap ${
-                        selectedCategory === cat
-                        ? ''
-                        : 'text-gray-500 hover:text-black'
-                    }`}
-                    >
-                    {cat}
-                    </AnimatedButton>
-                ))}
-                
-                {/* 管理员: 发布新商品按钮 */}
-                {isAdmin && (
-                  <button
-                    onClick={() => setShowProductUploadModal(true)}
-                    className="ml-auto px-4 py-2 rounded-full flex items-center gap-2 bg-brutal-black text-brutal-yellow font-black border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-                  >
-                    <Plus size={18} />
-                    发布新商品
-                  </button>
-                )}
+            <div className="mb-8">
+                {/* 管理员: 分类标签管理 */}
+                {isAdmin ? (
+                  <div className="mb-4">
+                    <TagManager
+                      tags={tags.categories}
+                      type="category"
+                      typeName="分类"
+                      onAdd={async (name) => await addTag('category', name)}
+                      onDelete={async (tagId, tagName) => await deleteTag(tagId, 'category', tagName)}
+                      isEditMode={isEditCategoryMode}
+                      onToggleEditMode={() => setIsEditCategoryMode(!isEditCategoryMode)}
+                    />
+                  </div>
+                ) : null}
+
+                {/* 分类按钮 */}
+                <div className="overflow-x-auto pb-2">
+                  <div className="flex gap-2 min-w-max items-center">
+                    {CATEGORIES.map(cat => (
+                      <AnimatedButton
+                        key={cat}
+                        variant={selectedCategory === cat ? 'primary' : 'outline'}
+                        onClick={() => setSelectedCategory(cat)}
+                        className={`px-6 py-2 rounded-full whitespace-nowrap ${
+                          selectedCategory === cat
+                            ? ''
+                            : 'text-gray-500 hover:text-black'
+                        }`}
+                      >
+                        {cat}
+                      </AnimatedButton>
+                    ))}
+                    
+                    {/* 管理员: 发布新商品按钮 */}
+                    {isAdmin && (
+                      <button
+                        onClick={() => setShowProductUploadModal(true)}
+                        className="ml-auto px-4 py-2 rounded-full flex items-center gap-2 bg-brutal-black text-brutal-yellow font-black border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                      >
+                        <Plus size={18} />
+                        发布新商品
+                      </button>
+                    )}
+                  </div>
                 </div>
             </div>
 

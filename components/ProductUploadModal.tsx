@@ -4,6 +4,7 @@ import { X, Upload, Image as ImageIcon, Loader, AlertCircle } from 'lucide-react
 import { useForm } from 'react-hook-form';
 import { databases, storage, DATABASE_ID, COLLECTIONS, STORAGE_BUCKET_ID, ID, Permission, Role } from '../lib/appwrite';
 import { useAuth } from '../contexts/AuthContext';
+import { useTags } from '../hooks/useTags';
 
 // ========== 表单数据类型 ==========
 interface ProductFormData {
@@ -14,30 +15,6 @@ interface ProductFormData {
   price: number;
   stock: number;
 }
-
-// ========== IP 标签选项 ==========
-const IP_TAGS = [
-  '原创',
-  '明日方舟',
-  '原神',
-  '崩坏：星穹铁道',
-  '排球少年',
-  '蓝色监狱',
-  '初音未来',
-  '其他二次元IP',
-];
-
-// ========== 商品分类选项 ==========
-const CATEGORIES = [
-  'GK树脂白模',
-  '3D打印制品',
-  '纸制品',
-  '涂装成品',
-  'Cos道具',
-  '吧唧制品',
-  '雪弗板定制',
-  '其他周边',
-];
 
 interface ProductUploadModalProps {
   isOpen: boolean;
@@ -55,6 +32,11 @@ export default function ProductUploadModal({
   initialData,
 }: ProductUploadModalProps) {
   const { user } = useAuth();
+  const { tags } = useTags();
+  
+  // 从数据库获取动态分类和IP列表（排除"全部"和"未分类"）
+  const CATEGORIES = tags.categories.map(t => t.name);
+  const IP_TAGS = tags.ips.map(t => t.name);
   const { register, handleSubmit, formState: { errors }, reset } = useForm<ProductFormData>({
     defaultValues: initialData || {
       name: '',
