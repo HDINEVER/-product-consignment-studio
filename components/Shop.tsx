@@ -5,6 +5,7 @@ import { CATEGORIES, IPS, Product, CartItem, Category } from '../types';
 import AtroposCard from './AtroposCard';
 import ProductModal from './ProductModal';
 import CartDrawer from './CartDrawer';
+import FloatingCartButton from './FloatingCartButton';
 import AuthModal from './AuthModal';
 import AnimatedButton from './AnimatedButton';
 import SidebarFilterButton from './SidebarFilterButton';
@@ -203,21 +204,6 @@ const Shop = () => {
                 登录
               </button>
             )}
-
-            <Link to="/cart">
-              <AnimatedButton 
-                  variant="icon"
-                  className="relative p-3"
-                  title="购物车"
-              >
-                  <ShoppingCart size={20} />
-                  {totalCartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-brutal-yellow text-black text-xs font-bold w-5 h-5 flex items-center justify-center border-2 border-black z-20">
-                      {totalCartCount}
-                  </span>
-                  )}
-              </AnimatedButton>
-            </Link>
             </div>
         </header>
 
@@ -426,6 +412,13 @@ const Shop = () => {
             cart={cartItems}
             onRemoveItem={(index) => cartItems[index] && handleRemoveFromCart(cartItems[index].id)}
             onUpdateQuantity={handleUpdateQuantity}
+        />
+
+        {/* 悬浮购物车按钮 - 右下角 */}
+        <FloatingCartButton
+            cartCount={cartCount}
+            onClick={() => setIsCartOpen(true)}
+            isCartOpen={isCartOpen}
         />
 
         {/* Auth Modal */}

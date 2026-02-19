@@ -73,8 +73,7 @@ export function useProducts() {
         queries.push(Query.search('name', filters.search));
       }
       
-      // 默认按创建时间倒序
-      queries.push(Query.orderDesc('created_at'));
+      // 限制返回数量
       queries.push(Query.limit(100));
       
       const response = await databases.listDocuments(
