@@ -70,3 +70,26 @@
   box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
   transform: translate(2px, 2px);
 }
+
+/* React Grid Layout Styles */
+.react-grid-layout {
+  position: relative;
+  transition: height 200ms ease;
+}
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top;
+}
+.react-grid-item.cssTransforms {
+  transition-property: transform;
+}
+.react-grid-item.resizing {
+  z-index: 100;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+.react-grid-item.react-grid-placeholder {
+  background: rgba(0,0,0,0.1) !important;
+  opacity: 0.5;
+  z-index: 2;
+  border-radius: 12px;
+}
