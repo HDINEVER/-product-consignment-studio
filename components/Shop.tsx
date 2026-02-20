@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Menu, Search, ShoppingCart, LayoutGrid, Filter, Package, User as UserIcon, AlertTriangle, LogIn, Plus, Edit, Trash2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Product, CartItem } from '../types';
 import AtroposCard from './AtroposCard';
 import ProductModal from './ProductModal';
@@ -10,7 +10,11 @@ import AuthModal from './AuthModal';
 import AnimatedButton from './AnimatedButton';
 import SidebarFilterButton from './SidebarFilterButton';
 import ProductUploadModal from './ProductUploadModal';
+import ProductDetailModal from './ProductDetailModal';
 import TagManager from './TagManager';
+import SearchBar from './SearchBar';
+import PriceRangeFilter from './PriceRangeFilter';
+import BentoProductGrid from './BentoProductGrid';
 import { useProducts, ProductFilters } from '../hooks/useProducts';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,11 +22,14 @@ import { useTags } from '../hooks/useTags';
 import { hasGuestCartItems } from '../utils/guestCart';
 
 const Shop = () => {
+    const navigate = useNavigate();
+    
     // 使用重构后的 hooks
-    const { products, loading: productsLoading, error: productsError, fetchProducts, deleteProduct } = useProducts();
+    const { products, loading: productsLoading, error: productsError, fetchProducts, deleteProduct, updateProduct } = useProducts();
     const { cartItems, cartCount, addToCart, removeFromCart, updateQuantity, loading: cartLoading } = useCart();
     const { user, isAuthenticated, isGuest, isAdmin, hasGuestCart } = useAuth();
-    const { tags, loading: tagsLoading, addTag, deleteTag, getCategoryNames, getIPNames } = useTags();
+    const { tags, loading: tagsLoading, addTag, deleteTag, getCategoryNames, getIPNames, getTagIdByName } = useTags();
+
 
     // 动态获取分类和IP列表
     const CATEGORIES = getCategoryNames();
@@ -35,6 +42,7 @@ const Shop = () => {
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [viewProduct, setViewProduct] = useState<Product | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000]);
     
     // Auth Modal State
     const [showAuthModal, setShowAuthModal] = useState(false);
@@ -43,24 +51,54 @@ const Shop = () => {
     // Product Upload Modal State (Admin)
     const [showProductUploadModal, setShowProductUploadModal] = useState(false);
 
+    // Product Detail Modal State
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
     // 标签管理状态 (Admin)
     const [isEditCategoryMode, setIsEditCategoryMode] = useState(false);
     const [isEditIPMode, setIsEditIPMode] = useState(false);
+    const [editingTag, setEditingTag] = useState<{ productId: string, type: 'category' | 'ip' } | null>(null);
 
     // 当筛选条件变化时重新获取商品
     useEffect(() => {
       const filters: ProductFilters = {};
-      if (selectedCategory !== '全部') {
-        filters.category = selectedCategory;
+      
+      // 将分类名称转换为ID
+      if (selectedCategory !== '全部' && selectedCategory !== '未分类') {
+        const categoryId = getTagIdByName('category', selectedCategory);
+        console.log('🏷️ 分类筛选:', selectedCategory, '→ ID:', categoryId);
+        if (categoryId) {
+          filters.category = categoryId;
+        }
+      } else if (selectedCategory === '未分类') {
+        filters.category = '未分类';
       }
-      if (selectedIP !== '全部') {
-        filters.ip = selectedIP;
+      
+      // 将IP名称转换为ID
+      if (selectedIP !== '全部' && selectedIP !== '未分类') {
+        const ipId = getTagIdByName('ip', selectedIP);
+        console.log('🎮 IP筛选:', selectedIP, '→ ID:', ipId);
+        if (ipId) {
+          filters.ip = ipId;
+        }
+      } else if (selectedIP === '未分类') {
+        filters.ip = '未分类';
       }
+      
+      // 搜索关键词
       if (searchQuery.trim()) {
         filters.search = searchQuery.trim();
       }
+      
+      // 价格范围筛选
+      if (priceRange[0] > 0 || priceRange[1] < 2000) {
+        filters.minPrice = priceRange[0];
+        filters.maxPrice = priceRange[1];
+      }
+      
+      console.log('📊 执行筛选，filters:', filters);
       fetchProducts(filters);
-    }, [selectedCategory, selectedIP, searchQuery, fetchProducts]);
+    }, [selectedCategory, selectedIP, searchQuery, priceRange, fetchProducts, getTagIdByName]);
 
     // Handlers - 使用 useCart hook
     const handleAddToCart = async (product: Product, variantName: string, price: number, quantity: number) => {
@@ -98,6 +136,30 @@ const Shop = () => {
         }
     };
 
+    // 更新商品标签
+    const handleUpdateTag = async (productId: string, tagType: 'category' | 'ip', tagName: string) => {
+      try {
+        const tagId = getTagIdByName(tagType, tagName);
+        if (!tagId && tagName !== '未分类') {
+          alert('标签不存在');
+          return;
+        }
+        
+        const updates: any = {
+          [tagType]: tagName,  // 更新名称字段
+          [tagType === 'category' ? 'categoryId' : 'ip_id']: tagId || '',  // 更新外键字段
+        };
+        
+        await updateProduct(productId, updates);
+        setEditingTag(null);
+        fetchProducts();
+        console.log(`✅ 商品标签已更新: ${tagType} = ${tagName}`);
+      } catch (err) {
+        console.error('❌ 更新标签失败:', err);
+        alert('更新标签失败');
+      }
+    };
+
     // Handle login button click
     const handleLoginClick = () => {
       setAuthModalWarning(hasGuestCartItems());
@@ -130,49 +192,59 @@ const Shop = () => {
         
         {/* 游客模式提示横幅 - 仅在游客有购物车时显示 */}
         {isGuest && (hasGuestCart || hasGuestCartItems()) && (
-          <div className="fixed top-0 left-0 right-0 bg-brutal-yellow border-b-4 border-black px-4 py-2 z-40 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <AlertTriangle size={18} className="text-black" />
-              <span className="font-bold text-sm">
-                ⚠️ 游客模式：购物车数据保存在本地，登录后自动同步
+          <div className="fixed top-0 left-0 right-0 bg-brutal-yellow border-b-4 border-black px-2 sm:px-4 py-2 z-40 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0">
+              <AlertTriangle size={16} className="text-black shrink-0" />
+              <span className="font-bold text-xs sm:text-sm truncate">
+                <span className="hidden sm:inline">⚠️ 游客模式：</span>购物车数据保存在本地
               </span>
             </div>
             <button
               onClick={handleLoginClick}
-              className="px-4 py-1 text-sm flex items-center gap-2 bg-black text-white font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+              className="px-2 sm:px-4 py-1 text-xs sm:text-sm flex items-center gap-1 sm:gap-2 bg-black text-white font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all shrink-0"
             >
-              <LogIn size={16} />
-              登录 / 注册
+              <LogIn size={14} className="sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">登录 / 注册</span>
+              <span className="sm:hidden">登录</span>
             </button>
           </div>
         )}
 
         {/* Top Navigation Bar */}
-        <header className={`fixed left-0 right-0 h-16 bg-white border-b-4 border-black z-30 flex items-center px-4 justify-between ${!isAuthenticated ? 'top-12' : 'top-0'}`}>
-            <div className="flex items-center gap-4">
+        <header className={`fixed left-0 right-0 h-14 sm:h-16 bg-white border-b-2 border-black z-30 flex items-center px-2 sm:px-4 justify-between ${!isAuthenticated ? 'top-10 sm:top-12' : 'top-0'}`}>
+            <div className="flex items-center gap-2 sm:gap-4">
             <AnimatedButton 
                 variant="ghost"
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="p-2"
+                className="p-1.5 sm:p-2"
                 aria-label="Toggle sidebar menu"
             >
-                <Menu size={20} />
+                <Menu size={18} className="sm:w-5 sm:h-5" />
             </AnimatedButton>
             <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-brutal-black text-brutal-yellow flex items-center justify-center font-black text-xl border-2 border-black shadow-brutal rounded-xl">寄</div>
-                <h1 className="font-black text-xl hidden sm:block tracking-tight">二次元寄售站</h1>
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-brutal-black text-brutal-yellow flex items-center justify-center font-black text-lg sm:text-xl border-2 border-black shadow-brutal rounded-lg sm:rounded-xl">寄</div>
+                <h1 className="font-black text-base sm:text-xl hidden md:block tracking-tight">二次元寄售站</h1>
             </div>
             </div>
 
-            <div className="hidden md:flex items-center bg-brutal-bg border-2 border-black px-4 py-2 w-96 shadow-brutal rounded-xl">
-            <Search size={18} className="text-gray-400" />
-            <input 
-                type="text" 
-                placeholder="搜索周边商品..." 
-                className="bg-transparent border-none outline-none ml-2 w-full font-medium"
+            {/* 搜索栏 + 筛选器 - 响应式 */}
+            <div className="flex-1 flex items-center gap-2 max-w-xs sm:max-w-md lg:max-w-2xl mx-2 sm:mx-4">
+              <SearchBar
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-            />
+                onChange={setSearchQuery}
+                placeholder="搜索商品..."
+                className="flex-1"
+              />
+              {/* 价格筛选 - 仅在大屏显示，紧挨搜索栏 */}
+              <div className="hidden lg:block shrink-0">
+                <PriceRangeFilter
+                  min={0}
+                  max={2000}
+                  defaultMin={priceRange[0]}
+                  defaultMax={priceRange[1]}
+                  onApply={(min, max) => setPriceRange([min, max])}
+                />
+              </div>
             </div>
 
             <div className="flex items-center gap-4">
@@ -219,12 +291,22 @@ const Shop = () => {
         </header>
 
         {/* Main Layout */}
-        <div className={`flex h-screen overflow-hidden ${!isAuthenticated ? 'pt-28' : 'pt-16'}`}>
+        <div className={`flex h-screen overflow-hidden ${!isAuthenticated ? 'pt-24 sm:pt-28' : 'pt-14 sm:pt-16'}`}>
+            
+            {/* Sidebar Overlay - 手机端点击关闭 */}
+            {isSidebarOpen && (
+              <div 
+                className="fixed inset-0 bg-black/30 z-20 lg:hidden"
+                onClick={() => setIsSidebarOpen(false)}
+              />
+            )}
             
             {/* Sidebar (IP Selector) */}
             <aside 
-            className={`bg-white border-r-2 border-black overflow-y-auto transition-all duration-300 ease-in-out flex flex-col ${
-                isSidebarOpen ? 'w-80 translate-x-0' : 'w-0 -translate-x-full opacity-0'
+            className={`fixed lg:relative bg-white border-r-2 border-black overflow-y-auto transition-all duration-300 ease-in-out flex flex-col z-30 h-full ${
+                isSidebarOpen 
+                  ? 'w-64 sm:w-72 lg:w-64 xl:w-80 translate-x-0' 
+                  : 'w-0 -translate-x-full lg:-translate-x-full opacity-0'
             }`}
             >
             <div className="p-6">
@@ -242,6 +324,8 @@ const Shop = () => {
                     onDelete={async (tagId, tagName) => await deleteTag(tagId, 'ip', tagName)}
                     isEditMode={isEditIPMode}
                     onToggleEditMode={() => setIsEditIPMode(!isEditIPMode)}
+                    selectedTag={selectedIP}
+                    onSelectTag={(tagName) => setSelectedIP(tagName)}
                     vertical={true}
                   />
                 ) : (
@@ -268,7 +352,7 @@ const Shop = () => {
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 overflow-y-auto bg-[#f3f3f3] p-4 md:p-8 relative">
+            <main className="flex-1 overflow-y-auto bg-[#f3f3f3] p-3 sm:p-4 md:p-6 lg:p-8 relative">
             
             {/* Category Tabs (Like Browser Tabs) */}
             <div className="mb-8">
@@ -283,6 +367,8 @@ const Shop = () => {
                       onDelete={async (tagId, tagName) => await deleteTag(tagId, 'category', tagName)}
                       isEditMode={isEditCategoryMode}
                       onToggleEditMode={() => setIsEditCategoryMode(!isEditCategoryMode)}
+                      selectedTag={selectedCategory}
+                      onSelectTag={(tagName) => setSelectedCategory(tagName)}
                     />
                   </div>
                 ) : null}
@@ -305,14 +391,14 @@ const Shop = () => {
                       </AnimatedButton>
                     ))}
                     
-                    {/* 管理员: 发布新商品按钮 */}
+                    {/* 管理员: 发布新商品按钮（纯图标） */}
                     {isAdmin && (
                       <button
                         onClick={() => setShowProductUploadModal(true)}
-                        className="ml-auto px-4 py-2 rounded-full flex items-center gap-2 bg-brutal-black text-brutal-yellow font-black border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                        className="ml-auto mr-4 w-10 h-10 rounded-full flex items-center justify-center bg-brutal-black text-brutal-yellow font-black border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                        title="发布新商品"
                       >
-                        <Plus size={18} />
-                        发布新商品
+                        <Plus size={20} strokeWidth={3} />
                       </button>
                     )}
                   </div>
@@ -342,101 +428,37 @@ const Shop = () => {
               </div>
             )}
 
-            {/* Products Grid - Conditional Layout */}
+            {/* Products Grid - 使用新的 BentoProductGrid */}
             {!productsLoading && !productsError && (
-            <div className={`grid gap-6 pb-24 ${
-                isBentoLayout 
-                ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 auto-rows-[280px] grid-flow-dense' 
-                : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-            }`}>
-                {products.map((product, idx) => {
-                const { span, intensity } = getGridConfig(idx);
-                
-                return (
-                    <div key={product.id} className="relative group">
-                      <Link to={`/product/${product.id}`}>
-                      <AtroposCard 
-                      className={`
-                          h-full 
-                          ${span} 
-                          ${!isBentoLayout ? 'aspect-[3/4]' : ''}
-                      `} 
-                      intensity={intensity}
-                      >
-                    <div className="flex flex-col h-full">
-                        {/* Image takes remaining space */}
-                        <div className="flex-1 bg-gray-200 overflow-hidden relative border-b-2 border-black group">
-                        <img 
-                            src={product.image} 
-                            alt={product.title} 
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                        />
-                        <div className="absolute top-2 left-2 bg-yellow-400 px-2 py-1 text-xs font-black border-2 border-black rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                            {product.category}
-                        </div>
-                        </div>
-                        {/* Content takes minimal required space */}
-                        <div className="bg-white p-4 flex flex-col justify-between shrink-0">
-                        <div>
-                            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{product.ip}</div>
-                            <h3 className="font-black text-lg leading-tight line-clamp-1 mb-1">{product.title}</h3>
-                        </div>
-                        <div className="flex items-center justify-between mt-1">
-                            <span className="font-mono font-bold text-xl">¥{product.basePrice}+</span>
-                            <button 
-                              className="bg-black text-white p-2 rounded-full hover:bg-gray-800 transition-colors"
-                              title="加入购物车"
-                            >
-                            <ShoppingCart size={16} />
-                            </button>
-                        </div>
-                        </div>
-                    </div>
-                    </AtroposCard>
-                    </Link>
-                    
-                    {/* 管理员: 编辑/删除按钮 */}
-                    {isAdmin && (
-                      <div className="absolute top-2 right-2 bg-white border-2 border-black shadow-brutal rounded-lg p-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-10">
-                        <Link to={`/admin/products/${product.id}/edit`}>
-                          <button 
-                            className="p-2 bg-brutal-yellow hover:bg-yellow-500 text-black rounded transition-colors"
-                            title="编辑商品"
-                          >
-                            <Edit size={16} />
-                          </button>
-                        </Link>
-                        <button 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleDeleteProduct(String(product.id));
-                          }}
-                          className="p-2 bg-red-500 hover:bg-red-600 text-white rounded transition-colors"
-                          title="删除商品"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    )}
-                    </div>
-                );
-                })}
-            </div>
-            )}
-
-            {/* 空状态 */}
-            {!productsLoading && !productsError && products.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-                <div className="text-6xl mb-4">👻</div>
-                <p className="font-bold text-xl">这里什么都没有...</p>
-                <button 
-                    onClick={() => {setSelectedCategory('全部'); setSelectedIP('全部'); setSearchQuery('');}}
-                    className="mt-4 px-6 py-2 bg-black text-white font-bold rounded-xl hover:bg-gray-800 border-2 border-black shadow-brutal"
-                >
-                    重置筛选
-                </button>
-                </div>
+              <BentoProductGrid
+                products={products}
+                isAdmin={isAdmin}
+                onProductSelect={(product) => !editingTag && setSelectedProduct(product)}
+                onAddToCart={(product) => {
+                  // 快速添加到购物车，使用默认变体
+                  const defaultVariant = product.variants?.[0];
+                  if (defaultVariant) {
+                    handleAddToCart(product, defaultVariant.name, defaultVariant.price, 1);
+                  } else {
+                    handleAddToCart(product, '默认', product.basePrice, 1);
+                  }
+                }}
+                onEdit={(productId) => navigate(`/admin/products/${productId}/edit`)}
+                onDelete={(productId) => handleDeleteProduct(productId)}
+                onEditCategory={(productId) => setEditingTag({ productId, type: 'category' })}
+                onEditIP={(productId) => setEditingTag({ productId, type: 'ip' })}
+                editingTag={editingTag}
+                categories={CATEGORIES}
+                ips={IPS}
+                onCategoryChange={(productId, value) => handleUpdateTag(productId, 'category', value)}
+                onIPChange={(productId, value) => handleUpdateTag(productId, 'ip', value)}
+                onTagBlur={() => setEditingTag(null)}
+                emptyMessage={
+                  selectedCategory !== '全部' || selectedIP !== '全部' || searchQuery || priceRange[0] > 0 || priceRange[1] < 2000
+                    ? '试试调整筛选条件吧' 
+                    : isAdmin ? '点击右上角 ➕ 发布第一个商品' : '敬请期待...'
+                }
+              />
             )}
             </main>
 
@@ -482,6 +504,13 @@ const Shop = () => {
             }}
           />
         )}
+
+        {/* Product Detail Modal */}
+        <ProductDetailModal
+          isOpen={selectedProduct !== null}
+          onClose={() => setSelectedProduct(null)}
+          product={selectedProduct}
+        />
 
         </div>
     );

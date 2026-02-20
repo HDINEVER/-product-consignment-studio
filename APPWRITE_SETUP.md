@@ -1,236 +1,261 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { Menu, Search, ShoppingCart, LayoutGrid, Filter, Package, User as UserIcon, AlertTriangle, LogIn, Plus, Edit, Trash2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { CATEGORIES, IPS, Product, CartItem, Category } from '../types';
-import AtroposCard from './AtroposCard';
-import ProductModal from './ProductModal';
-import CartDrawer from './CartDrawer';
-import FloatingCartButton from './FloatingCartButton';
-import AuthModal from './AuthModal';
-import AnimatedButton from './AnimatedButton';
-import SidebarFilterButton from './SidebarFilterButton';
-import ProductUploadModal from './ProductUploadModal';
-import { useProducts, ProductFilters } from '../hooks/useProducts';
-import { useCart } from '../hooks/useCart';
-import { useAuth } from '../contexts/AuthContext';
-import { hasGuestCartItems } from '../utils/guestCart';
+# 动态分类标签管理功能
 
-const Shop = () => {
-    // 使用重构后的 hooks
-    const { products, loading: productsLoading, error: productsError, fetchProducts, deleteProduct } = useProducts();
-    const { cartItems, cartCount, addToCart, removeFromCart, updateQuantity, loading: cartLoading } = useCart();
-    const { user, isAuthenticated, isGuest, isAdmin, hasGuestCart } = useAuth();
+## 📋 功能概述
 
-    // Shop State
-    const [selectedCategory, setSelectedCategory] = useState<Category>('全部');
-    const [selectedIP, setSelectedIP] = useState<string>('全部');
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-    const [isCartOpen, setIsCartOpen] = useState(false);
-    const [viewProduct, setViewProduct] = useState<Product | null>(null);
-    const [searchQuery, setSearchQuery] = useState('');
-    
-    // Auth Modal State
-    const [showAuthModal, setShowAuthModal] = useState(false);
-    const [authModalWarning, setAuthModalWarning] = useState(false);
+实现了完全动态的商品分类和 IP 标签管理系统，取代了之前硬编码在代码中的分类列表。
 
-    // Product Upload Modal State (Admin)
-    const [showProductUploadModal, setShowProductUploadModal] = useState(false);
+### 主要特性
 
-    // 当筛选条件变化时重新获取商品
-    useEffect(() => {
-      const filters: ProductFilters = {};
-      if (selectedCategory !== '全部') {
-        filters.category = selectedCategory;
-      }
-      if (selectedIP !== '全部') {
-        filters.ip = selectedIP;
-      }
-      if (searchQuery.trim()) {
-        filters.search = searchQuery.trim();
-      }
-      fetchProducts(filters);
-    }, [selectedCategory, selectedIP, searchQuery, fetchProducts]);
+✅ **动态分类管理**: 从数据库读取分类标签，无需修改代码
+✅ **管理员控制**: 管理员可以实时添加/删除分类
+✅ **未分类归档**: 删除分类时自动将相关商品归为"未分类"
+✅ **用户友好 UI**: 编辑模式、删除确认、添加输入框等
+✅ **权限隔离**: 仅管理员可见编辑功能
 
-    // Handlers - 使用 useCart hook
-    const handleAddToCart = async (product: Product, variantName: string, price: number, quantity: number) => {
-        const success = await addToCart({
-          product_id: String(product.id),
-          product_name: product.title,
-          product_image: product.image,
-          variant_name: variantName,
-          price: price,
-          quantity: quantity,
-        });
-        if (success) {
-          setIsCartOpen(true);
-        }
-    };
+## 🏗️ 技术架构
 
-    const handleRemoveFromCart = async (itemId: string) => {
-        await removeFromCart(itemId);
-    };
-    
-    const handleUpdateQuantity = async (index: number, quantity: number) => {
-        const item = cartItems[index];
-        if (item) {
-          await updateQuantity(item.id, quantity);
-        }
-    };
-    
-    // 管理员：删除商品
-    const handleDeleteProduct = async (productId: string) => {
-        if (!confirm('确认删除该商品？删除后将无法恢复。')) return;
-        const success = await deleteProduct(productId);
-        if (success) {
-          alert('商品已删除');
-          fetchProducts();
-        }
-    };
+### 1. 数据库结构
 
-    // Handle login button click
-    const handleLoginClick = () => {
-      setAuthModalWarning(hasGuestCartItems());
-      setShowAuthModal(true);
-    };
+**Collection**: `tags`
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| type | string | `category` (分类) 或 `ip` (IP 标签) |
+| name | string | 标签名称，如"纸制品"、"原神" |
+| order | integer | 排序顺序 |
 
-    // Grid Layout Helper
-    const isBentoLayout = selectedCategory === '全部';
-  
-    const getGridConfig = (index: number) => {
-        if (!isBentoLayout) {
-        return { 
-            span: 'col-span-1', 
-            intensity: 'normal' as const 
-        };
-        }
+### 2. 核心文件
 
-        const pattern = index % 10;
-        if (pattern === 0) return { span: 'md:col-span-2 md:row-span-2', intensity: 'low' as const };
-        if (pattern === 5) return { span: 'md:col-span-2', intensity: 'low' as const };
-        if (pattern === 8) return { span: 'md:row-span-2', intensity: 'normal' as const };
-        return { span: 'col-span-1 row-span-1', intensity: 'normal' as const };
-    };
+```
+hooks/
+  └── useTags.ts           # 标签管理 Hook (CRUD操作)
+components/
+  ├── TagManager.tsx       # 标签管理UI组件
+  ├── Shop.tsx             # 主页面（使用动态分类）
+  └── ProductUploadModal.tsx  # 商品上传（使用动态分类）
+scripts/
+  └── init-tags.ts         # 初始化脚本
+```
 
-    // 购物车数量现在由 useCart hook 提供
-    const totalCartCount = cartCount;
+### 3. 代码变更
 
-    return (
-        <div className="min-h-screen bg-brutal-bg text-gray-900 font-sans selection:bg-brutal-yellow selection:text-black">
-        
-        {/* 游客模式提示横幅 - 仅在游客有购物车时显示 */}
-        {isGuest && (hasGuestCart || hasGuestCartItems()) && (
-          <div className="fixed top-0 left-0 right-0 bg-brutal-yellow border-b-4 border-black px-4 py-2 z-40 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <AlertTriangle size={18} className="text-black" />
-              <span className="font-bold text-sm">
-                ⚠️ 游客模式：购物车数据保存在本地，登录后自动同步
-              </span>
-            </div>
-            <button
-              onClick={handleLoginClick}
-              className="px-4 py-1 text-sm flex items-center gap-2 bg-black text-white font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-            >
-              <LogIn size={16} />
-              登录 / 注册
-            </button>
-          </div>
-        )}
+#### useTags Hook
+```typescript
+// 提供的功能
+- fetchTags()        // 获取所有标签
+- addTag()           // 添加新标签
+- deleteTag()        // 删除标签（自动处理商品归类）
+- getCategoryNames() // 获取分类名称数组
+- getIPNames()       // 获取 IP 名称数组
+```
 
-        {/* Top Navigation Bar */}
-        <header className={`fixed left-0 right-0 h-16 bg-white border-b-4 border-black z-30 flex items-center px-4 justify-between ${!isAuthenticated ? 'top-12' : 'top-0'}`}>
-            <div className="flex items-center gap-4">
-            <AnimatedButton 
-                variant="ghost"
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="p-2"
-                aria-label="Toggle sidebar menu"
-            >
-                <Menu size={20} />
-            </AnimatedButton>
-            <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-brutal-black text-brutal-yellow flex items-center justify-center font-black text-xl border-2 border-black shadow-brutal rounded-xl">寄</div>
-                <h1 className="font-black text-xl hidden sm:block tracking-tight">二次元寄售站</h1>
-            </div>
-            </div>
+#### Shop.tsx
+```typescript
+// 使用动态分类
+const { tags, addTag, deleteTag, getCategoryNames, getIPNames } = useTags();
+const CATEGORIES = getCategoryNames(); // ['全部', ...动态分类，'未分类']
+const IPS = getIPNames();               // ['全部', ...动态 IP, '未分类']
+```
 
-            <div className="hidden md:flex items-center bg-brutal-bg border-2 border-black px-4 py-2 w-96 shadow-brutal rounded-xl">
-            <Search size={18} className="text-gray-400" />
-            <input 
-                type="text" 
-                placeholder="搜索周边商品..." 
-                className="bg-transparent border-none outline-none ml-2 w-full font-medium"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            </div>
+## 🚀 使用指南
 
-            <div className="flex items-center gap-4">
-            
-            {isAuthenticated ? (
-              <>
-                <div className="hidden md:block text-xs font-bold text-right">
-                    <div className="text-gray-500">欢迎回来</div>
-                    <div className="flex items-center gap-1">
-                    {user?.name || user?.email}
-                    </div>
-                </div>
+### 第一步：设置 Appwrite Collection
 
-                <Link to="/profile">
-                  <AnimatedButton 
-                      variant="icon"
-                      className="relative p-3"
-                      title="个人中心"
-                  >
-                      <UserIcon size={20} />
-                  </AnimatedButton>
-                </Link>
+1. 访问 Appwrite Console
+2. 创建 `tags` collection
+3. 添加属性：`type`, `name`, `order`
+4. 设置权限（详见 [TAGS_SETUP.md](./TAGS_SETUP.md)）
 
-                <Link to="/orders">
-                  <AnimatedButton 
-                      variant="icon"
-                      className="relative p-3"
-                      title="我的订单"
-                  >
-                      <Package size={20} />
-                  </AnimatedButton>
-                </Link>
-              </>
-            ) : (
-              <button
-                onClick={handleLoginClick}
-                className="hidden md:flex items-center gap-2 font-bold text-brutal-black hover:text-brutal-blue transition-colors"
-              >
-                <UserIcon size={20} />
-                登录
-              </button>
-            )}
-            </div>
-        </header>
+### 第二步：添加 API Key
 
-        {/* Main Layout */}
-        <div className={`flex h-screen overflow-hidden ${!isAuthenticated ? 'pt-28' : 'pt-16'}`}>
-            
-            {/* Sidebar (IP Selector) */}
+在 `.env.local` 中添加：
+```env
+# 用于服务端脚本（从 Appwrite Console > Settings > API Keys 获取）
+APPWRITE_API_KEY=your_api_key_here
+```
+
+### 第三步：初始化数据
+
+```bash
+npm run init-tags
+```
+
+这将自动创建初始的分类和 IP 标签。
+
+### 第四步：验证功能
+
+1. **访问主页面**: http://localhost:5175
+2. **以管理员身份登录**
+3. **查看分类标签**: 顶部横排按钮（"全部"、"纸制品"等）
+4. **查看 IP 标签**: 左侧边栏（"全部"、"原神"等）
+5. **编辑模式**: 点击"编辑"按钮进入编辑模式
+6. **删除标签**: 点击标签右上角的 ✕ 
+7. **添加标签**: 点击"添加分类"或"添加 IP"按钮
+
+## 🎨 UI/UX 设计
+
+### 普通用户视图
+- 显示所有分类/IP 按钮
+- 可点击筛选商品
+- 无编辑功能
+
+### 管理员视图
+
+#### 分类管理（顶部）
+```
+[全部] [纸制品] [3D打印制品] ... [+添加分类] [✏️编辑]
+```
+
+**编辑模式**:
+```
+[纸制品 ✕] [3D打印制品 ✕] [角色手办定制 ✕] [➕添加分类] [✕完成编辑]
+```
+
+#### IP 管理（侧边栏）
+```
+IP 筛选
+━━━━━━━━━━━━━━━━
+[全部]
+[原神]
+[崩坏：星穹铁道]
+...
+[+添加IP] [✏️编辑]
+```
+
+## ⚙️ 工作流程
+
+### 添加新分类
+1. Admin 点击"添加分类"
+2. 输入新分类名称（如"手办模型"）
+3. 点击"确认"
+4. 系统写入数据库
+5. 列表自动刷新，新分类出现
+
+### 删除分类
+1. Admin 点击"编辑"按钮
+2. 标签右上角出现 ✕ 按钮
+3. 点击 ✕ 
+4. 弹出确认对话框
+5. 确认后：
+   - 查找使用该分类的所有商品
+   - 将这些商品的分类改为"未分类"
+   - 删除该分类标签
+   - 刷新列表
+
+### 商品上传时选择分类
+```typescript
+// ProductUploadModal.tsx
+const { tags } = useTags();
+const CATEGORIES = tags.categories.map(t => t.name);
+const IP_TAGS = tags.ips.map(t => t.name);
+
+// 下拉菜单自动使用最新的分类
+<select name="category">
+  {CATEGORIES.map(cat => <option>{cat}</option>)}
+</select>
+```
+
+## 🔒 权限控制
+
+### 数据库权限
+- **Read**: Any (所有人可读)
+- **Create/Update/Delete**: Team:Admins (仅管理员)
+
+### UI 权限
+```typescript
+// Shop.tsx
+{isAdmin && (
+  <TagManager ... />
+)}
+```
+
+## 🐛 故障排除
+
+### 问题：分类不显示
+**解决方案**:
+1. 检查 tags collection 是否创建
+2. 运行 `npm run init-tags` 初始化数据
+3. 检查浏览器控制台是否有错误
+
+### 问题：权限错误 (403)
+**解决方案**:
+1. 检查 Collection 权限设置
+2. 确认用户是否在 Admin 团队中
+3. 检查 VITE_APPWRITE_ADMIN_TEAM_ID 环境变量
+
+### 问题：删除分类后商品丢失
+**解释**: 商品没有丢失，而是被归类为"未分类"
+**查看**: 点击"未分类"按钮查看这些商品
+
+## 📈 未来扩展
+
+可能的增强功能：
+- [ ] 支持拖拽排序标签
+- [ ] 批量导入/导出标签
+- [ ] 标签使用统计（显示每个分类下的商品数量）
+- [ ] 标签颜色自定义
+- [ ] 标签图标/emoji 支持
+
+## 🎯 数据流程图
+
+```
+┌─────────────┐
+│ Appwrite DB │
+│   (tags)    │
+└──────┬──────┘
+       │
+       ├─ Read ────► useTags Hook ────► Shop.tsx
+       │                                   │
+       │                                   ├─► Category Buttons
+       │                                   └─► IP Sidebar
+       │
+       ├─ Create ──┐
+       │           │
+       └─ Delete ──┴─► Admin Actions ──► TagManager.tsx
+                           │
+                           └─► Update Products (删除时)
+```
+
+## 📝 注意事项
+
+1. **"全部"和"未分类"**: 这两个特殊选项不存在于数据库中，而是代码中硬编码的
+2. **删除操作不可逆**: 删除标签后无法恢复
+3. **初始化会清空数据**: `npm run init-tags` 会删除现有标签
+4. **需要 API Key**: 初始化脚本需要 API Key 才能运行
             <aside 
             className={`bg-white border-r-2 border-black overflow-y-auto transition-all duration-300 ease-in-out flex flex-col ${
-                isSidebarOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full opacity-0'
+                isSidebarOpen ? 'w-80 translate-x-0' : 'w-0 -translate-x-full opacity-0'
             }`}
             >
             <div className="p-6">
                 <h3 className="font-black text-lg mb-4 flex items-center gap-2 uppercase tracking-wider">
                 <Filter size={18} /> IP 筛选
                 </h3>
-                <div className="space-y-2">
-                {IPS.map(ip => (
-                    <SidebarFilterButton
-                    key={ip}
-                    isSelected={selectedIP === ip}
-                    onClick={() => setSelectedIP(ip)}
-                    >
-                    {ip}
-                    </SidebarFilterButton>
-                ))}
-                </div>
+
+                {/* 管理员：IP 标签管理 */}
+                {isAdmin ? (
+                  <TagManager
+                    tags={tags.ips}
+                    type="ip"
+                    typeName="IP"
+                    onAdd={async (name) => await addTag('ip', name)}
+                    onDelete={async (tagId, tagName) => await deleteTag(tagId, 'ip', tagName)}
+                    isEditMode={isEditIPMode}
+                    onToggleEditMode={() => setIsEditIPMode(!isEditIPMode)}
+                    vertical={true}
+                  />
+                ) : (
+                  <div className="space-y-2">
+                    {IPS.map(ip => (
+                      <SidebarFilterButton
+                        key={ip}
+                        isSelected={selectedIP === ip}
+                        onClick={() => setSelectedIP(ip)}
+                      >
+                        {ip}
+                      </SidebarFilterButton>
+                    ))}
+                  </div>
+                )}
             </div>
             
             <div className="mt-auto p-6 border-t-2 border-gray-100">
@@ -245,33 +270,51 @@ const Shop = () => {
             <main className="flex-1 overflow-y-auto bg-[#f3f3f3] p-4 md:p-8 relative">
             
             {/* Category Tabs (Like Browser Tabs) */}
-            <div className="mb-8 overflow-x-auto pb-2">
-                <div className="flex gap-2 min-w-max items-center">
-                {CATEGORIES.map(cat => (
-                    <AnimatedButton
-                    key={cat}
-                    variant={selectedCategory === cat ? 'primary' : 'outline'}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-6 py-2 rounded-full whitespace-nowrap ${
-                        selectedCategory === cat
-                        ? ''
-                        : 'text-gray-500 hover:text-black'
-                    }`}
-                    >
-                    {cat}
-                    </AnimatedButton>
-                ))}
-                
-                {/* 管理员：发布新商品按钮 */}
-                {isAdmin && (
-                  <button
-                    onClick={() => setShowProductUploadModal(true)}
-                    className="ml-auto px-4 py-2 rounded-full flex items-center gap-2 bg-brutal-black text-brutal-yellow font-black border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-                  >
-                    <Plus size={18} />
-                    发布新商品
-                  </button>
-                )}
+            <div className="mb-8">
+                {/* 管理员：分类标签管理 */}
+                {isAdmin ? (
+                  <div className="mb-4">
+                    <TagManager
+                      tags={tags.categories}
+                      type="category"
+                      typeName="分类"
+                      onAdd={async (name) => await addTag('category', name)}
+                      onDelete={async (tagId, tagName) => await deleteTag(tagId, 'category', tagName)}
+                      isEditMode={isEditCategoryMode}
+                      onToggleEditMode={() => setIsEditCategoryMode(!isEditCategoryMode)}
+                    />
+                  </div>
+                ) : null}
+
+                {/* 分类按钮 */}
+                <div className="overflow-x-auto pb-2">
+                  <div className="flex gap-2 min-w-max items-center">
+                    {CATEGORIES.map(cat => (
+                      <AnimatedButton
+                        key={cat}
+                        variant={selectedCategory === cat ? 'primary' : 'outline'}
+                        onClick={() => setSelectedCategory(cat)}
+                        className={`px-6 py-2 rounded-full whitespace-nowrap ${
+                          selectedCategory === cat
+                            ? ''
+                            : 'text-gray-500 hover:text-black'
+                        }`}
+                      >
+                        {cat}
+                      </AnimatedButton>
+                    ))}
+                    
+                    {/* 管理员：发布新商品按钮 */}
+                    {isAdmin && (
+                      <button
+                        onClick={() => setShowProductUploadModal(true)}
+                        className="ml-auto px-4 py-2 rounded-full flex items-center gap-2 bg-brutal-black text-brutal-yellow font-black border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                      >
+                        <Plus size={18} />
+                        发布新商品
+                      </button>
+                    )}
+                  </div>
                 </div>
             </div>
 
@@ -444,47 +487,3 @@ const Shop = () => {
 };
 
 export default Shop;
-                    className="w-full px-4 py-3 border-4 border-black rounded-xl font-bold focus:outline-none focus:bg-yellow-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    placeholder="0"
-                  />
-                  {errors.stock && (
-                    <p className="mt-2 text-red-600 font-bold">{errors.stock.message}</p>
-                  )}
-                </div>
-              </div>
-            </form>
-
-            {/* Footer - 固定在底部 */}
-            <div className="border-t-4 border-black bg-white p-6 shrink-0">
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  onClick={handleSubmit(onSubmit)}
-                  disabled={submitting || uploadingImage}
-                  className="flex-1 px-6 py-4 bg-yellow-400 text-black font-black text-lg border-4 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                >
-                  {submitting ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Loader className="animate-spin" size={20} />
-                      {editMode ? '更新中...' : '发布中...'}
-                    </span>
-                  ) : (
-                    editMode ? '✅ 更新商品' : '🚀 立即发布'
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  disabled={submitting}
-                  className="px-6 py-4 bg-white text-black font-black text-lg border-4 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  取消
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  );
-}

@@ -13,6 +13,8 @@ interface TagManagerProps {
   isEditMode: boolean;
   onToggleEditMode: () => void;
   vertical?: boolean; // 垂直布局模式（用于侧边栏）
+  selectedTag?: string; // 当前选中的标签名称
+  onSelectTag?: (tagName: string) => void; // 点击标签时的回调
 }
 
 /**
@@ -28,6 +30,8 @@ export default function TagManager({
   isEditMode,
   vertical = false,
   onToggleEditMode,
+  selectedTag,
+  onSelectTag,
 }: TagManagerProps) {
   const [showAddInput, setShowAddInput] = useState(false);
   const [newTagName, setNewTagName] = useState('');
@@ -69,9 +73,18 @@ export default function TagManager({
       <div className={vertical ? "flex flex-col gap-2" : "flex flex-wrap gap-2 items-center"}>
         {tags.map((tag) => (
           <div key={tag.$id} className="relative group">
-            <div className={`px-4 py-2 rounded-full border-2 border-black bg-white font-bold text-sm ${vertical ? 'w-full text-center' : ''}`}>
+            <button
+              onClick={() => !isEditMode && onSelectTag && onSelectTag(tag.name)}
+              disabled={isEditMode}
+              className={`px-4 py-2 rounded-full border-2 border-black font-bold text-sm transition-all ${vertical ? 'w-full text-center' : ''} ${
+                selectedTag === tag.name
+                  ? 'bg-brutal-black text-brutal-yellow shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
+                  : 'bg-white hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px]'
+              } ${isEditMode ? 'cursor-default' : 'cursor-pointer'}`}
+              title={!isEditMode ? `筛选 ${tag.name}` : ''}
+            >
               {tag.name}
-            </div>
+            </button>
             
             {/* 删除按钮 (仅编辑模式显示) */}
             {isEditMode && (

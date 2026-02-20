@@ -27,6 +27,8 @@ export const COLLECTIONS = {
   ADDRESSES: import.meta.env.VITE_APPWRITE_ADDRESSES_COLLECTION_ID,
   CART_ITEMS: import.meta.env.VITE_APPWRITE_CART_ITEMS_COLLECTION_ID,
   TAGS: import.meta.env.VITE_APPWRITE_TAGS_COLLECTION_ID,
+  CATEGORIES: 'categories',  // 分类表
+  IP_TAGS: 'ip_tags',        // IP标签表
 };
 
 // Storage Bucket ID

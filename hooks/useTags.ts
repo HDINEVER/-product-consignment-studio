@@ -5,9 +5,7 @@ export type TagType = 'category' | 'ip';
 
 export interface Tag {
   $id: string;
-  type: TagType;
   name: string;
-  order: number;
 }
 
 export interface TagsData {
@@ -18,6 +16,7 @@ export interface TagsData {
 /**
  * useTags Hook
  * 管理商品分类和IP标签的动态读取、添加、删除
+ * 适配两个独立的表: categories 和 ip_tags
  */
 export const useTags = () => {
   const [tags, setTags] = useState<TagsData>({ categories: [], ips: [] });
@@ -25,42 +24,31 @@ export const useTags = () => {
   const [error, setError] = useState<string>('');
 
   /**
-   * 从数据库获取所有标签
+   * 从两个独立的表获取所有标签
    */
   const fetchTags = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
       
-      const response = await databases.listDocuments(
-        DATABASE_ID,
-        COLLECTIONS.TAGS,
-        [Query.limit(100)]
-      );
+      // 并发查询两个表
+      const [categoriesResponse, ipsResponse] = await Promise.all([
+        databases.listDocuments(DATABASE_ID, COLLECTIONS.CATEGORIES, [Query.limit(100)]),
+        databases.listDocuments(DATABASE_ID, COLLECTIONS.IP_TAGS, [Query.limit(100)]),
+      ]);
 
-      const categories: Tag[] = [];
-      const ips: Tag[] = [];
+      const categories: Tag[] = categoriesResponse.documents.map((doc: any) => ({
+        $id: doc.$id,
+        name: doc.name,
+      }));
 
-      response.documents.forEach((doc: any) => {
-        const tag: Tag = {
-          $id: doc.$id,
-          type: doc.type,
-          name: doc.name,
-          order: doc.order || 0,
-        };
-
-        if (tag.type === 'category') {
-          categories.push(tag);
-        } else if (tag.type === 'ip') {
-          ips.push(tag);
-        }
-      });
-
-      // 按 order 排序
-      categories.sort((a, b) => a.order - b.order);
-      ips.sort((a, b) => a.order - b.order);
+      const ips: Tag[] = ipsResponse.documents.map((doc: any) => ({
+        $id: doc.$id,
+        name: doc.name,
+      }));
 
       setTags({ categories, ips });
+      console.log(`✅ 加载标签: ${categories.length} 个分类, ${ips.length} 个IP`);
     } catch (err: any) {
       console.error('❌ 获取标签失败:', err);
       setError(err.message || '获取标签失败');
@@ -70,7 +58,7 @@ export const useTags = () => {
   }, []);
 
   /**
-   * 添加新标签
+   * 添加新标签到对应的表
    */
   const addTag = async (type: TagType, name: string): Promise<boolean> => {
     try {
@@ -86,23 +74,18 @@ export const useTags = () => {
         return false;
       }
 
-      // 获取当前最大order值
-      const currentTags = type === 'category' ? tags.categories : tags.ips;
-      const maxOrder = currentTags.length > 0 
-        ? Math.max(...currentTags.map(t => t.order)) 
-        : 0;
+      // 选择正确的集合
+      const collectionId = type === 'category' ? COLLECTIONS.CATEGORIES : COLLECTIONS.IP_TAGS;
 
       // 创建新标签
       await databases.createDocument(
         DATABASE_ID,
-        COLLECTIONS.TAGS,
+        collectionId,
         ID.unique(),
-        {
-          type,
-          name,
-          order: maxOrder + 1,
-        }
+        { name }
       );
+
+      console.log(`✅ 添加${type === 'category' ? '分类' : 'IP'}: ${name}`);
 
       // 刷新标签列表
       await fetchTags();
@@ -116,39 +99,48 @@ export const useTags = () => {
 
   /**
    * 删除标签
-   * 同时将使用该标签的商品归类为"未分类"
+   * 同时将使用该标签的商品的外键清空
    */
   const deleteTag = async (tagId: string, type: TagType, tagName: string): Promise<boolean> => {
     try {
       setError('');
 
-      // 1. 查找使用该标签的商品
-      const field = type === 'category' ? 'category' : 'ip';
+      // 1. 查找使用该标签的商品（通过外键 ID）
+      const field = type === 'category' ? 'categoryId' : 'ip_id';
       const productsResponse = await databases.listDocuments(
         DATABASE_ID,
         COLLECTIONS.PRODUCTS,
-        [Query.equal(field, tagName), Query.limit(1000)]
+        [Query.equal(field, tagId), Query.limit(1000)]
       );
 
-      // 2. 将这些商品更新为"未分类"
-      const updatePromises = productsResponse.documents.map(product =>
-        databases.updateDocument(
-          DATABASE_ID,
-          COLLECTIONS.PRODUCTS,
-          product.$id,
-          { [field]: '未分类' }
-        )
-      );
+      if (productsResponse.documents.length > 0) {
+        const confirmDelete = window.confirm(
+          `有 ${productsResponse.documents.length} 个商品使用了"${tagName}"标签。\n删除后这些商品的${type === 'category' ? '分类' : 'IP'}将被清空。\n确定要删除吗？`
+        );
+        
+        if (!confirmDelete) {
+          return false;
+        }
 
-      await Promise.all(updatePromises);
-      console.log(`✅ 已将 ${productsResponse.documents.length} 个商品归类为"未分类"`);
+        // 2. 清空这些商品的外键
+        const updatePromises = productsResponse.documents.map(product =>
+          databases.updateDocument(
+            DATABASE_ID,
+            COLLECTIONS.PRODUCTS,
+            product.$id,
+            { [field]: '' }
+          )
+        );
 
-      // 3. 删除标签
-      await databases.deleteDocument(
-        DATABASE_ID,
-        COLLECTIONS.TAGS,
-        tagId
-      );
+        await Promise.all(updatePromises);
+        console.log(`✅ 已清空 ${productsResponse.documents.length} 个商品的${type === 'category' ? '分类' : 'IP'}引用`);
+      }
+
+      // 3. 删除标签文档
+      const collectionId = type === 'category' ? COLLECTIONS.CATEGORIES : COLLECTIONS.IP_TAGS;
+      await databases.deleteDocument(DATABASE_ID, collectionId, tagId);
+
+      console.log(`✅ 已删除${type === 'category' ? '分类' : 'IP'}: ${tagName}`);
 
       // 4. 刷新标签列表
       await fetchTags();
@@ -159,6 +151,20 @@ export const useTags = () => {
       return false;
     }
   };
+
+  /**
+   * 根据名称获取标签ID（用于查询商品）
+   */
+  const getTagIdByName = useCallback((type: TagType, name: string): string | null => {
+    const tagList = type === 'category' ? tags.categories : tags.ips;
+    const tag = tagList.find(t => t.name === name);
+    console.log(`🔍 getTagIdByName(${type}, "${name}"):`, {
+      tagList: tagList.map(t => t.name),
+      found: tag,
+      result: tag?.$id || null
+    });
+    return tag?.$id || null;
+  }, [tags]);
 
   /**
    * 获取分类名称数组（用于兼容现有UI）
@@ -186,6 +192,7 @@ export const useTags = () => {
     fetchTags,
     addTag,
     deleteTag,
+    getTagIdByName,  // 新增：根据名称查找ID
     getCategoryNames,
     getIPNames,
   };
