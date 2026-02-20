@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Menu, Search, ShoppingCart, LayoutGrid, Filter, Package, User as UserIcon, AlertTriangle, LogIn, Plus, Edit, Trash2 } from 'lucide-react';
+import { Menu, LayoutGrid, Filter, Package, User as UserIcon, AlertTriangle, Plus, Edit, Trash2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Product, CartItem } from '../types';
 import AtroposCard from './AtroposCard';
@@ -112,6 +112,10 @@ const Shop = () => {
         });
         if (success) {
           setIsCartOpen(true);
+          // 游客模式下显示提示
+          if (isGuest) {
+            showGuestToast('购物车数据保存在本地，登录后可同步到云端');
+          }
         }
     };
 
@@ -187,48 +191,39 @@ const Shop = () => {
     // 购物车数量现在由 useCart hook 提供
     const totalCartCount = cartCount;
 
+    // 游客加入购物车提示弹窗状态
+    const [showGuestCartToast, setShowGuestCartToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
+
+    // 显示游客购物车提示
+    const showGuestToast = (message: string) => {
+      setToastMessage(message);
+      setShowGuestCartToast(true);
+      setTimeout(() => setShowGuestCartToast(false), 4000);
+    };
+
     return (
         <div className="min-h-screen bg-brutal-bg text-gray-900 font-sans selection:bg-brutal-yellow selection:text-black">
-        
-        {/* 游客模式提示横幅 - 仅在游客有购物车时显示 */}
-        {isGuest && (hasGuestCart || hasGuestCartItems()) && (
-          <div className="fixed top-0 left-0 right-0 bg-brutal-yellow border-b-4 border-black px-2 sm:px-4 py-2 z-40 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0">
-              <AlertTriangle size={16} className="text-black shrink-0" />
-              <span className="font-bold text-xs sm:text-sm truncate">
-                <span className="hidden sm:inline">⚠️ 游客模式：</span>购物车数据保存在本地
-              </span>
-            </div>
-            <button
-              onClick={handleLoginClick}
-              className="px-2 sm:px-4 py-1 text-xs sm:text-sm flex items-center gap-1 sm:gap-2 bg-black text-white font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all shrink-0"
-            >
-              <LogIn size={14} className="sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">登录 / 注册</span>
-              <span className="sm:hidden">登录</span>
-            </button>
-          </div>
-        )}
 
         {/* Top Navigation Bar */}
-        <header className={`fixed left-0 right-0 h-14 sm:h-16 bg-white border-b-2 border-black z-30 flex items-center px-2 sm:px-4 justify-between ${!isAuthenticated ? 'top-10 sm:top-12' : 'top-0'}`}>
-            <div className="flex items-center gap-2 sm:gap-4">
+        <header className="fixed left-0 right-0 top-0 h-16 sm:h-[72px] lg:h-20 bg-white border-b border-gray-200 z-30 flex items-center px-3 sm:px-5 lg:px-6 justify-between">
+            <div className="flex items-center gap-3 sm:gap-4">
             <AnimatedButton 
                 variant="ghost"
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="p-1.5 sm:p-2"
+                className="p-2 sm:p-2.5"
                 aria-label="Toggle sidebar menu"
             >
-                <Menu size={18} className="sm:w-5 sm:h-5" />
+                <Menu size={20} className="sm:w-6 sm:h-6" />
             </AnimatedButton>
-            <div className="flex items-center gap-2">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-brutal-black text-brutal-yellow flex items-center justify-center font-black text-lg sm:text-xl border-2 border-black shadow-brutal rounded-lg sm:rounded-xl">寄</div>
-                <h1 className="font-black text-base sm:text-xl hidden md:block tracking-tight">二次元寄售站</h1>
+            <div className="flex items-center gap-3">
+                <img src="/assets/logo.webp" alt="工作室Logo" className="w-9 h-9 sm:w-11 sm:h-11 border-2 border-black shadow-brutal rounded-xl object-cover" />
+                <h1 className="font-black text-lg sm:text-xl hidden md:block tracking-tight">二次元寄售站</h1>
             </div>
             </div>
 
             {/* 搜索栏 + 筛选器 - 响应式 */}
-            <div className="flex-1 flex items-center gap-2 max-w-xs sm:max-w-md lg:max-w-2xl mx-2 sm:mx-4">
+            <div className="flex-1 flex items-center gap-3 max-w-sm sm:max-w-lg lg:max-w-2xl mx-3 sm:mx-6">
               <SearchBar
                 value={searchQuery}
                 onChange={setSearchQuery}
@@ -247,7 +242,7 @@ const Shop = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
             
             {isAuthenticated ? (
               <>
@@ -291,7 +286,7 @@ const Shop = () => {
         </header>
 
         {/* Main Layout */}
-        <div className={`flex h-screen overflow-hidden ${!isAuthenticated ? 'pt-24 sm:pt-28' : 'pt-14 sm:pt-16'}`}>
+        <div className="flex h-screen overflow-hidden pt-16 sm:pt-[72px] lg:pt-20">
             
             {/* Sidebar Overlay - 手机端点击关闭 */}
             {isSidebarOpen && (
@@ -511,6 +506,26 @@ const Shop = () => {
           onClose={() => setSelectedProduct(null)}
           product={selectedProduct}
         />
+
+        {/* 游客购物车底部弹窗提示 */}
+        <div 
+          className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ease-out ${
+            showGuestCartToast 
+              ? 'translate-y-0 opacity-100' 
+              : 'translate-y-full opacity-0 pointer-events-none'
+          }`}
+        >
+          <div className="flex items-center gap-3 px-5 py-3 bg-white border-3 border-black rounded-xl shadow-brutal">
+            <AlertTriangle size={18} className="text-brutal-orange shrink-0" />
+            <span className="text-sm font-bold text-gray-800">{toastMessage}</span>
+            <button
+              onClick={handleLoginClick}
+              className="ml-2 px-3 py-1 text-xs font-black bg-brutal-yellow border-2 border-black rounded-lg hover:bg-brutal-orange transition-colors"
+            >
+              登录
+            </button>
+          </div>
+        </div>
 
         </div>
     );

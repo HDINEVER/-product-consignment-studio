@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mail, Lock, User, AlertTriangle, ShoppingCart, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { hasGuestCartItems, getGuestCartCount } from '../utils/guestCart';
+import { Input } from './ui/input';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -85,18 +86,20 @@ const AuthModal: React.FC<AuthModalProps> = ({
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             onClick={(e) => e.target === e.currentTarget && onClose()}
           >
-            <div className="w-full max-w-md bg-white border-4 border-black shadow-brutal-lg rounded-2xl overflow-hidden">
+            <div className="w-full max-w-md bg-white border-3 border-black shadow-brutal-lg rounded-2xl overflow-hidden">
             {/* 标题栏 - 明日方舟风格 */}
-            <div className="bg-brutal-black text-white px-6 py-4 flex items-center justify-between">
+            <div className="bg-brutal-black text-white px-6 py-5 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-2 h-8 bg-brutal-yellow" />
+                <div className="w-1.5 h-7 bg-brutal-yellow rounded-full" />
                 <h2 className="text-xl font-bold tracking-wide">
                   {mode === 'login' ? '用户登录' : '新用户注册'}
                 </h2>
               </div>
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-white/20 transition-colors"
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                title="关闭"
+                aria-label="关闭登录窗口"
               >
                 <X size={20} />
               </button>
@@ -126,85 +129,93 @@ const AuthModal: React.FC<AuthModalProps> = ({
             )}
 
             {/* 表单内容 */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+            <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
               {/* 错误提示 */}
               {error && (
                 <motion.div
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center gap-3 bg-red-100 border-2 border-red-500 p-3 rounded-xl"
+                  className="flex items-center gap-3 bg-red-50 border-2 border-red-400 p-4 rounded-xl"
                 >
-                  <AlertTriangle className="text-red-500 flex-shrink-0" size={20} />
-                  <p className="text-red-700 text-sm font-medium">{error}</p>
+                  <AlertTriangle className="text-red-500 shrink-0" size={20} />
+                  <p className="text-red-600 text-sm font-medium">{error}</p>
                 </motion.div>
               )}
 
               {/* 注册模式：姓名输入 */}
               {mode === 'register' && (
-                <div className="space-y-2">
-                  <label className="block text-sm font-bold text-black uppercase tracking-wide">
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-2"
+                >
+                  <label className="block text-sm font-bold text-black tracking-wide">
                     姓名
                   </label>
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="您的姓名"
-                      className="input-brutal pl-12"
-                      required
-                    />
-                  </div>
-                </div>
+                  <Input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="您的姓名"
+                    icon={<User size={20} />}
+                    required
+                  />
+                </motion.div>
               )}
 
               {/* 邮箱输入 */}
-              <div className="space-y-2">
-                <label className="block text-sm font-bold text-black uppercase tracking-wide">
+              <motion.div 
+                className="space-y-2"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <label className="block text-sm font-bold text-black tracking-wide">
                   邮箱地址
                 </label>
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    className="input-brutal pl-12"
-                    required
-                  />
-                </div>
-              </div>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  icon={<Mail size={20} />}
+                  required
+                />
+              </motion.div>
 
               {/* 密码输入 */}
-              <div className="space-y-2">
-                <label className="block text-sm font-bold text-black uppercase tracking-wide">
+              <motion.div 
+                className="space-y-2"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <label className="block text-sm font-bold text-black tracking-wide">
                   密码
                 </label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="input-brutal pl-12"
-                    required
-                    minLength={8}
-                  />
-                </div>
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  icon={<Lock size={20} />}
+                  required
+                  minLength={8}
+                />
                 {mode === 'register' && (
-                  <p className="text-xs text-gray-500">密码至少 8 位字符</p>
+                  <p className="text-xs text-gray-500 mt-1">密码至少 8 位字符</p>
                 )}
-              </div>
+              </motion.div>
 
               {/* 提交按钮 */}
-              <button
+              <motion.button
                 type="submit"
                 disabled={loading}
-                className="btn-brutal w-full bg-brutal-yellow text-black py-4 text-lg font-bold
-                         disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="btn-brutal w-full bg-brutal-yellow text-black py-4 text-lg font-bold rounded-xl
+                         disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2
+                         hover:bg-yellow-400 active:translate-y-1 active:shadow-brutal-sm transition-all duration-200"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
                 {loading ? (
                   <>
@@ -216,24 +227,27 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 ) : (
                   '创建账户'
                 )}
-              </button>
+              </motion.button>
 
               {/* 分割线 */}
-              <div className="relative">
+              <div className="relative py-2">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t-2 border-gray-300" />
+                  <div className="w-full border-t-2 border-gray-200" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-gray-500 font-medium">或者</span>
+                  <span className="px-4 bg-white text-gray-400 font-medium">或者</span>
                 </div>
               </div>
 
               {/* Google 登录按钮 */}
-              <button
+              <motion.button
                 type="button"
                 onClick={handleGoogleLogin}
-                className="btn-brutal w-full bg-white text-black py-3 font-bold
-                         flex items-center justify-center gap-3 hover:bg-gray-50"
+                className="btn-brutal w-full bg-white text-black py-3.5 font-bold rounded-xl
+                         flex items-center justify-center gap-3 hover:bg-gray-50 
+                         border-2 border-gray-200 hover:border-gray-300 transition-all duration-200"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
                 {/* Google Logo SVG */}
                 <svg width="20" height="20" viewBox="0 0 24 24">
@@ -255,17 +269,18 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   />
                 </svg>
                 使用 Google 账号登录
-              </button>
+              </motion.button>
 
               {/* 切换模式 */}
-              <div className="text-center pt-2">
-                <p className="text-gray-600">
+              <div className="text-center pt-4">
+                <p className="text-gray-500">
                   {mode === 'login' ? '还没有账号？' : '已有账号？'}
                   <button
                     type="button"
                     onClick={switchMode}
-                    className="ml-2 font-bold text-brutal-black underline decoration-4 
-                             decoration-brutal-yellow hover:bg-brutal-yellow transition-colors px-1"
+                    className="ml-2 font-bold text-brutal-black underline decoration-2 
+                             decoration-brutal-yellow underline-offset-2 hover:bg-brutal-yellow/20 
+                             transition-colors px-1.5 py-0.5 rounded"
                   >
                     {mode === 'login' ? '立即注册' : '返回登录'}
                   </button>
@@ -274,12 +289,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
             </form>
 
             {/* 底部装饰 - 明日方舟风格条纹 */}
-            <div className="h-2 bg-brutal-black flex rounded-b-xl overflow-hidden">
-              <div className="w-1/4 bg-brutal-yellow" />
-              <div className="w-1/4 bg-brutal-black" />
-              <div className="w-1/4 bg-brutal-blue" />
-              <div className="w-1/4 bg-brutal-black" />
-            </div>
+            <div className="h-1.5 bg-gradient-to-r from-brutal-yellow via-brutal-cyan to-brutal-pink" />
             </div>
           </motion.div>
         </>

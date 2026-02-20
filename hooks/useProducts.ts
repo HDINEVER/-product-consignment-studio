@@ -78,9 +78,11 @@ export function useProducts() {
         queries.push(Query.equal('categoryId', ''));
       }
       
-      // 搜索（需要在Appwrite创建全文索引）
-      if (filters?.search) {
-        queries.push(Query.search('name', filters.search));
+      // 搜索 - 使用 index_search 全文索引
+      // 索引覆盖: name, description, categoryId, slug, ip_id
+      // Appwrite 会自动在所有索引字段中搜索
+      if (filters?.search && filters.search.trim()) {
+        queries.push(Query.search('name', filters.search.trim()));
       }
       
       // 价格范围筛选
