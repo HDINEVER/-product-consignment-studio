@@ -13,7 +13,7 @@ interface Product {
   status: string;
   is_featured: boolean;
   created_at: string;
-  image_url?: string;
+  imageUrl?: string;
   price?: number;
   stock?: number;
 }

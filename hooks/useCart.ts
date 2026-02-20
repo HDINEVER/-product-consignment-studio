@@ -79,7 +79,7 @@ export function useCart() {
                 cartDoc.product_id
               );
               productName = product.name as string;
-              productImage = (product.image_url as string) || '/placeholder-product.jpg';
+              productImage = (product.imageUrl as string) || '/placeholder-product.jpg';
               price = product.price as number;
             } catch {
               // 商品可能已被删除

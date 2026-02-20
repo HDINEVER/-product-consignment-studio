@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   LogOut, Package, ShoppingCart, Users, DollarSign, 
-  TrendingUp, AlertCircle, Clock, CheckCircle 
+  TrendingUp, AlertCircle, Clock, CheckCircle, LayoutDashboard 
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { adminAPI, productAPI } from '../utils/api';
@@ -27,7 +27,11 @@ interface RecentOrder {
   created_at: string;
 }
 
-const AdminDashboard: React.FC = () => {
+interface AdminDashboardProps {
+  onSwitchToShadcn?: () => void;
+}
+
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ onSwitchToShadcn }) => {
   const { user, isAdmin, loading: authLoading, logout } = useAuth();
   const navigate = useNavigate();
   
@@ -47,8 +51,18 @@ const AdminDashboard: React.FC = () => {
       
       // 获取仪表板统计
       const dashboardResponse = await adminAPI.getDashboard();
-      setStats(dashboardResponse.data.stats);
-      setRecentOrders(dashboardResponse.data.recent_orders || []);
+      const apiStats = dashboardResponse.data.stats as any;
+      
+      // 将 API 返回的 camelCase 转换为我们的接口格式
+      setStats({
+        total_products: apiStats.totalProducts || 0,
+        total_orders: apiStats.totalOrders || 0,
+        total_users: apiStats.totalUsers || 0,
+        total_revenue: apiStats.totalRevenue || 0,
+        pending_orders: apiStats.pendingOrders || 0,
+        low_stock_products: apiStats.lowStockProducts || 0,
+      });
+      setRecentOrders((dashboardResponse.data.recentOrders || []) as unknown as RecentOrder[]);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {
@@ -98,6 +112,17 @@ const AdminDashboard: React.FC = () => {
             </div>
             
             <div className="flex items-center gap-4">
+              {onSwitchToShadcn && (
+                <AnimatedButton 
+                  onClick={onSwitchToShadcn}
+                  variant="outline" 
+                  className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white border-none"
+                >
+                  <LayoutDashboard size={18} />
+                  切换到 Shadcn 界面
+                </AnimatedButton>
+              )}
+              
               <Link to="/">
                 <AnimatedButton variant="outline" className="flex items-center gap-2">
                   <Package size={18} />

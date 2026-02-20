@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { verifyConnection } from './lib/appwrite';
 import Shop from './components/Shop';
-import AdminDashboard from './components/AdminDashboard';
+import AdminDashboardContainer from './components/AdminDashboardContainer';
 import AdminOrders from './components/AdminOrders';
 import AdminProducts from './components/AdminProducts';
 import AdminUsers from './components/AdminUsers';
@@ -37,7 +37,7 @@ function App() {
           <Route path="/profile/addresses" element={<AddressList />} />
           
           {/* Admin Routes */}
-          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin" element={<AdminDashboardContainer />} />
           <Route path="/admin/orders" element={<AdminOrders />} />
           <Route path="/admin/orders/:id" element={<AdminOrders />} />
           <Route path="/admin/products" element={<AdminProducts />} />

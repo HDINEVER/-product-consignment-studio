@@ -25,7 +25,17 @@ const Shop = () => {
     const navigate = useNavigate();
     
     // 使用重构后的 hooks
-    const { products, loading: productsLoading, error: productsError, fetchProducts, deleteProduct, updateProduct } = useProducts();
+    const { 
+      products, 
+      loading: productsLoading, 
+      error: productsError, 
+      total,
+      hasMore,
+      fetchProducts, 
+      loadMore,
+      deleteProduct, 
+      updateProduct 
+    } = useProducts();
     const { cartItems, cartCount, addToCart, removeFromCart, updateQuantity, loading: cartLoading } = useCart();
     const { user, isAuthenticated, isGuest, isAdmin, hasGuestCart } = useAuth();
     const { tags, loading: tagsLoading, addTag, deleteTag, getCategoryNames, getIPNames, getTagIdByName } = useTags();
@@ -58,6 +68,9 @@ const Shop = () => {
     const [isEditCategoryMode, setIsEditCategoryMode] = useState(false);
     const [isEditIPMode, setIsEditIPMode] = useState(false);
     const [editingTag, setEditingTag] = useState<{ productId: string, type: 'category' | 'ip' } | null>(null);
+
+    // 当前筛选条件（用于加载更多时传递）
+    const [currentFilters, setCurrentFilters] = useState<ProductFilters>({});
 
     // 当筛选条件变化时重新获取商品
     useEffect(() => {
@@ -96,6 +109,9 @@ const Shop = () => {
         filters.maxPrice = priceRange[1];
       }
       
+      // 保存当前筛选条件（用于加载更多）
+      setCurrentFilters(filters);
+      
       console.log('📊 执行筛选，filters:', filters);
       fetchProducts(filters);
     }, [selectedCategory, selectedIP, searchQuery, priceRange, fetchProducts, getTagIdByName]);
@@ -132,12 +148,17 @@ const Shop = () => {
     
     // 管理员: 删除商品
     const handleDeleteProduct = async (productId: string) => {
-        if (!confirm('确认删除该商品?删除后将无法恢复。')) return;
+        if (!confirm('确认下架该商品?商品将对用户不可见，但历史订单仍可查询。')) return;
         const success = await deleteProduct(productId);
         if (success) {
-          alert('商品已删除');
-          fetchProducts();
+          alert('商品已下架');
+          fetchProducts(currentFilters);
         }
+    };
+
+    // 加载更多商品
+    const handleLoadMore = () => {
+      loadMore(currentFilters);
     };
 
     // 更新商品标签
@@ -454,6 +475,27 @@ const Shop = () => {
                     : isAdmin ? '点击右上角 ➕ 发布第一个商品' : '敬请期待...'
                 }
               />
+            )}
+
+            {/* 🔥 技巧B: 加载更多按钮 */}
+            {!productsLoading && !productsError && products.length > 0 && (
+              <div className="flex flex-col items-center mt-8 mb-4 gap-3">
+                <p className="text-sm text-gray-500 font-medium">
+                  已加载 {products.length} / {total} 个商品
+                </p>
+                {hasMore ? (
+                  <AnimatedButton
+                    variant="outline"
+                    onClick={handleLoadMore}
+                    disabled={productsLoading}
+                    className="min-w-[160px]"
+                  >
+                    {productsLoading ? '加载中...' : '加载更多'}
+                  </AnimatedButton>
+                ) : (
+                  <p className="text-sm text-gray-400">已加载全部商品 🎉</p>
+                )}
+              </div>
             )}
             </main>
 

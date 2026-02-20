@@ -133,7 +133,7 @@ export default function ProductUploadModal({
         category: data.category,
         price: Number(data.price),
         stock_quantity: Number(data.stock),  // stock -> stock_quantity
-        image_url: uploadedImages[0],  // 使用第一张图片作为主图
+        imageUrl: uploadedImages[0],  // 使用第一张图片作为主图
         condition: 'new',  // 默认新品
         seller_id: user.$id,  // 卖家 ID
         seller_name: user.name || user.email,  // 卖家名称
