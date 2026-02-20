@@ -104,45 +104,51 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onSwitchToShadcn }) => 
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
       {/* Header */}
       <header className="bg-white border-b-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 md:py-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
             <div>
-              <h1 className="text-3xl font-black">管理后台</h1>
-              <p className="text-sm text-gray-600 mt-1">欢迎回来，{user.name || user.email}</p>
+              <h1 className="text-2xl md:text-3xl font-black">管理后台</h1>
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">欢迎回来，{user.name || user.email}</p>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-2 md:gap-3 w-full sm:w-auto">
               {onSwitchToShadcn && (
                 <AnimatedButton 
                   onClick={onSwitchToShadcn}
                   variant="outline" 
-                  className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white border-none"
+                  className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 md:px-5 py-2 md:py-2.5 flex-1 sm:flex-none sm:min-w-[140px] md:min-w-[180px] bg-gradient-to-r from-purple-500 to-blue-500 text-white border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all font-bold text-xs sm:text-sm"
                 >
-                  <LayoutDashboard size={18} />
-                  切换到 Shadcn 界面
+                  <LayoutDashboard className="w-4 h-4 md:w-5 md:h-5" />
+                  <span className="hidden sm:inline">切换界面</span>
+                  <span className="sm:hidden">切换</span>
                 </AnimatedButton>
               )}
               
-              <Link to="/">
-                <AnimatedButton variant="outline" className="flex items-center gap-2">
-                  <Package size={18} />
-                  返回前台
+              <Link to="/" className="flex-1 sm:flex-none">
+                <AnimatedButton 
+                  variant="outline" 
+                  className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 md:px-5 py-2 md:py-2.5 w-full sm:w-auto sm:min-w-[100px] md:min-w-[120px] border-3 border-black font-bold text-xs sm:text-sm"
+                >
+                  <Package className="w-4 h-4 md:w-5 md:h-5" />
+                  <span className="hidden sm:inline">返回前台</span>
+                  <span className="sm:hidden">前台</span>
                 </AnimatedButton>
               </Link>
               
               <AnimatedButton 
                 onClick={handleLogout}
-                className="bg-red-500 text-white flex items-center gap-2"
+                className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 md:px-5 py-2 md:py-2.5 flex-1 sm:flex-none sm:min-w-[100px] md:min-w-[120px] bg-red-500 text-white border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(220,38,38,1)] transition-all font-bold text-xs sm:text-sm"
               >
-                <LogOut size={18} />
-                退出登录
+                <LogOut className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="hidden sm:inline">退出登录</span>
+                <span className="sm:hidden">退出</span>
               </AnimatedButton>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         {loading ? (
           <div className="text-center py-20">
             <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-black mx-auto mb-4"></div>
@@ -151,62 +157,62 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onSwitchToShadcn }) => 
         ) : (
           <>
             {/* 统计卡片 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-8">
               {/* 总商品数 */}
-              <div className="bg-white border-4 border-black rounded-2xl p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-blue-100 border-3 border-black rounded-xl">
-                    <Package size={24} />
+              <div className="bg-white border-4 border-black rounded-2xl p-3 sm:p-4 md:p-3 sm:p-4 md:p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all">
+                <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
+                  <div className="p-2 sm:p-2.5 md:p-3 bg-blue-100 border-3 border-black rounded-xl">
+                    <Package className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
                   </div>
-                  <TrendingUp className="text-green-500" size={20} />
+                  <TrendingUp className="text-green-500 w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <h3 className="text-gray-600 text-sm font-bold mb-1">总商品数</h3>
-                <p className="text-4xl font-black">{stats?.total_products || 0}</p>
+                <h3 className="text-gray-600 text-xs sm:text-sm font-bold mb-1">总商品数</h3>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-black">{stats?.total_products || 0}</p>
               </div>
 
               {/* 总订单数 */}
-              <div className="bg-white border-4 border-black rounded-2xl p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-yellow-100 border-3 border-black rounded-xl">
-                    <ShoppingCart size={24} />
+              <div className="bg-white border-4 border-black rounded-2xl p-3 sm:p-4 md:p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all">
+                <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
+                  <div className="p-2 sm:p-2.5 md:p-3 bg-yellow-100 border-3 border-black rounded-xl">
+                    <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
                   </div>
-                  <Clock className="text-orange-500" size={20} />
+                  <Clock className="text-orange-500 w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <h3 className="text-gray-600 text-sm font-bold mb-1">总订单数</h3>
-                <p className="text-4xl font-black">{stats?.total_orders || 0}</p>
+                <h3 className="text-gray-600 text-xs sm:text-sm font-bold mb-1">总订单数</h3>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-black">{stats?.total_orders || 0}</p>
                 <p className="text-xs text-gray-500 mt-2">
                   待处理: {stats?.pending_orders || 0}
                 </p>
               </div>
 
               {/* 总用户数 */}
-              <div className="bg-white border-4 border-black rounded-2xl p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-purple-100 border-3 border-black rounded-xl">
-                    <Users size={24} />
+              <div className="bg-white border-4 border-black rounded-2xl p-3 sm:p-4 md:p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all">
+                <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
+                  <div className="p-2 sm:p-2.5 md:p-3 bg-purple-100 border-3 border-black rounded-xl">
+                    <Users className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
                   </div>
-                  <CheckCircle className="text-purple-500" size={20} />
+                  <CheckCircle className="text-purple-500 w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <h3 className="text-gray-600 text-sm font-bold mb-1">总用户数</h3>
-                <p className="text-4xl font-black">{stats?.total_users || 0}</p>
+                <h3 className="text-gray-600 text-xs sm:text-sm font-bold mb-1">总用户数</h3>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-black">{stats?.total_users || 0}</p>
               </div>
 
               {/* 总营收 */}
-              <div className="bg-white border-4 border-black rounded-2xl p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-green-100 border-3 border-black rounded-xl">
-                    <DollarSign size={24} />
+              <div className="bg-white border-4 border-black rounded-2xl p-3 sm:p-4 md:p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all">
+                <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
+                  <div className="p-2 sm:p-2.5 md:p-3 bg-green-100 border-3 border-black rounded-xl">
+                    <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
                   </div>
-                  <TrendingUp className="text-green-500" size={20} />
+                  <TrendingUp className="text-green-500 w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <h3 className="text-gray-600 text-sm font-bold mb-1">总营收</h3>
-                <p className="text-4xl font-black">¥{(stats?.total_revenue || 0).toFixed(2)}</p>
+                <h3 className="text-gray-600 text-xs sm:text-sm font-bold mb-1">总营收</h3>
+                <p className="text-xl sm:text-2xl md:text-4xl font-black break-all">¥{(stats?.total_revenue || 0).toFixed(2)}</p>
               </div>
             </div>
 
             {/* 警告信息 */}
             {stats && stats.low_stock_products > 0 && (
-              <div className="bg-yellow-50 border-4 border-yellow-400 rounded-2xl p-6 mb-8 flex items-center gap-4">
+              <div className="bg-yellow-50 border-4 border-yellow-400 rounded-2xl p-4 md:p-6 mb-8 flex items-center gap-3 md:gap-4">
                 <AlertCircle className="text-yellow-600" size={32} />
                 <div>
                   <h3 className="font-black text-lg mb-1">库存警告</h3>
@@ -218,28 +224,28 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onSwitchToShadcn }) => 
             )}
 
             {/* 快捷操作 */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-8">
               <Link to="/admin/products">
-                <div className="bg-white border-4 border-black rounded-2xl p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer">
-                  <Package className="mb-3" size={32} />
-                  <h3 className="font-black text-xl mb-2">商品管理</h3>
-                  <p className="text-sm text-gray-600">管理所有商品和库存</p>
+                <div className="bg-white border-4 border-black rounded-2xl p-3 sm:p-4 md:p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer">
+                  <Package className="mb-2 md:mb-3 w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8" />
+                  <h3 className="font-black text-base sm:text-lg md:text-xl mb-1 md:mb-2">商品管理</h3>
+                  <p className="text-xs sm:text-sm text-gray-600">管理所有商品和库存</p>
                 </div>
               </Link>
 
               <Link to="/admin/orders">
-                <div className="bg-white border-4 border-black rounded-2xl p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer">
-                  <ShoppingCart className="mb-3" size={32} />
-                  <h3 className="font-black text-xl mb-2">订单管理</h3>
-                  <p className="text-sm text-gray-600">处理客户订单</p>
+                <div className="bg-white border-4 border-black rounded-2xl p-3 sm:p-4 md:p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer">
+                  <ShoppingCart className="mb-2 md:mb-3 w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8" />
+                  <h3 className="font-black text-base sm:text-lg md:text-xl mb-1 md:mb-2">订单管理</h3>
+                  <p className="text-xs sm:text-sm text-gray-600">处理客户订单</p>
                 </div>
               </Link>
 
               <Link to="/admin/users">
-                <div className="bg-white border-4 border-black rounded-2xl p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer">
-                  <Users className="mb-3" size={32} />
-                  <h3 className="font-black text-xl mb-2">用户管理</h3>
-                  <p className="text-sm text-gray-600">查看用户信息</p>
+                <div className="bg-white border-4 border-black rounded-2xl p-3 sm:p-4 md:p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer">
+                  <Users className="mb-2 md:mb-3 w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8" />
+                  <h3 className="font-black text-base sm:text-lg md:text-xl mb-1 md:mb-2">用户管理</h3>
+                  <p className="text-xs sm:text-sm text-gray-600">查看用户信息</p>
                 </div>
               </Link>
             </div>
