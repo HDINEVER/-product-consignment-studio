@@ -260,7 +260,7 @@ const Shop = () => {
             </AnimatedButton>
             <div className="flex items-center gap-3">
                 <img src="/assets/logo.webp" alt="工作室Logo" className="w-12 h-12 border-2 border-black shadow-brutal rounded-xl object-cover" />
-                <h1 className="font-black text-lg sm:text-xl hidden md:block tracking-tight">二次元寄售站</h1>
+                <h1 className="font-black text-lg sm:text-xl hidden md:block tracking-tight">hdin-studio 制品小站</h1>
             </div>
             </div>
 
