@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { verifyConnection } from './lib/appwrite';
+import './utils/checkEnv'; // 导入环境变量检查工具
 import Shop from './components/Shop';
 import AdminDashboardContainer from './components/AdminDashboardContainer';
 import AdminOrders from './components/AdminOrders';

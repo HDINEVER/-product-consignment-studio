@@ -6,6 +6,9 @@ import { databases, storage, DATABASE_ID, COLLECTIONS, STORAGE_BUCKET_ID, ID, Pe
 import { useAuth } from '../contexts/AuthContext';
 import { useTags } from '../hooks/useTags';
 
+// 管理员团队 ID（从环境变量读取，默认为 'admins'）
+const ADMIN_TEAM_ID = import.meta.env.VITE_APPWRITE_ADMIN_TEAM_ID || 'admins';
+
 // ========== 表单数据类型 ==========
 interface ProductFormData {
   name: string;
@@ -163,8 +166,8 @@ export default function ProductUploadModal({
           productData,
           [
             Permission.read('any'), // 所有人可读
-            Permission.update(Role.team(import.meta.env.VITE_APPWRITE_ADMIN_TEAM_ID)),
-            Permission.delete(Role.team(import.meta.env.VITE_APPWRITE_ADMIN_TEAM_ID)),
+            Permission.update(Role.team(ADMIN_TEAM_ID)),
+            Permission.delete(Role.team(ADMIN_TEAM_ID)),
           ]
         );
         console.log('✅ 商品创建成功');
