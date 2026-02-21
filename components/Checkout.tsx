@@ -25,7 +25,7 @@ interface Address {
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
   const { user, isGuest } = useAuth();
-  const { cartItems, cartTotal, clearCart } = useCart();
+  const { cartItems, cartTotal, clearCart, loading: cartLoading } = useCart();
   
   // 🐛 调试日志：监控购物车数据变化
   useEffect(() => {
@@ -57,7 +57,7 @@ const Checkout: React.FC = () => {
   });
   
   const [remark, setRemark] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('wechat');
+  const [paymentMethod, setPaymentMethod] = useState('定金后补款');
 
   // ========== 检查登录状态 ==========
   useEffect(() => {
@@ -67,6 +67,10 @@ const Checkout: React.FC = () => {
       return;
     }
     
+    if (cartLoading) {
+      return; // 等待购物车数据加载完成
+    }
+    
     if (cartItems.length === 0) {
       alert('购物车是空的');
       navigate('/');  // ✅ 修复：跳转到首页而不是 /cart
@@ -74,7 +78,7 @@ const Checkout: React.FC = () => {
     }
     
     loadAddresses();
-  }, [isGuest, cartItems.length, navigate]);
+  }, [isGuest, cartItems.length, cartLoading, navigate]);
 
   // ========== 加载收货地址 ==========
   const loadAddresses = async () => {
@@ -127,7 +131,6 @@ const Checkout: React.FC = () => {
         {
           userId: user.$id,      // ✅ 驼峰命名
           ...newAddress,
-          createdAt: new Date().toISOString(),  // ✅ 驼峰命名
         },
         [
           // 行级安全：只有该用户可以读取、更新、删除
@@ -252,8 +255,6 @@ const Checkout: React.FC = () => {
             subtotal: subtotal,              // ✅ 必填字段：小计
             discount: 0,                     // ✅ 默认值：折扣
             taxAmount: 0,                    // ✅ 默认值：税额
-            // ❌ 移除数据库中不存在的字段：
-            // productName, productImage, variantName, createdAt
           };
           
           console.log(`🛍️ 创建订单项 ${index + 1}/${cartItems.length}:`, itemData);
@@ -296,7 +297,7 @@ const Checkout: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loading || cartLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-yellow-50">
         <div className="text-center">
@@ -553,9 +554,9 @@ const Checkout: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
-                  { value: 'alipay', label: '支付宝', icon: '💳' },
-                  { value: 'wechat', label: '微信支付', icon: '💚' },
-                  { value: 'cod', label: '货到付款', icon: '📦' },
+                  { value: '支付宝', label: '支付宝', icon: '💳' },
+                  { value: 'WeChat', label: '微信支付', icon: '💚' },
+                  { value: '定金后补款', label: '定金后补款', icon: '📦' },
                 ].map((method) => (
                   <label
                     key={method.value}

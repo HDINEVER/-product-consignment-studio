@@ -58,35 +58,35 @@ export default function UserProfile() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white border-4 border-black rounded-xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-8 mb-8"
+          className="bg-white border-4 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-4 md:p-8 mb-6 md:mb-8"
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-20 h-20 bg-yellow-400 border-4 border-black rounded-full flex items-center justify-center">
-                <User size={40} className="text-black" />
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              <div className="w-16 h-16 md:w-20 md:h-20 shrink-0 bg-yellow-400 border-4 border-black rounded-full flex items-center justify-center">
+                <User className="text-black w-8 h-8 md:w-10 md:h-10" />
               </div>
-              <div>
-                <h1 className="text-3xl font-black mb-1">{user?.name || '用户'}</h1>
-                <p className="text-gray-600">{user?.email}</p>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl md:text-3xl font-black mb-1 truncate">{user?.name || '用户'}</h1>
+                <p className="text-sm md:text-base text-gray-600 break-all">{user?.email}</p>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="px-6 py-2 bg-black text-white font-bold border-4 border-black rounded-xl hover:bg-white hover:text-black transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px]"
+              className="w-full md:w-auto px-6 py-2 bg-black text-white font-bold border-4 border-black rounded-xl hover:bg-white hover:text-black transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px]"
             >
               退出登录
             </button>
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8">
           {/* Sidebar */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="col-span-3"
+            className="col-span-1 md:col-span-3"
           >
-            <div className="bg-white border-4 border-black rounded-xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-4">
+            <div className="bg-white border-4 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-2 md:p-4 flex overflow-x-auto md:block gap-2 md:gap-0 [&::-webkit-scrollbar]:hidden">
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
@@ -100,17 +100,17 @@ export default function UserProfile() {
                         setActiveTab(item.id as any);
                       }
                     }}
-                    className={`w-full flex items-center justify-between p-4 mb-2 font-bold border-4 border-black rounded-xl transition-all ${
+                    className={`shrink-0 md:w-full flex items-center justify-between p-3 md:p-4 mb-0 md:mb-2 font-bold border-4 border-black rounded-xl transition-all ${
                       isActive
                         ? 'bg-yellow-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
                         : 'bg-white hover:bg-yellow-100'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <Icon size={20} />
-                      <span>{item.label}</span>
+                    <div className="flex items-center gap-2 md:gap-3">
+                      <Icon size={20} className="shrink-0" />
+                      <span className="whitespace-nowrap">{item.label}</span>
                     </div>
-                    <ChevronRight size={20} />
+                    <ChevronRight size={20} className="hidden md:block shrink-0" />
                   </button>
                 );
               })}
@@ -121,49 +121,49 @@ export default function UserProfile() {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="col-span-9"
+            className="col-span-1 md:col-span-9"
           >
-            <div className="bg-white border-4 border-black rounded-xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-8">
+            <div className="bg-white border-4 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-4 md:p-8 mb-8 md:mb-0">
               {activeTab === 'info' && (
                 <div>
-                  <h2 className="text-2xl font-black mb-6 flex items-center gap-2">
-                    <Settings size={24} />
+                  <h2 className="text-xl md:text-2xl font-black mb-4 md:mb-6 flex items-center gap-2">
+                    <Settings className="w-5 h-5 md:w-6 md:h-6" />
                     个人信息设置
                   </h2>
-                  <div className="space-y-6">
+                  <div className="space-y-4 md:space-y-6">
                     <div>
-                      <label className="block font-bold mb-2">姓名</label>
+                      <label className="block font-bold mb-1 md:mb-2 text-sm md:text-base">姓名</label>
                       <input
                         type="text"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-4 py-3 border-4 border-black rounded-xl focus:outline-none focus:ring-4 focus:ring-yellow-400"
+                        className="w-full px-3 py-2 md:px-4 md:py-3 border-4 border-black rounded-xl text-sm md:text-base focus:outline-none focus:ring-4 focus:ring-yellow-400"
                         placeholder="请输入姓名"
                       />
                     </div>
                     <div>
-                      <label className="block font-bold mb-2">手机号</label>
+                      <label className="block font-bold mb-1 md:mb-2 text-sm md:text-base">手机号</label>
                       <input
                         type="tel"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full px-4 py-3 border-4 border-black rounded-xl focus:outline-none focus:ring-4 focus:ring-yellow-400"
+                        className="w-full px-3 py-2 md:px-4 md:py-3 border-4 border-black rounded-xl text-sm md:text-base focus:outline-none focus:ring-4 focus:ring-yellow-400"
                         placeholder="请输入手机号"
                       />
                     </div>
                     <div>
-                      <label className="block font-bold mb-2">邮箱</label>
+                      <label className="block font-bold mb-1 md:mb-2 text-sm md:text-base">邮箱</label>
                       <input
                         type="email"
                         value={formData.email}
                         disabled
-                        className="w-full px-4 py-3 border-4 border-black rounded-xl bg-gray-100 cursor-not-allowed"
+                        className="w-full px-3 py-2 md:px-4 md:py-3 border-4 border-black rounded-xl text-sm md:text-base bg-gray-100 cursor-not-allowed text-gray-500 overflow-hidden text-ellipsis"
                       />
-                      <p className="text-sm text-gray-500 mt-1">邮箱地址不可修改</p>
+                      <p className="text-xs md:text-sm text-gray-500 mt-1">邮箱地址不可修改</p>
                     </div>
                     <button
                       onClick={handleSaveProfile}
-                      className="px-8 py-3 bg-yellow-400 text-black font-black border-4 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                      className="w-full md:w-auto px-8 py-3 bg-yellow-400 text-black font-black border-4 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
                     >
                       保存修改
                     </button>
@@ -173,22 +173,22 @@ export default function UserProfile() {
 
               {activeTab === 'addresses' && (
                 <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-black flex items-center gap-2">
-                      <MapPin size={24} />
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 md:mb-6">
+                    <h2 className="text-xl md:text-2xl font-black flex items-center gap-2">
+                      <MapPin className="w-5 h-5 md:w-6 md:h-6" />
                       收货地址管理
                     </h2>
                     <button
                       onClick={() => navigate('/profile/addresses/new')}
-                      className="px-6 py-2 bg-yellow-400 text-black font-black border-4 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                      className="w-full md:w-auto px-6 py-2 bg-yellow-400 text-black font-black border-4 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
                     >
                       + 新增地址
                     </button>
                   </div>
-                  <div className="text-center py-12 text-gray-500">
-                    <MapPin size={48} className="mx-auto mb-4 opacity-50" />
-                    <p>暂无收货地址</p>
-                    <p className="text-sm mt-2">点击"新增地址"添加您的收货地址</p>
+                  <div className="text-center py-8 md:py-12 text-gray-500">
+                    <MapPin className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-4 opacity-50" />
+                    <p className="text-sm md:text-base">暂无收货地址</p>
+                    <p className="text-xs md:text-sm mt-2">点击"新增地址"添加您的收货地址</p>
                   </div>
                 </div>
               )}
