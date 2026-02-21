@@ -419,12 +419,6 @@ const Shop = () => {
                 )}
             </div>
             
-            <div className="mt-auto p-6 border-t-2 border-gray-100">
-                <div className="flex items-center gap-2 text-xs font-bold text-gray-400">
-                <LayoutGrid size={14} />
-                <span>v1.0.0 Alpha</span>
-                </div>
-            </div>
             </aside>
 
             {/* Main Content Area */}
@@ -544,8 +538,8 @@ const Shop = () => {
 
             {/* 🔥 技巧B: 加载更多按钮 */}
             {!productsLoading && !productsError && products.length > 0 && (
-              <div className="flex flex-col items-center mt-6 mb-4 gap-3">
-                <p className="text-sm text-gray-500 font-medium">
+              <div className="fixed bottom-3 left-3 sm:bottom-4 sm:left-4 z-30 flex flex-col items-start gap-1.5">
+                <p className="text-[11px] sm:text-xs text-gray-500 font-medium">
                   已加载 {products.length} / {total} 个商品
                 </p>
                 {hasMore ? (
@@ -553,12 +547,12 @@ const Shop = () => {
                     variant="outline"
                     onClick={handleLoadMore}
                     disabled={productsLoading}
-                    className="min-w-[160px]"
+                    className="min-w-[120px] text-xs px-3 py-1.5"
                   >
                     {productsLoading ? '加载中...' : '加载更多'}
                   </AnimatedButton>
                 ) : (
-                  <p className="text-sm text-gray-400">已加载全部商品 🎉</p>
+                  <p className="text-[11px] sm:text-xs text-gray-400">已加载全部商品 🎉</p>
                 )}
               </div>
             )}
