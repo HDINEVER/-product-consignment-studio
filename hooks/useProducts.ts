@@ -51,6 +51,7 @@ export function useProducts() {
     setError(null);
     
     try {
+      console.log('🚀 fetchProducts 被调用，filters:', JSON.stringify(filters, null, 2));
       // 构建查询条件
       const queries: string[] = [];
       
@@ -76,11 +77,16 @@ export function useProducts() {
         queries.push(Query.equal('categoryId', ''));
       }
       
-      // 搜索 - 使用 index_search 全文索引
-      // 索引覆盖: name, description, categoryId, slug, ipId ✅
-      // Appwrite 会自动在所有索引字段中搜索
+      // 搜索 - 临时使用模糊搜索（contains）
+      // 注意：等待 Appwrite index_search 全文索引构建完成后，可以改回 Query.search()
       if (filters?.search && filters.search.trim()) {
-        queries.push(Query.search('name', filters.search.trim()));
+        const searchTerm = filters.search.trim();
+        console.log('🔍 搜索关键词:', searchTerm);
+        
+        // 临时方案：使用 contains 进行模糊搜索 name 字段
+        // 全文索引就绪后可以改回: Query.search('name', searchTerm)
+        queries.push(Query.contains('name', searchTerm));
+        console.log('📝 添加模糊搜索: name contains', searchTerm);
       }
       
       // 价格范围筛选
@@ -98,13 +104,20 @@ export function useProducts() {
       queries.push(Query.offset(offset));
       queries.push(Query.orderDesc('$createdAt'));
       
+      console.log('📊 最终查询条件:', queries.length, '个');
+      queries.forEach((q, i) => console.log(`  ${i + 1}.`, typeof q === 'string' ? q : JSON.stringify(q)));
+      
       const response = await databases.listDocuments(
         DATABASE_ID,
         COLLECTIONS.PRODUCTS,
         queries
       );
       
-      console.log('📦 获取到商品文档:', response.documents.length);
+      console.log('📦 Appwrite 返回:', {
+        total: response.total,
+        documents: response.documents.length,
+        搜索结果: response.documents.map((d: any) => ({ id: d.$id, name: d.name }))
+      });
       
       // ========== ✅ 批量查询标签信息 ==========
       const docs = response.documents as unknown as AppwriteProduct[];
@@ -159,20 +172,31 @@ export function useProducts() {
       setTotal(response.total);
       setCurrentOffset(offset + mappedProducts.length);
       setHasMore(offset + mappedProducts.length < response.total);
-      setError(''); // 清除之前的错误
+      setError(null); // 清除之前的错误
+      
+      // 如果搜索无结果，记录日志但不显示错误
+      if (mappedProducts.length === 0 && filters?.search) {
+        console.log('⚠️ 搜索无结果，关键词:', filters.search);
+      }
+      
       console.log(`📦 最终映射 ${mappedProducts.length} 个商品 (总共 ${response.total})`);
     } catch (err: any) {
       console.error('❌ 获取商品失败:', err);
-      // 如果是查询错误但不是致命错误，显示空列表而不是错误
-      // 例如：查询不存在的分类不应该显示为错误
+      
+      // 区分不同类型的错误
       const isQueryError = err.type === 'general_query_invalid' || err.code === 400;
-      if (isQueryError) {
-        console.log('⚠️ 查询条件无结果，显示空列表');
+      const isSearchError = filters?.search && err.message?.includes('search');
+      
+      if (isQueryError || isSearchError) {
+        // 查询语法错误或搜索错误：显示空列表，不显示错误消息
+        console.log('⚠️ 查询条件无结果或搜索语法错误，显示空列表');
         setProducts([]);
-        setError(''); // 不显示错误，只显示空状态
+        setTotal(0);
+        setError(null); // 不显示错误，提供更好的用户体验
       } else {
+        // 其他错误（网络错误等）：显示错误消息
         setError(err.message || '获取商品失败');
-        setProducts([]);
+        // 保持之前的产品列表，不清空（更好的用户体验）
       }
     } finally {
       setLoading(false);

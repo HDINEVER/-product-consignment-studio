@@ -72,6 +72,18 @@ const Shop = () => {
     // 当前筛选条件（用于加载更多时传递）
     const [currentFilters, setCurrentFilters] = useState<ProductFilters>({});
 
+    // 搜索防抖状态
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+
+    // 搜索防抖：用户停止输入 500ms 后才执行搜索
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        setDebouncedSearchQuery(searchQuery);
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }, [searchQuery]);
+
     // 当筛选条件变化时重新获取商品
     useEffect(() => {
       const filters: ProductFilters = {};
@@ -98,9 +110,10 @@ const Shop = () => {
         filters.ip = '未分类';
       }
       
-      // 搜索关键词
-      if (searchQuery.trim()) {
-        filters.search = searchQuery.trim();
+      // 搜索关键词（使用防抖后的值）
+      if (debouncedSearchQuery.trim()) {
+        filters.search = debouncedSearchQuery.trim();
+        console.log('🔍 执行搜索:', debouncedSearchQuery);
       }
       
       // 价格范围筛选
@@ -114,7 +127,7 @@ const Shop = () => {
       
       console.log('📊 执行筛选，filters:', filters);
       fetchProducts(filters);
-    }, [selectedCategory, selectedIP, searchQuery, priceRange, fetchProducts, getTagIdByName]);
+    }, [selectedCategory, selectedIP, debouncedSearchQuery, priceRange, fetchProducts, getTagIdByName]);
 
     // Handlers - 使用 useCart hook
     const handleAddToCart = async (product: Product, variantName: string, price: number, quantity: number) => {
