@@ -6,7 +6,7 @@ interface ProductCardProps {
   product: Product;
   isAdmin?: boolean;
   isDraggable?: boolean;
-  onSelect?: (product: Product) => void;
+  onSelect?: (product: Product, element?: HTMLElement) => void;
   onAddToCart?: (product: Product) => void;
   onEdit?: (productId: string) => void;
   onDelete?: (productId: string) => void;
@@ -47,7 +47,7 @@ export default function ProductCard({
       const dx = Math.abs(e.clientX - touchStartRef.current.x);
       const dy = Math.abs(e.clientY - touchStartRef.current.y);
       if (dx < 10 && dy < 10) {
-        onSelect?.(product);
+        onSelect?.(product, e.currentTarget as HTMLElement);
       }
       touchStartRef.current = null;
     }
@@ -137,7 +137,7 @@ export default function ProductCard({
           // 只拦截鼠标点击，触摸点击由 onPointerUp 处理
           const nativeEvent = e.nativeEvent as PointerEvent;
           if (nativeEvent.pointerType !== 'touch' && !editingTag) {
-            onSelect?.(product);
+            onSelect?.(product, e.currentTarget as HTMLElement);
           }
         }}
         onPointerDown={(e) => {
@@ -151,7 +151,7 @@ export default function ProductCard({
         onKeyDown={(e) => {
           if ((e.key === 'Enter' || e.key === ' ') && !editingTag) {
             e.preventDefault();
-            onSelect?.(product);
+            onSelect?.(product, e.currentTarget as HTMLElement);
           }
         }}
       >

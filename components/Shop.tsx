@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Menu, LayoutGrid, Filter, Package, User as UserIcon, AlertTriangle, Plus, Edit, Trash2 } from 'lucide-react';
+import { Menu, X, LayoutGrid, Layers, Package, User as UserIcon, AlertTriangle, Plus, Edit, Trash2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Product, CartItem } from '../types';
 import AtroposCard from './AtroposCard';
@@ -61,8 +61,8 @@ const Shop = () => {
     // Product Upload Modal State (Admin)
     const [showProductUploadModal, setShowProductUploadModal] = useState(false);
 
-    // Product Detail Modal State
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+    const [selectedProductRect, setSelectedProductRect] = useState<DOMRect | null>(null);
 
     // 标签管理状态 (Admin)
     const [isEditCategoryMode, setIsEditCategoryMode] = useState(false);
@@ -250,9 +250,13 @@ const Shop = () => {
                 variant="ghost"
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                 className="p-2 sm:p-2.5"
-                aria-label="Toggle sidebar menu"
+                aria-label={isSidebarOpen ? "关闭侧边栏" : "打开侧边栏"}
             >
-                <Menu size={20} className="sm:w-6 sm:h-6" />
+                {isSidebarOpen ? (
+                  <X size={20} className="sm:w-6 sm:h-6" />
+                ) : (
+                  <Menu size={20} className="sm:w-6 sm:h-6" />
+                )}
             </AnimatedButton>
             <div className="flex items-center gap-3">
                 <img src="/assets/logo.webp" alt="工作室Logo" className="w-12 h-12 border-2 border-black shadow-brutal rounded-xl object-cover" />
@@ -344,7 +348,7 @@ const Shop = () => {
             >
             <div className="p-6">
                 <h3 className="font-black text-lg mb-4 flex items-center gap-2 uppercase tracking-wider">
-                <Filter size={18} /> IP 筛选
+                <Layers size={18} /> IP 筛选
                 </h3>
 
                 {/* 管理员: IP标签管理 */}
@@ -466,7 +470,12 @@ const Shop = () => {
               <BentoProductGrid
                 products={products}
                 isAdmin={isAdmin}
-                onProductSelect={(product) => !editingTag && setSelectedProduct(product)}
+                onProductSelect={(product, element) => {
+                  if (!editingTag) {
+                    setSelectedProduct(product);
+                    setSelectedProductRect(element ? element.getBoundingClientRect() : null);
+                  }
+                }}
                 onAddToCart={(product) => {
                   // 快速添加到购物车，使用默认变体
                   const defaultVariant = product.variants?.[0];
@@ -563,8 +572,12 @@ const Shop = () => {
         {/* Product Detail Modal */}
         <ProductDetailModal
           isOpen={selectedProduct !== null}
-          onClose={() => setSelectedProduct(null)}
+          onClose={() => {
+            setSelectedProduct(null);
+            setTimeout(() => setSelectedProductRect(null), 300); // Wait for exit animation
+          }}
           product={selectedProduct}
+          triggerRect={selectedProductRect}
         />
 
         {/* 游客购物车底部弹窗提示 */}

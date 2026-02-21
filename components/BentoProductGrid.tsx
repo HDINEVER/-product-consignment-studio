@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Responsive, Layout, useContainerWidth } from 'react-grid-layout';
 import { Product } from '../types';
 import ProductCard from './ProductCard';
-import { LayoutGrid, ListIcon, Shuffle, Edit, Trash2 } from 'lucide-react';
+import { LayoutGrid, LayoutDashboard, ListIcon, Shuffle, Edit, Trash2 } from 'lucide-react';
 
 // Responsive grid component from react-grid-layout v2
 const ResponsiveGridLayout = Responsive;
@@ -10,7 +10,7 @@ const ResponsiveGridLayout = Responsive;
 interface BentoGridProps {
   products: Product[];
   isAdmin?: boolean;
-  onProductSelect: (product: Product) => void;
+  onProductSelect: (product: Product, element?: HTMLElement) => void;
   onAddToCart: (product: Product) => void;
   onEdit?: (productId: string) => void;
   onDelete?: (productId: string) => void;
@@ -178,8 +178,8 @@ export default function BentoProductGrid({
   return (
     <div className="relative">
       {/* 浮动按钮组 - 固定在右下方，购物车按钮上方 */}
-      <div ref={buttonGroupRef} className="fixed bottom-24 sm:bottom-28 right-4 sm:right-6 z-40">
-        <div className="flex flex-col-reverse gap-2 sm:gap-3">
+      <div ref={buttonGroupRef} className="fixed bottom-28 sm:bottom-32 right-4 sm:right-6 z-40">
+        <div className="flex flex-col gap-2 sm:gap-3 items-end">
           {/* 展开状态：显示所有按钮 */}
           {isExpanded && (
             <>
@@ -191,13 +191,13 @@ export default function BentoProductGrid({
                 }}
                 className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
                   viewMode === 'bento' 
-                    ? 'bg-black text-white shadow-brutal' 
+                    ? 'bg-gray-200 text-black shadow-brutal' 
                     : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:shadow-brutal-sm'
                 }`}
                 title="大图模式"
                 aria-label="切换到大图模式"
               >
-                <LayoutGrid size={20} className="sm:w-6 sm:h-6" />
+                <LayoutDashboard size={20} className="sm:w-6 sm:h-6" />
               </button>
 
               {/* 小卡片模式按钮 */}
@@ -208,18 +208,13 @@ export default function BentoProductGrid({
                 }}
                 className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
                   viewMode === 'grid' 
-                    ? 'bg-black text-white shadow-brutal' 
+                    ? 'bg-gray-200 text-black shadow-brutal' 
                     : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:shadow-brutal-sm'
                 }`}
                 title="小卡片模式"
                 aria-label="切换到小卡片模式"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="3" width="7" height="7"/>
-                  <rect x="14" y="3" width="7" height="7"/>
-                  <rect x="3" y="14" width="7" height="7"/>
-                  <rect x="14" y="14" width="7" height="7"/>
-                </svg>
+                <LayoutGrid size={20} className="sm:w-6 sm:h-6" />
               </button>
 
               {/* 列表模式按钮 */}
@@ -230,7 +225,7 @@ export default function BentoProductGrid({
                 }}
                 className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
                   viewMode === 'list' 
-                    ? 'bg-black text-white shadow-brutal' 
+                    ? 'bg-gray-200 text-black shadow-brutal' 
                     : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:shadow-brutal-sm'
                 }`}
                 title="列表布局"
@@ -262,8 +257,8 @@ export default function BentoProductGrid({
             onClick={() => setIsExpanded(!isExpanded)}
             className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
               isExpanded
-                ? 'bg-brutal-cyan shadow-brutal'
-                : 'bg-black text-white shadow-brutal hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] active:shadow-brutal-sm'
+                ? 'bg-black text-white shadow-brutal hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] active:shadow-brutal-sm'
+                : 'bg-brutal-cyan text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:shadow-brutal-sm'
             }`}
             title={isExpanded ? '收起' : '切换视图'}
             aria-label={isExpanded ? '收起视图选项' : '展开视图选项'}
@@ -279,14 +274,9 @@ export default function BentoProductGrid({
               ) : (
                 // 收缩时显示当前视图模式图标
                 <>
-                  {viewMode === 'bento' && <LayoutGrid size={20} />}
+                  {viewMode === 'bento' && <LayoutDashboard size={20} />}
                   {viewMode === 'grid' && (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="3" y="3" width="7" height="7"/>
-                      <rect x="14" y="3" width="7" height="7"/>
-                      <rect x="3" y="14" width="7" height="7"/>
-                      <rect x="14" y="14" width="7" height="7"/>
-                    </svg>
+                    <LayoutGrid size={20} />
                   )}
                   {viewMode === 'list' && <ListIcon size={20} />}
                 </>
@@ -370,7 +360,7 @@ export default function BentoProductGrid({
 interface ListProductCardProps {
   product: Product;
   isAdmin?: boolean;
-  onSelect?: (product: Product) => void;
+  onSelect?: (product: Product, element?: HTMLElement) => void;
   onAddToCart?: (product: Product) => void;
   onEdit?: (productId: string) => void;
   onDelete?: (productId: string) => void;
@@ -387,7 +377,7 @@ function ListProductCard({
   return (
     <div 
       className="flex bg-white rounded-2xl border-2 border-black shadow-brutal overflow-hidden hover:shadow-brutal-lg transition-all cursor-pointer"
-      onClick={() => onSelect?.(product)}
+      onClick={(e) => onSelect?.(product, e.currentTarget as HTMLElement)}
     >
       <div className="w-24 h-24 sm:w-40 sm:h-40 flex-shrink-0 bg-gray-100">
         <img 
