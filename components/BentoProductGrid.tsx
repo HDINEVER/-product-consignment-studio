@@ -50,6 +50,19 @@ export default function BentoProductGrid({
   const [isExpanded, setIsExpanded] = useState(false); // 控制按钮组展开/收缩
   const buttonGroupRef = React.useRef<HTMLDivElement>(null); // 用于检测外部点击
   const { width, containerRef, mounted } = useContainerWidth({ measureBeforeMount: true });
+
+  // 根据容器宽度计算响应式行高和间距
+  const responsiveRowHeight = useMemo(() => {
+    if (width < 480) return 180;    // 手机端：紧凑行高
+    if (width < 768) return 200;    // 平板端
+    return 240;                      // PC端
+  }, [width]);
+
+  const responsiveMargin = useMemo((): [number, number] => {
+    if (width < 480) return [8, 8];    // 手机端：更小间距
+    if (width < 768) return [10, 10];  // 平板端
+    return [14, 14];                    // PC端
+  }, [width]);
   
   // Generate Optimized Bento Layout
   const generateBentoLayout = useCallback((products: Product[]) => {
@@ -107,9 +120,9 @@ export default function BentoProductGrid({
       }
       xsLayout.push(xsItem);
       
-      // --- XXS / Small Mobile (1 Col) ---
-      // Everything full width
-      xxsLayout.push({ i: id, x: 0, y: i, w: 1, h: 1 });
+      // --- XXS / Small Mobile (2 Cols) ---
+      // 双列布局，交替排列
+      xxsLayout.push({ i: id, x: (i % 2), y: Math.floor(i / 2), w: 1, h: 1 });
 
       // --- MD (3 Cols) & SM (2 Cols) ---
       // Simple logic or reuse layout props but limit width
@@ -149,7 +162,7 @@ export default function BentoProductGrid({
        md: products.map((p, i) => ({ i: p.id, x: i % 3, y: Math.floor(i / 3), w: 1, h: 1 })),
        sm: products.map((p, i) => ({ i: p.id, x: i % 2, y: Math.floor(i / 2), w: 1, h: 1 })),
        xs: products.map((p, i) => ({ i: p.id, x: i % 2, y: Math.floor(i / 2), w: 1, h: 1 })),
-       xxs: products.map((p, i) => ({ i: p.id, x: 0, y: i, w: 1, h: 1 })),
+       xxs: products.map((p, i) => ({ i: p.id, x: i % 2, y: Math.floor(i / 2), w: 1, h: 1 })),
      };
   }, []);
   
@@ -294,14 +307,14 @@ export default function BentoProductGrid({
               className="layout"
               layouts={currentLayouts}
               breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-              cols={{ lg: 4, md: 3, sm: 2, xs: 2, xxs: 1 }}
-              rowHeight={240}
+              cols={{ lg: 4, md: 3, sm: 2, xs: 2, xxs: 2 }}
+              rowHeight={responsiveRowHeight}
               width={width}
               isDraggable={isDraggable && isAdmin}
               isResizable={isDraggable && isAdmin}
               onLayoutChange={onLayoutChange}
               draggableHandle=".drag-handle"
-              margin={[16, 16]}
+              margin={responsiveMargin}
               containerPadding={[0, 0]}
               draggableCancel=".no-drag"
             >

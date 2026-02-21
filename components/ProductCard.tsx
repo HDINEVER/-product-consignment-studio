@@ -169,7 +169,7 @@ export default function ProductCard({
         )}
 
         {/* 商品图片区域 */}
-        <div className="relative flex-1 bg-gray-100 overflow-hidden min-h-[100px] sm:min-h-[120px]">
+        <div className="relative flex-1 bg-gray-100 overflow-hidden min-h-[80px] sm:min-h-[120px]">
           <img 
             src={product.image} 
             alt={product.title}
@@ -190,21 +190,21 @@ export default function ProductCard({
         </div>
 
         {/* 商品信息区域 */}
-        <div className="p-2.5 sm:p-3 border-t-2 border-black bg-white shrink-0 flex flex-col gap-1.5 sm:gap-2">
+        <div className="p-1.5 sm:p-3 border-t-2 border-black bg-white shrink-0 flex flex-col gap-1 sm:gap-2">
           {/* 手机端内嵌显示的标签 */}
-          <div className="flex sm:hidden items-center gap-1.5 flex-wrap -mt-0.5">
+          <div className="flex sm:hidden items-center gap-1 flex-wrap">
             {renderCategoryTag()}
             {product.ip && renderIPTag()}
           </div>
 
-          <h3 className="font-black text-xs sm:text-sm leading-tight line-clamp-2 sm:line-clamp-1">
+          <h3 className="font-black text-[11px] sm:text-sm leading-tight line-clamp-1">
             {product.title}
           </h3>
           
-          <div className="flex items-center justify-between mt-0.5">
+          <div className="flex items-center justify-between">
             <div className="flex items-baseline gap-0.5">
-              <span className="text-sm sm:text-lg font-black">¥{product.basePrice}</span>
-              <span className="text-[10px] sm:text-xs font-bold text-gray-400">起</span>
+              <span className="text-xs sm:text-lg font-black">¥{product.basePrice}</span>
+              <span className="text-[9px] sm:text-xs font-bold text-gray-400">起</span>
             </div>
             
             <button 
@@ -212,11 +212,11 @@ export default function ProductCard({
                 e.stopPropagation();
                 onAddToCart?.(product);
               }}
-              className="p-1.5 sm:p-2 bg-black text-white rounded-lg border-2 border-black shadow-brutal-sm hover:bg-gray-800 transition-all active:scale-95 active:shadow-none min-w-[36px] min-h-[36px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center touch-target"
+              className="p-1 sm:p-2 bg-black text-white rounded-lg border-2 border-black shadow-brutal-sm hover:bg-gray-800 transition-all active:scale-95 active:shadow-none min-w-[28px] min-h-[28px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center touch-target"
               title="加入购物车"
               aria-label="加入购物车"
             >
-              <ShoppingCart size={14} className="sm:w-4 sm:h-4" />
+              <ShoppingCart size={12} className="sm:w-4 sm:h-4" />
             </button>
           </div>
         </div>

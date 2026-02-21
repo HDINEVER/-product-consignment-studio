@@ -48,7 +48,7 @@ const Shop = () => {
     // Shop State
     const [selectedCategory, setSelectedCategory] = useState<string>('全部');
     const [selectedIP, setSelectedIP] = useState<string>('全部');
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth >= 1024);
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [viewProduct, setViewProduct] = useState<Product | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -284,7 +284,8 @@ const Shop = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 sm:gap-4">
+            {/* PC/Tablet Auth Buttons */}
+            <div className="hidden lg:flex items-center gap-3 sm:gap-4">
             
             {isAuthenticated ? (
               <>
@@ -346,6 +347,44 @@ const Shop = () => {
                   : 'w-0 -translate-x-full lg:-translate-x-full opacity-0'
             }`}
             >
+            {/* 手机端专用登录与用户功能栏 */}
+            <div className="p-6 border-b-2 border-gray-100 lg:hidden">
+              {isAuthenticated ? (
+                <div className="space-y-4">
+                  <div className="text-sm font-bold">
+                    <div className="text-gray-500">欢迎回来</div>
+                    <div className="mt-1 break-all">
+                      {user?.name || user?.email}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Link to="/profile" onClick={() => setIsSidebarOpen(false)} className="flex-1">
+                      <AnimatedButton variant="outline" className="w-full text-sm justify-center py-2 h-auto flex items-center gap-2">
+                        <UserIcon size={16} /> 个人中心
+                      </AnimatedButton>
+                    </Link>
+                    <Link to="/orders" onClick={() => setIsSidebarOpen(false)} className="flex-1">
+                      <AnimatedButton variant="outline" className="w-full text-sm justify-center py-2 h-auto flex items-center gap-2">
+                        <Package size={16} /> 我的订单
+                      </AnimatedButton>
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <AnimatedButton
+                  variant="primary"
+                  className="w-full flex items-center justify-center gap-2"
+                  onClick={() => {
+                    handleLoginClick();
+                    setIsSidebarOpen(false);
+                  }}
+                >
+                  <UserIcon size={18} />
+                  登录 / 注册
+                </AnimatedButton>
+              )}
+            </div>
+
             <div className="p-6">
                 <h3 className="font-black text-lg mb-4 flex items-center gap-2 uppercase tracking-wider">
                 <Layers size={18} /> IP 筛选
@@ -411,14 +450,14 @@ const Shop = () => {
                 ) : null}
 
                 {/* 分类按钮 */}
-                <div className="overflow-x-auto pb-2">
-                  <div className="flex gap-2 min-w-max items-center">
+                <div className="overflow-x-auto pb-4 pt-1">
+                  <div className="flex gap-1.5 min-w-max items-center px-1">
                     {CATEGORIES.map(cat => (
                       <AnimatedButton
                         key={cat}
                         variant={selectedCategory === cat ? 'primary' : 'outline'}
                         onClick={() => setSelectedCategory(cat)}
-                        className={`px-6 py-2 rounded-full whitespace-nowrap ${
+                        className={`px-4 py-1.5 rounded-xl whitespace-nowrap ${
                           selectedCategory === cat
                             ? ''
                             : 'text-gray-500 hover:text-black'
@@ -432,10 +471,10 @@ const Shop = () => {
                     {isAdmin && (
                       <button
                         onClick={() => setShowProductUploadModal(true)}
-                        className="ml-auto mr-4 w-10 h-10 rounded-full flex items-center justify-center bg-brutal-black text-brutal-yellow font-black border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                        className="ml-auto mr-4 w-9 h-9 rounded-full flex items-center justify-center bg-brutal-black text-brutal-yellow font-black border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
                         title="发布新商品"
                       >
-                        <Plus size={20} strokeWidth={3} />
+                        <Plus size={18} strokeWidth={3} />
                       </button>
                     )}
                   </div>
