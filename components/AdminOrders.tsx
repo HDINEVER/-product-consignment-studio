@@ -51,7 +51,7 @@ const AdminOrders: React.FC = () => {
     try {
       setLoading(true);
       const response = await adminAPI.getOrders({ page: 1, limit: 100 });
-      setOrders(response.data.items || []);
+      setOrders(response.data || []);
     } catch (error) {
       console.error('Failed to load orders:', error);
       alert('加载订单失败');
@@ -64,7 +64,7 @@ const AdminOrders: React.FC = () => {
     try {
       setLoading(true);
       const response = await adminAPI.getOrders({ page: 1, limit: 100 });
-      const order = (response.data.items || []).find((o: Order) => o.id === orderId);
+      const order = (response.data || []).find((o: any) => String(o.id || o.$id) === String(orderId));
       if (order) {
         setSelectedOrder(order);
       } else {
@@ -142,7 +142,7 @@ const AdminOrders: React.FC = () => {
               </h1>
               <p className="text-gray-600">订单号：{selectedOrder.order_number}</p>
               <p className="text-sm text-gray-500 mt-2">
-                {new Date(selectedOrder.created_at).toLocaleString('zh-CN')}
+                {new Date(selectedOrder.created_at || (selectedOrder as any).$createdAt).toLocaleString('zh-CN')}
               </p>
             </div>
 
@@ -153,7 +153,7 @@ const AdminOrders: React.FC = () => {
                 {Object.keys(statusConfig).map((status) => (
                   <button
                     key={status}
-                    onClick={() => handleUpdateStatus(selectedOrder.id, status)}
+                    onClick={() => handleUpdateStatus((selectedOrder as any).$id || selectedOrder.id, status)}
                     disabled={updating || selectedOrder.status === status}
                     className={`px-4 py-2 border-3 border-black rounded-xl font-bold transition-all disabled:opacity-50 ${
                       selectedOrder.status === status
@@ -295,7 +295,7 @@ const AdminOrders: React.FC = () => {
               
               return (
                 <div
-                  key={order.id}
+                  key={(order as any).$id || order.id}
                   className="bg-white border-4 border-black rounded-2xl overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all"
                 >
                   <div className="bg-gray-50 border-b-4 border-black px-6 py-4 flex justify-between items-center">
@@ -303,7 +303,7 @@ const AdminOrders: React.FC = () => {
                       <p className="font-bold">{order.order_number}</p>
                       <p className="text-sm text-gray-600">{order.user_email}</p>
                       <p className="text-xs text-gray-500">
-                        {new Date(order.created_at).toLocaleString('zh-CN')}
+                        {new Date(order.created_at || (order as any).$createdAt).toLocaleString('zh-CN')}
                       </p>
                     </div>
                     <span className={`px-4 py-2 ${statusConfig[order.status]?.color} border-3 border-black rounded-xl font-bold flex items-center gap-2`}>
@@ -316,11 +316,11 @@ const AdminOrders: React.FC = () => {
                     <div>
                       <p className="text-sm text-gray-600 mb-1">订单金额</p>
                       <p className="text-3xl font-black text-yellow-600">
-                        ¥{order.total_amount.toFixed(2)}
+                        ¥{(order.total_amount || 0).toFixed(2)}
                       </p>
                     </div>
 
-                    <Link to={`/admin/orders/${order.id}`}>
+                    <Link to={`/admin/orders/${(order as any).$id || order.id}`}>
                       <AnimatedButton className="bg-black text-white">
                         查看详情
                       </AnimatedButton>

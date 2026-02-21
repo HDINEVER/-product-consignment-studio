@@ -380,7 +380,7 @@ const ShadcnDashboard: React.FC<ShadcnDashboardProps> = ({ onSwitchToOriginal })
                               </p>
                             </div>
                             <div className="text-sm font-medium">
-                              ¥{order.total_amount.toFixed(2)}
+                              ¥{(order.total_amount || 0).toFixed(2)}
                             </div>
                           </div>
                         ))}
@@ -432,7 +432,7 @@ const ShadcnDashboard: React.FC<ShadcnDashboardProps> = ({ onSwitchToOriginal })
                             {new Date(order.created_at).toLocaleDateString('zh-CN')}
                           </TableCell>
                           <TableCell className="text-right">
-                            ¥{order.total_amount.toFixed(2)}
+                            ¥{(order.total_amount || 0).toFixed(2)}
                           </TableCell>
                           <TableCell className="text-right">
                             <DropdownMenu>

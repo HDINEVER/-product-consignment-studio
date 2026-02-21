@@ -257,19 +257,19 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onSwitchToShadcn }) => 
                 <div className="space-y-4">
                   {recentOrders.map((order) => (
                     <div
-                      key={order.id}
+                      key={order.id || (order as any).$id}
                       className="flex items-center justify-between p-4 bg-gray-50 border-3 border-black rounded-xl hover:bg-gray-100 transition-colors"
                     >
                       <div className="flex-1">
                         <p className="font-bold">{order.order_number}</p>
                         <p className="text-sm text-gray-600">{order.user_email}</p>
                         <p className="text-xs text-gray-500">
-                          {new Date(order.created_at).toLocaleString('zh-CN')}
+                          {new Date(order.created_at || (order as any).$createdAt).toLocaleString('zh-CN')}
                         </p>
                       </div>
                       
                       <div className="text-right mr-4">
-                        <p className="font-bold text-lg">¥{order.total_amount.toFixed(2)}</p>
+                        <p className="font-bold text-lg">¥{(order.total_amount || 0).toFixed(2)}</p>
                         <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold border-2 border-black ${
                           statusConfig[order.status]?.color || 'bg-gray-100'
                         }`}>
@@ -277,7 +277,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onSwitchToShadcn }) => 
                         </span>
                       </div>
 
-                      <Link to={`/admin/orders/${order.id}`}>
+                      <Link to={`/admin/orders/${order.id || (order as any).$id}`}>
                         <AnimatedButton variant="outline" className="text-sm">
                           查看详情
                         </AnimatedButton>
