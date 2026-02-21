@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { ShoppingCart, Edit, Trash2, GripVertical } from 'lucide-react';
 import { Product } from '../types';
 
@@ -40,12 +40,112 @@ export default function ProductCard({
   const isEditingCategory = editingTag?.productId === product.id && editingTag?.type === 'category';
   const isEditingIP = editingTag?.productId === product.id && editingTag?.type === 'ip';
 
+  const touchStartRef = useRef<{ x: number, y: number } | null>(null);
+
+  const handleTouchTap = (e: React.PointerEvent) => {
+    if (e.pointerType === 'touch' && touchStartRef.current && !editingTag) {
+      const dx = Math.abs(e.clientX - touchStartRef.current.x);
+      const dy = Math.abs(e.clientY - touchStartRef.current.y);
+      if (dx < 10 && dy < 10) {
+        onSelect?.(product);
+      }
+      touchStartRef.current = null;
+    }
+  };
+
+  const renderCategoryTag = () => (
+    isEditingCategory ? (
+      <select
+        className="bg-brutal-yellow px-2 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-xs font-black border-2 border-black rounded-lg sm:rounded-xl shadow-brutal cursor-pointer focus:outline-none focus:ring-2 focus:ring-black"
+        value={product.category}
+        onChange={(e) => {
+          e.stopPropagation();
+          onCategoryChange?.(product.id, e.target.value);
+        }}
+        onBlur={onTagBlur}
+        onClick={(e) => e.stopPropagation()}
+        title="选择分类"
+        aria-label="选择商品分类"
+        autoFocus
+      >
+        {categories.filter(c => c !== '全部').map(cat => (
+          <option key={cat} value={cat}>{cat}</option>
+        ))}
+      </select>
+    ) : (
+      <button
+        className={`bg-brutal-yellow px-2 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-xs font-black border-2 border-black rounded-lg sm:rounded-xl shadow-brutal transition-all ${
+          isAdmin 
+            ? 'hover:bg-yellow-400 hover:scale-105 cursor-pointer' 
+            : 'cursor-default'
+        }`}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (isAdmin) onEditCategory?.(product.id);
+        }}
+        title={isAdmin ? '点击编辑分类' : product.category}
+      >
+        {product.category || '未分类'}
+      </button>
+    )
+  );
+
+  const renderIPTag = () => {
+    if (!product.ip) return null;
+    return isEditingIP ? (
+      <select
+        className="bg-brutal-blue text-white px-2 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-xs font-black border-2 border-black rounded-lg sm:rounded-xl shadow-brutal cursor-pointer focus:outline-none focus:ring-2 focus:ring-white"
+        value={product.ip}
+        onChange={(e) => {
+          e.stopPropagation();
+          onIPChange?.(product.id, e.target.value);
+        }}
+        onBlur={onTagBlur}
+        onClick={(e) => e.stopPropagation()}
+        title="选择IP"
+        aria-label="选择商品IP"
+        autoFocus
+      >
+        {ips.filter(ip => ip !== '全部').map(ipTag => (
+          <option key={ipTag} value={ipTag}>{ipTag}</option>
+        ))}
+      </select>
+    ) : (
+      <button
+        className={`bg-brutal-blue text-white px-2 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-xs font-black border-2 border-black rounded-lg sm:rounded-xl shadow-brutal transition-all ${
+          isAdmin 
+            ? 'hover:bg-blue-500 hover:scale-105 cursor-pointer' 
+            : 'cursor-default'
+        }`}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (isAdmin) onEditIP?.(product.id);
+        }}
+        title={isAdmin ? '点击编辑IP' : product.ip}
+      >
+        {product.ip}
+      </button>
+    );
+  };
+
   return (
-    <div className="relative group h-full touch-feedback">
+    <div className="relative group h-full">
       {/* 商品卡片主体 */}
       <div 
-        className="h-full bg-white rounded-2xl border-2 border-black shadow-brutal overflow-hidden flex flex-col transition-all duration-200 hover:shadow-brutal-lg hover:-translate-y-1 cursor-pointer active:scale-[0.98] active:shadow-brutal-sm"
-        onClick={() => !editingTag && onSelect?.(product)}
+        className="no-drag h-full bg-white rounded-2xl border-2 border-black shadow-brutal overflow-hidden flex flex-col transition-all duration-200 md:hover:shadow-brutal-lg md:hover:-translate-y-1 cursor-pointer md:active:scale-[0.98] md:active:shadow-brutal-sm"
+        onClick={(e) => {
+          // 只拦截鼠标点击，触摸点击由 onPointerUp 处理
+          const nativeEvent = e.nativeEvent as PointerEvent;
+          if (nativeEvent.pointerType !== 'touch' && !editingTag) {
+            onSelect?.(product);
+          }
+        }}
+        onPointerDown={(e) => {
+          if (e.pointerType === 'touch') {
+            touchStartRef.current = { x: e.clientX, y: e.clientY };
+          }
+        }}
+        onPointerUp={handleTouchTap}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
@@ -68,86 +168,8 @@ export default function ProductCard({
           </div>
         )}
 
-        {/* 分类标签 */}
-        <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-20">
-          {isEditingCategory ? (
-            <select
-              className="bg-brutal-yellow px-2 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-xs font-black border-2 border-black rounded-lg sm:rounded-xl shadow-brutal cursor-pointer focus:outline-none focus:ring-2 focus:ring-black"
-              value={product.category}
-              onChange={(e) => {
-                e.stopPropagation();
-                onCategoryChange?.(product.id, e.target.value);
-              }}
-              onBlur={onTagBlur}
-              onClick={(e) => e.stopPropagation()}
-              title="选择分类"
-              aria-label="选择商品分类"
-              autoFocus
-            >
-              {categories.filter(c => c !== '全部').map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-          ) : (
-            <button
-              className={`bg-brutal-yellow px-2 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-xs font-black border-2 border-black rounded-lg sm:rounded-xl shadow-brutal transition-all ${
-                isAdmin 
-                  ? 'hover:bg-yellow-400 hover:scale-105 cursor-pointer' 
-                  : 'cursor-default'
-              }`}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (isAdmin) onEditCategory?.(product.id);
-              }}
-              title={isAdmin ? '点击编辑分类' : product.category}
-            >
-              {product.category || '未分类'}
-            </button>
-          )}
-        </div>
-
-        {/* IP标签 */}
-        {product.ip && (
-          <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-20">
-            {isEditingIP ? (
-              <select
-                className="bg-brutal-blue text-white px-2 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-xs font-black border-2 border-black rounded-lg sm:rounded-xl shadow-brutal cursor-pointer focus:outline-none focus:ring-2 focus:ring-white"
-                value={product.ip}
-                onChange={(e) => {
-                  e.stopPropagation();
-                  onIPChange?.(product.id, e.target.value);
-                }}
-                onBlur={onTagBlur}
-                onClick={(e) => e.stopPropagation()}
-                title="选择IP"
-                aria-label="选择商品IP"
-                autoFocus
-              >
-                {ips.filter(ip => ip !== '全部').map(ipTag => (
-                  <option key={ipTag} value={ipTag}>{ipTag}</option>
-                ))}
-              </select>
-            ) : (
-              <button
-                className={`bg-brutal-blue text-white px-2 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-xs font-black border-2 border-black rounded-lg sm:rounded-xl shadow-brutal transition-all ${
-                  isAdmin 
-                    ? 'hover:bg-blue-500 hover:scale-105 cursor-pointer' 
-                    : 'cursor-default'
-                }`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (isAdmin) onEditIP?.(product.id);
-                }}
-                title={isAdmin ? '点击编辑IP' : product.ip}
-              >
-                {product.ip}
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* 商品图片 */}
-        <div className="relative flex-1 min-h-[120px] bg-gray-100 overflow-hidden">
+        {/* 商品图片区域 */}
+        <div className="relative flex-1 bg-gray-100 overflow-hidden min-h-[100px] sm:min-h-[120px]">
           <img 
             src={product.image} 
             alt={product.title}
@@ -155,15 +177,31 @@ export default function ProductCard({
           />
           {/* 图片遮罩 - 悬停时显示 */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+          {/* PC端显示的悬浮标签 */}
+          <div className="hidden sm:block absolute top-3 left-3 z-20">
+            {renderCategoryTag()}
+          </div>
+          {product.ip && (
+            <div className="hidden sm:block absolute top-3 right-3 z-20">
+              {renderIPTag()}
+            </div>
+          )}
         </div>
 
-        {/* 商品信息 */}
-        <div className="p-2 sm:p-3 border-t-2 border-black bg-white shrink-0">
-          <h3 className="font-black text-xs sm:text-sm leading-tight line-clamp-1 mb-1.5 sm:mb-2">
+        {/* 商品信息区域 */}
+        <div className="p-2.5 sm:p-3 border-t-2 border-black bg-white shrink-0 flex flex-col gap-1.5 sm:gap-2">
+          {/* 手机端内嵌显示的标签 */}
+          <div className="flex sm:hidden items-center gap-1.5 flex-wrap -mt-0.5">
+            {renderCategoryTag()}
+            {product.ip && renderIPTag()}
+          </div>
+
+          <h3 className="font-black text-xs sm:text-sm leading-tight line-clamp-2 sm:line-clamp-1">
             {product.title}
           </h3>
           
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mt-0.5">
             <div className="flex items-baseline gap-0.5">
               <span className="text-sm sm:text-lg font-black">¥{product.basePrice}</span>
               <span className="text-[10px] sm:text-xs font-bold text-gray-400">起</span>
@@ -174,7 +212,7 @@ export default function ProductCard({
                 e.stopPropagation();
                 onAddToCart?.(product);
               }}
-              className="p-1.5 sm:p-2 bg-black text-white rounded-lg border-2 border-black shadow-brutal-sm hover:bg-gray-800 transition-all active:scale-95 active:shadow-none touch-target min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="p-1.5 sm:p-2 bg-black text-white rounded-lg border-2 border-black shadow-brutal-sm hover:bg-gray-800 transition-all active:scale-95 active:shadow-none min-w-[36px] min-h-[36px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center touch-target"
               title="加入购物车"
               aria-label="加入购物车"
             >
@@ -192,7 +230,7 @@ export default function ProductCard({
               e.stopPropagation();
               onEdit?.(product.id);
             }}
-            className="p-2 sm:p-2.5 bg-brutal-yellow text-black rounded-lg border-2 border-black shadow-brutal-sm hover:bg-yellow-400 hover:scale-105 active:scale-95 transition-all touch-target min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-2 sm:p-2.5 bg-brutal-yellow text-black rounded-lg border-2 border-black shadow-brutal-sm hover:bg-yellow-400 hover:scale-105 active:scale-95 transition-all min-w-[36px] min-h-[36px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center touch-target"
             title="编辑商品"
             aria-label="编辑商品"
           >
@@ -203,7 +241,7 @@ export default function ProductCard({
               e.stopPropagation();
               onDelete?.(product.id);
             }}
-            className="p-2 sm:p-2.5 bg-red-500 text-white rounded-lg border-2 border-black shadow-brutal-sm hover:bg-red-600 hover:scale-105 active:scale-95 transition-all touch-target min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-2 sm:p-2.5 bg-red-500 text-white rounded-lg border-2 border-black shadow-brutal-sm hover:bg-red-600 hover:scale-105 active:scale-95 transition-all min-w-[36px] min-h-[36px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center touch-target"
             title="删除商品"
             aria-label="删除商品"
           >
