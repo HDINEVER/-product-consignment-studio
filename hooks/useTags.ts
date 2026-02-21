@@ -106,7 +106,7 @@ export const useTags = () => {
       setError('');
 
       // 1. 查找使用该标签的商品（通过外键 ID）
-      const field = type === 'category' ? 'categoryId' : 'ip_id';
+      const field = type === 'category' ? 'categoryId' : 'ipId';  // ✅ 驼峰命名
       const productsResponse = await databases.listDocuments(
         DATABASE_ID,
         COLLECTIONS.PRODUCTS,

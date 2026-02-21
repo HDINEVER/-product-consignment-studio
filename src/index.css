@@ -1,5 +1,39 @@
-@config "../tailwind.config.js";
 @import "tailwindcss";
+
+/* Tailwind CSS 4.x 主题配置 */
+@theme {
+  /* 字体 */
+  --font-family-brutal: 'Space Grotesk', 'Noto Sans SC', system-ui, sans-serif;
+  
+  /* 自定义颜色 */
+  --color-brutal-yellow: #FFE566;
+  --color-brutal-orange: #FF6B35;
+  --color-brutal-pink: #FF4F9A;
+  --color-brutal-cyan: #00D4FF;
+  --color-brutal-purple: #7B68EE;
+  --color-brutal-blue: #4A90E2;
+  --color-brutal-dark: #1A1A2E;
+  --color-brutal-light: #FFFEF0;
+  --color-brutal-black: #000000;
+  
+  --color-arknights-black: #0A0E1A;
+  --color-arknights-gold: #FFD700;
+  --color-arknights-silver: #C0C0C0;
+  --color-arknights-blue: #00A0E9;
+  --color-arknights-red: #FF4444;
+  
+  /* Neo-brutalism 阴影 */
+  --shadow-brutal: 4px 4px 0px 0px rgba(0,0,0,1);
+  --shadow-brutal-sm: 2px 2px 0px 0px rgba(0,0,0,1);
+  --shadow-brutal-md: 6px 6px 0px 0px rgba(0,0,0,1);
+  --shadow-brutal-lg: 8px 8px 0px 0px rgba(0,0,0,1);
+  --shadow-brutal-xl: 12px 12px 0px 0px rgba(0,0,0,1);
+  --shadow-brutal-hover: 6px 6px 0px 0px rgba(0,0,0,1);
+  --shadow-brutal-active: 2px 2px 0px 0px rgba(0,0,0,1);
+  
+  /* 边框宽度 */
+  --width-3: 3px;
+}
 
 @layer base {
   :root {
@@ -50,25 +84,212 @@
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
+  
   body {
-    @apply bg-background text-foreground font-brutal;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Space Grotesk', 'Noto Sans SC', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-/* Neo-brutalism 样式 */
+/* Neo-brutalism 全局样式 */
+.bg-brutal-light {
+  background-color: #FFFEF0;
+}
+
+.bg-brutal-yellow {
+  background-color: #FFE566;
+}
+
+.bg-brutal-blue {
+  background-color: #4A90E2;
+}
+
+.bg-brutal-cyan {
+  background-color: #00D4FF;
+}
+
+.bg-brutal-pink {
+  background-color: #FF4F9A;
+}
+
+/* Gumroad 风格黑色按钮阴影 - 关键样式！ */
 .shadow-brutal {
-  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1) !important;
+}
+
+.shadow-brutal-sm {
+  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1) !important;
+}
+
+.shadow-brutal-md {
+  box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 1) !important;
 }
 
 .shadow-brutal-lg {
-  box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+  box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1) !important;
 }
 
-.shadow-brutal-hover:hover {
-  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+.shadow-brutal-xl {
+  box-shadow: 12px 12px 0px 0px rgba(0, 0, 0, 1) !important;
+}
+
+.hover\:shadow-brutal-hover:hover {
+  box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 1) !important;
+}
+
+.hover\:shadow-brutal-lg:hover {
+  box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1) !important;
+}
+
+.active\:shadow-brutal-sm:active {
+  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1) !important;
+}
+
+/* 边框宽度 */
+.border-3 {
+  border-width: 3px;
+}
+
+.bg-stripes {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 10px,
+    rgba(0, 0, 0, 0.03) 10px,
+    rgba(0, 0, 0, 0.03) 20px
+  );
+}
+
+/* Neo-brutalism 按钮悬停效果 */
+.btn-brutal {
+  transition: all 0.1s ease;
+  transform: translate(0, 0);
+  border-radius: 12px;
+}
+
+.btn-brutal:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px 0px rgba(0,0,0,1);
+}
+
+.btn-brutal:active {
   transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px rgba(0,0,0,1);
+}
+
+/* 明日方舟风格装饰线 */
+.arknights-border {
+  position: relative;
+}
+
+.arknights-border::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #F5B041, #E74C3C, #F5B041);
+}
+
+/* 复选框明日方舟风格 */
+.checkbox-brutal {
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border: 3px solid black;
+  background: white;
+  cursor: pointer;
+  position: relative;
+  border-radius: 6px;
+}
+
+.checkbox-brutal:checked {
+  background: #FFE566;
+}
+
+.checkbox-brutal:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: bold;
+}
+
+/* 全局卡片圆角 */
+.card-brutal {
+  border: 3px solid black;
+  border-radius: 16px;
+  background: white;
+  box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
+  overflow: hidden;
+}
+
+/* 模态框圆角 */
+.modal-brutal {
+  border: 4px solid black;
+  border-radius: 20px;
+  background: white;
+  box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);
+  overflow: hidden;
+}
+
+/* 输入框 Neo-brutalism 风格 */
+.input-brutal {
+  border: 3px solid black;
+  background: white;
+  padding: 12px 16px;
+  font-weight: 500;
+  transition: all 0.1s ease;
+  border-radius: 12px;
+  width: 100%;
+}
+
+.input-brutal:focus {
+  outline: none;
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
+}
+
+/* 隐藏滚动条 */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* 闪烁警告动画 */
+@keyframes blink-warning {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.blink-warning {
+  animation: blink-warning 1.5s ease-in-out infinite;
+}
+
+/* 分割线明日方舟风格 */
+.divider-arknights {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.divider-arknights::before,
+.divider-arknights::after {
+  content: '';
+  flex: 1;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, black, transparent);
 }
 
 /* React Grid Layout Styles */
@@ -76,17 +297,21 @@
   position: relative;
   transition: height 200ms ease;
 }
+
 .react-grid-item {
   transition: all 200ms ease;
   transition-property: left, top;
 }
+
 .react-grid-item.cssTransforms {
   transition-property: transform;
 }
+
 .react-grid-item.resizing {
   z-index: 100;
   box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
+
 .react-grid-item.react-grid-placeholder {
   background: rgba(0,0,0,0.1) !important;
   opacity: 0.5;

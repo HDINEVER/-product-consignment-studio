@@ -1,41 +1,24 @@
 import { useState, useEffect, useCallback } from 'react';
 import { databases, DATABASE_ID, COLLECTIONS, Query, ID, storage, STORAGE_BUCKET_ID } from '../lib/appwrite';
-import { Product, Category } from '../types';
+import { Product, Category, AppwriteProduct } from '../types';
 
-// ========== Appwrite 文档到 Product 的映射 ==========
-interface AppwriteProduct {
-  $id: string;
-  name: string;
-  description: string;
-  price: number;
-  category: string;  // 分类名称（用于显示）
-  categoryId?: string;  // 分类外键（用于筛选）
-  ip: string;  // IP名称（用于显示）
-  ip_id?: string;  // IP外键（用于筛选）
-  condition: string;
-  imageUrl?: string;
-  stock_quantity?: number;
-  material_type?: string;
-  seller_id: string;
-  seller_name: string;
-  status: string;
-  isActive?: boolean;  // 软删除标记：true=上架, false=下架
-  created_at: string;
-  updated_at?: string;
+// 标签映射表类型
+interface TagsMap {
+  [id: string]: string;  // ID -> 标签名称
 }
 
 // 将 Appwrite 文档转换为前端 Product 类型
-const mapToProduct = (doc: AppwriteProduct): Product => ({
+const mapToProduct = (doc: AppwriteProduct, categoryMap: TagsMap = {}, ipMap: TagsMap = {}): Product => ({
   id: doc.$id,
-  title: doc.name,
+  title: doc.name,                                    // ✅ 使用 name
   description: doc.description,
-  basePrice: doc.price,
-  category: doc.category as Category,
-  ip: doc.ip,
-  image: doc.imageUrl || '/placeholder-product.jpg',
-  stockQuantity: doc.stock_quantity,
-  materialType: doc.material_type,
-  variants: [], // TODO: 支持变体
+  basePrice: doc.price,                               // ✅ 使用 price
+  category: (categoryMap[doc.categoryId] || '未分类') as Category,  // ✅ 从映射表获取分类名称
+  ip: ipMap[doc.ipId] || '未分类',                    // ✅ 从映射表获取IP名称
+  image: doc.imageUrl || '/placeholder-product.jpg',  // ✅ 使用 imageUrl
+  stockQuantity: doc.stockQuantity,                   // ✅ 使用 stockQuantity
+  materialType: undefined,
+  variants: [],
 });
 
 // ========== 筛选参数类型 ==========
@@ -77,12 +60,12 @@ export function useProducts() {
         queries.push(Query.equal('isActive', true));
       }
       
-      // IP 筛选（使用 ip_id 字段）
+      // IP 筛选（使用 ipId 字段）✅
       if (filters?.ip && filters.ip !== '全部' && filters.ip !== '未分类') {
-        queries.push(Query.equal('ip_id', filters.ip));
+        queries.push(Query.equal('ipId', filters.ip));
       } else if (filters?.ip === '未分类') {
-        // 查询 ip_id 为空的商品
-        queries.push(Query.equal('ip_id', ''));
+        // 查询 ipId 为空的商品
+        queries.push(Query.equal('ipId', ''));
       }
       
       // 分类筛选（使用 categoryId 字段）
@@ -94,7 +77,7 @@ export function useProducts() {
       }
       
       // 搜索 - 使用 index_search 全文索引
-      // 索引覆盖: name, description, categoryId, slug, ip_id
+      // 索引覆盖: name, description, categoryId, slug, ipId ✅
       // Appwrite 会自动在所有索引字段中搜索
       if (filters?.search && filters.search.trim()) {
         queries.push(Query.search('name', filters.search.trim()));
@@ -121,8 +104,49 @@ export function useProducts() {
         queries
       );
       
-      const mappedProducts = response.documents.map((doc) => 
-        mapToProduct(doc as unknown as AppwriteProduct)
+      console.log('📦 获取到商品文档:', response.documents.length);
+      
+      // ========== ✅ 批量查询标签信息 ==========
+      const docs = response.documents as unknown as AppwriteProduct[];
+      
+      // 收集所有唯一的 categoryId 和 ipId
+      const categoryIds = [...new Set(docs.map(doc => doc.categoryId).filter(id => id && id.trim()))];
+      const ipIds = [...new Set(docs.map(doc => doc.ipId).filter(id => id && id.trim()))];
+      
+      console.log('🏷️ 需要查询的标签:', { categoryIds, ipIds });
+      
+      // 批量查询分类和IP标签
+      const [categoriesData, ipsData] = await Promise.all([
+        categoryIds.length > 0 
+          ? databases.listDocuments(DATABASE_ID, COLLECTIONS.CATEGORIES, [
+              Query.equal('$id', categoryIds),
+              Query.limit(100)
+            ])
+          : Promise.resolve({ documents: [] }),
+        ipIds.length > 0
+          ? databases.listDocuments(DATABASE_ID, COLLECTIONS.IP_TAGS, [
+              Query.equal('$id', ipIds),
+              Query.limit(100)
+            ])
+          : Promise.resolve({ documents: [] }),
+      ]);
+      
+      // 构建 ID -> 名称 的映射表
+      const categoryMap: TagsMap = {};
+      categoriesData.documents.forEach((doc: any) => {
+        categoryMap[doc.$id] = doc.name;
+      });
+      
+      const ipMap: TagsMap = {};
+      ipsData.documents.forEach((doc: any) => {
+        ipMap[doc.$id] = doc.name;
+      });
+      
+      console.log('✅ 标签映射表:', { categoryMap, ipMap });
+      
+      // 映射产品数据（传入标签映射表）
+      const mappedProducts = docs.map((doc) => 
+        mapToProduct(doc, categoryMap, ipMap)
       );
       
       // 分页逻辑：追加模式或替换模式
@@ -136,7 +160,7 @@ export function useProducts() {
       setCurrentOffset(offset + mappedProducts.length);
       setHasMore(offset + mappedProducts.length < response.total);
       setError(''); // 清除之前的错误
-      console.log(`📦 获取到 ${mappedProducts.length} 个商品 (总共 ${response.total})`, { filters, offset, hasMore: offset + mappedProducts.length < response.total });
+      console.log(`📦 最终映射 ${mappedProducts.length} 个商品 (总共 ${response.total})`);
     } catch (err: any) {
       console.error('❌ 获取商品失败:', err);
       // 如果是查询错误但不是致命错误，显示空列表而不是错误
@@ -165,14 +189,14 @@ export function useProducts() {
     name: string;
     description: string;
     price: number;
-    category: string;
-    ip: string;
+    categoryId: string;    // ✅ 驿c峰命名
+    ipId: string;          // ✅ 驼峰命名
     condition: string;
-    imageUrl?: string;
-    stock_quantity?: number;
-    material_type?: string;
-    seller_id: string;
-    seller_name: string;
+    imageUrl?: string;     // ✅ 驻c峰命名
+    stockQuantity?: number; // ✅ 驻c峰命名
+    materialType?: string;  // ✅ 驻c峰命名
+    sellerId?: string;      // ✅ 驻c峰命名
+    sellerName?: string;    // ✅ 驻c峰命名
   }) => {
     try {
       const doc = await databases.createDocument(
@@ -181,8 +205,10 @@ export function useProducts() {
         ID.unique(),
         {
           ...productData,
-          status: 'active',
-          created_at: new Date().toISOString(),
+          isActive: true,        // ✅ 驻c峰命名
+          slug: productData.name.toLowerCase().replace(/\s+/g, '-'),
+          createdAt: new Date().toISOString(),  // ✅ 驻c峰命名
+          updatedAt: new Date().toISOString(),  // ✅ 驻c峰命名
         }
       );
       
@@ -205,7 +231,7 @@ export function useProducts() {
         id,
         {
           ...updates,
-          updated_at: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),  // ✅ 驻c峰命名
         }
       );
       
@@ -232,8 +258,7 @@ export function useProducts() {
         // 商品对用户不可见，但历史订单仍可查询
         await databases.updateDocument(DATABASE_ID, COLLECTIONS.PRODUCTS, id, {
           isActive: false,
-          status: 'draft',
-          updated_at: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),  // ✅ 驻c峰命名
         });
         console.log('✅ 商品已下架 (软删除):', id);
       }
@@ -252,8 +277,7 @@ export function useProducts() {
     try {
       await databases.updateDocument(DATABASE_ID, COLLECTIONS.PRODUCTS, id, {
         isActive: true,
-        status: 'active',
-        updated_at: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),  // ✅ 驻c峰命名
       });
       console.log('✅ 商品已重新上架:', id);
       await fetchProducts();
@@ -281,8 +305,23 @@ export function useProducts() {
         DATABASE_ID,
         COLLECTIONS.PRODUCTS,
         id
-      );
-      return mapToProduct(doc as unknown as AppwriteProduct);
+      ) as unknown as AppwriteProduct;
+      
+      // 查询该商品的分类和IP标签
+      const [categoryData, ipData] = await Promise.all([
+        doc.categoryId && doc.categoryId.trim()
+          ? databases.getDocument(DATABASE_ID, COLLECTIONS.CATEGORIES, doc.categoryId).catch(() => null)
+          : Promise.resolve(null),
+        doc.ipId && doc.ipId.trim()
+          ? databases.getDocument(DATABASE_ID, COLLECTIONS.IP_TAGS, doc.ipId).catch(() => null)
+          : Promise.resolve(null),
+      ]);
+      
+      // 构建映射表
+      const categoryMap: TagsMap = categoryData ? { [doc.categoryId]: (categoryData as any).name } : {};
+      const ipMap: TagsMap = ipData ? { [doc.ipId]: (ipData as any).name } : {};
+      
+      return mapToProduct(doc, categoryMap, ipMap);
     } catch (err: any) {
       console.error('❌ 获取商品详情失败:', err);
       return null;

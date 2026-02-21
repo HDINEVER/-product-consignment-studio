@@ -29,42 +29,39 @@ import AnimatedButton from './AnimatedButton';
 // ========== 类型定义 ==========
 interface OrderItem {
   $id: string;
-  order_id: string;
-  product_id: string;
-  product_name: string;
-  product_image: string;
-  variant_name?: string;
+  orderId: string;        // ✅ 驼峰命名
+  productId: string;      // ✅ 驼峰命名
+  productName: string;    // ✅ 驼峰命名（商品名称快照）
+  productImage: string;   // ✅ 驼峰命名（商品图片快照）
+  variantName?: string;   // ✅ 驼峰命名（规格名称快照）
   price: number;
   quantity: number;
-  created_at: string;
+  createdAt: string;      // ✅ 驼峰命名
 }
 
 interface Order {
   $id: string;
-  user_id: string;
+  orderId: string;       // ✅ 订单编号
+  userId: string;        // ✅ 驼峰命名
   status: string;
-  total_amount: number;
-  payment_method: string;
+  totalAmount: number;   // ✅ 驼峰命名
+  paymentMethod: string; // ✅ 驼峰命名
   remark?: string;
   
-  // 收货地址快照
-  shipping_contact_name: string;
-  shipping_contact_phone: string;
-  shipping_province: string;
-  shipping_city: string;
-  shipping_district: string;
-  shipping_address: string;
-  shipping_zipcode?: string;
+  // ✅ 收货地址快照（简化版 - 3个字段）
+  shippingContactName: string;     // 收货人
+  shippingContactPhone: string;    // 电话
+  shippingFullAddress: string;     // 完整地址
   
-  created_at: string;
-  updated_at: string;
+  createdAt: string;     // ✅ 驼峰命名
+  updatedAt: string;     // ✅ 驼峰命名
   
   // 关联订单明细
   items?: OrderItem[];
   
   // 管理员可见：下单用户信息
-  user_email?: string;
-  user_name?: string;
+  userEmail?: string;    // ✅ 驼峰命名
+  userName?: string;     // ✅ 驼峰命名
 }
 
 // ========== 订单状态配置 ==========
@@ -141,7 +138,7 @@ const Orders: React.FC = () => {
         ordersData = ordersResponse.documents as unknown as Order[];
         
         // 获取每个订单的用户信息
-        const userIds = [...new Set(ordersData.map(order => order.user_id))];
+        const userIds = [...new Set(ordersData.map(order => order.userId))];
         const usersMap = new Map<string, { email: string; name: string }>();
         
         await Promise.all(
@@ -165,8 +162,8 @@ const Orders: React.FC = () => {
         // 追加用户信息到订单
         ordersData = ordersData.map(order => ({
           ...order,
-          user_email: usersMap.get(order.user_id)?.email,
-          user_name: usersMap.get(order.user_id)?.name,
+          userEmail: usersMap.get(order.userId)?.email,   // ✅ 驼峰命名
+          userName: usersMap.get(order.userId)?.name,     // ✅ 驼峰命名
         }));
         
       } else if (isUser) {
@@ -176,7 +173,7 @@ const Orders: React.FC = () => {
           DATABASE_ID,
           COLLECTIONS.ORDERS,
           [
-            Query.equal('user_id', user.$id),
+            Query.equal('userId', user.$id),  // ✅ 驼峰命名
             Query.limit(50),
           ]
         );
@@ -192,7 +189,7 @@ const Orders: React.FC = () => {
               DATABASE_ID,
               COLLECTIONS.ORDER_ITEMS,
               [
-                Query.equal('order_id', order.$id),
+                Query.equal('orderId', order.$id),  // ✅ 驼峰命名
               ]
             );
             
@@ -410,7 +407,7 @@ const Orders: React.FC = () => {
                           
                           <div className="flex items-center gap-2 text-gray-600">
                             <Calendar size={16} />
-                            {new Date(order.created_at).toLocaleString('zh-CN')}
+                            {new Date(order.createdAt).toLocaleString('zh-CN')}
                           </div>
                         </div>
                         
@@ -418,7 +415,7 @@ const Orders: React.FC = () => {
                         {isAdmin && (
                           <div className="flex items-center gap-2 px-4 py-2 bg-purple-200 border-2 border-black rounded-lg font-bold">
                             <User size={16} />
-                            {order.user_name || '未知'} ({order.user_email})
+                            {order.userName || '未知'} ({order.userEmail})
                           </div>
                         )}
                       </div>
@@ -430,10 +427,11 @@ const Orders: React.FC = () => {
                           {order.items?.map((item, idx) => (
                             <div key={item.$id} className="flex items-center gap-4 pb-4 border-b-2 border-dashed border-gray-300 last:border-0">
                               <div className="w-20 h-20 bg-gray-200 border-4 border-black rounded-xl overflow-hidden shrink-0">
-                                {item.product_image ? (
+                                {/* ✅ 驼峰命名：productImage, productName */}
+                                {item.productImage ? (
                                   <img
-                                    src={item.product_image}
-                                    alt={item.product_name}
+                                    src={item.productImage}
+                                    alt={item.productName}
                                     className="w-full h-full object-cover"
                                   />
                                 ) : (
@@ -444,9 +442,10 @@ const Orders: React.FC = () => {
                               </div>
                               
                               <div className="flex-1 min-w-0">
-                                <h3 className="font-bold text-lg truncate">{item.product_name}</h3>
-                                {item.variant_name && (
-                                  <p className="text-gray-600 text-sm">{item.variant_name}</p>
+                                {/* ✅ 驼峰命名：productName, variantName */}
+                                <h3 className="font-bold text-lg truncate">{item.productName}</h3>
+                                {item.variantName && (
+                                  <p className="text-gray-600 text-sm">{item.variantName}</p>
                                 )}
                                 <div className="flex items-center gap-4 mt-2 text-sm font-mono">
                                   <span className="font-bold">¥{item.price.toFixed(2)}</span>
@@ -470,11 +469,10 @@ const Orders: React.FC = () => {
                               收货地址
                             </div>
                             <div className="space-y-1 text-sm">
-                              <p className="font-bold">{order.shipping_contact_name} {order.shipping_contact_phone}</p>
+                              <p className="font-bold">{order.shippingContactName} {order.shippingContactPhone}</p>
                               <p className="text-gray-700">
-                                {order.shipping_province} {order.shipping_city} {order.shipping_district}
+                                {order.shippingFullAddress}
                               </p>
-                              <p className="text-gray-700">{order.shipping_address}</p>
                             </div>
                           </div>
                           
@@ -485,10 +483,10 @@ const Orders: React.FC = () => {
                               支付方式
                             </div>
                             <p className="font-bold text-lg">
-                              {order.payment_method === 'alipay' && '支付宝'}
-                              {order.payment_method === 'wechat' && '微信支付'}
-                              {order.payment_method === 'card' && '银行卡'}
-                              {order.payment_method === 'cod' && '货到付款'}
+                              {order.paymentMethod === 'alipay' && '支付宝'}
+                              {order.paymentMethod === 'wechat' && '微信支付'}
+                              {order.paymentMethod === 'card' && '银行卡'}
+                              {order.paymentMethod === 'cod' && '货到付款'}
                             </p>
                             {order.remark && (
                               <div className="mt-3 pt-3 border-t border-gray-300">
@@ -507,7 +505,7 @@ const Orders: React.FC = () => {
                           <div className="flex items-center gap-2">
                             <span className="text-2xl font-black">订单总价:</span>
                             <span className="text-4xl font-black text-yellow-600">
-                              ¥{order.total_amount.toFixed(2)}
+                              ￥{order.totalAmount.toFixed(2)}
                             </span>
                           </div>
                           
@@ -559,9 +557,9 @@ const Orders: React.FC = () => {
               <div className="p-6">
                 <div className="space-y-4">
                   <p className="font-mono text-lg"><strong>订单 ID:</strong> {selectedOrder.$id}</p>
-                  <p className="text-lg"><strong>创建时间:</strong> {new Date(selectedOrder.created_at).toLocaleString('zh-CN')}</p>
+                  <p className="text-lg"><strong>创建时间:</strong> {new Date(selectedOrder.createdAt).toLocaleString('zh-CN')}</p>
                   <p className="text-lg"><strong>状态:</strong> {statusConfig[selectedOrder.status]?.label}</p>
-                  <p className="text-2xl font-black"><strong>总金额:</strong> ¥{selectedOrder.total_amount.toFixed(2)}</p>
+                  <p className="text-2xl font-black"><strong>总金额:</strong> ¥{selectedOrder.totalAmount.toFixed(2)}</p>
                 </div>
               </div>
             </motion.div>

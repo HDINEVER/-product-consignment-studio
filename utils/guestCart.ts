@@ -5,13 +5,13 @@
  */
 
 export interface GuestCartItem {
-  product_id: string;
-  product_name: string;
+  productId: string;      // ✅ 驼峰命名
+  productName: string;    // ✅ 驼峰命名
   price: number;
   quantity: number;
   image?: string;
-  variant_name?: string;
-  added_at: string;
+  variantName?: string;   // ✅ 驼峰命名
+  addedAt: string;        // ✅ 驼峰命名
 }
 
 const GUEST_CART_KEY = 'guest_cart_items';
@@ -43,12 +43,12 @@ export const saveGuestCart = (items: GuestCartItem[]): void => {
 /**
  * 添加商品到游客购物车
  */
-export const addToGuestCart = (item: Omit<GuestCartItem, 'added_at'>): GuestCartItem[] => {
+export const addToGuestCart = (item: Omit<GuestCartItem, 'addedAt'>): GuestCartItem[] => {
   const cart = getGuestCart();
   
   // 检查是否已存在相同商品
   const existingIndex = cart.findIndex(
-    (i) => i.product_id === item.product_id && i.variant_name === item.variant_name
+    (i) => i.productId === item.productId && i.variantName === item.variantName
   );
 
   if (existingIndex > -1) {
@@ -58,7 +58,7 @@ export const addToGuestCart = (item: Omit<GuestCartItem, 'added_at'>): GuestCart
     // 添加新项
     cart.push({
       ...item,
-      added_at: new Date().toISOString(),
+      addedAt: new Date().toISOString(),  // ✅ 驼峰命名
     });
   }
 
@@ -69,11 +69,11 @@ export const addToGuestCart = (item: Omit<GuestCartItem, 'added_at'>): GuestCart
 /**
  * 更新游客购物车商品数量
  */
-export const updateGuestCartItem = (product_id: string, quantity: number, variant_name?: string): GuestCartItem[] => {
+export const updateGuestCartItem = (productId: string, quantity: number, variantName?: string): GuestCartItem[] => {
   const cart = getGuestCart();
   
   const index = cart.findIndex(
-    (i) => i.product_id === product_id && i.variant_name === variant_name
+    (i) => i.productId === productId && i.variantName === variantName  // ✅ 驼峰命名
   );
 
   if (index > -1) {
@@ -92,11 +92,11 @@ export const updateGuestCartItem = (product_id: string, quantity: number, varian
 /**
  * 从游客购物车移除商品
  */
-export const removeFromGuestCart = (product_id: string, variant_name?: string): GuestCartItem[] => {
+export const removeFromGuestCart = (productId: string, variantName?: string): GuestCartItem[] => {
   const cart = getGuestCart();
   
   const filtered = cart.filter(
-    (i) => !(i.product_id === product_id && i.variant_name === variant_name)
+    (i) => !(i.productId === productId && i.variantName === variantName)  // ✅ 驼峰命名
   );
 
   saveGuestCart(filtered);

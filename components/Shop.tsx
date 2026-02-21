@@ -119,10 +119,10 @@ const Shop = () => {
     // Handlers - 使用 useCart hook
     const handleAddToCart = async (product: Product, variantName: string, price: number, quantity: number) => {
         const success = await addToCart({
-          product_id: String(product.id),
-          product_name: product.title,
-          product_image: product.image,
-          variant_name: variantName,
+          productId: String(product.id),      // ✅ 驼峰命名
+          productName: product.title,         // ✅ 驼峰命名
+          productImage: product.image,        // ✅ 驼峰命名
+          variantName: variantName,           // ✅ 驼峰命名
           price: price,
           quantity: quantity,
         });
@@ -172,7 +172,7 @@ const Shop = () => {
         
         const updates: any = {
           [tagType]: tagName,  // 更新名称字段
-          [tagType === 'category' ? 'categoryId' : 'ip_id']: tagId || '',  // 更新外键字段
+          [tagType === 'category' ? 'categoryId' : 'ipId']: tagId || '',  // ✅ 驼峰命名
         };
         
         await updateProduct(productId, updates);

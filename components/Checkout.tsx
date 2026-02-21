@@ -10,15 +10,16 @@ import AnimatedButton from './AnimatedButton';
 // ========== 类型定义 ==========
 interface Address {
   $id: string;
-  user_id: string;
-  contact_name: string;
-  contact_phone: string;
+  userId: string;        // ✅ 驼峰命名
+  contactName: string;   // ✅ 驼峰命名
+  contactPhone: string;  // ✅ 驼峰命名
   province: string;
   city: string;
   district: string;
-  address: string;
-  zipcode?: string;
-  is_default: boolean;
+  village: string;       // ✅ 新增乡镇字段
+  streetAddress: string; // ✅ 详细地址
+  label?: string;        // ✅ 地址标签
+  isDefault?: boolean;   // ✅ 驼峰命名
 }
 
 const Checkout: React.FC = () => {
@@ -35,14 +36,15 @@ const Checkout: React.FC = () => {
   
   // 新地址表单
   const [newAddress, setNewAddress] = useState({
-    contact_name: '',
-    contact_phone: '',
+    contactName: '',    // ✅ 驼峰命名
+    contactPhone: '',   // ✅ 驼峰命名
     province: '',
     city: '',
     district: '',
-    address: '',
-    zipcode: '',
-    is_default: false,
+    village: '',        // ✅ 新增乡镇
+    streetAddress: '',  // ✅ 驼峰命名
+    label: '',          // ✅ 地址标签
+    isDefault: false,   // ✅ 驼峰命名
   });
   
   const [remark, setRemark] = useState('');
@@ -75,8 +77,8 @@ const Checkout: React.FC = () => {
         DATABASE_ID,
         COLLECTIONS.ADDRESSES,
         [
-          Query.equal('user_id', user.$id),
-          Query.orderDesc('is_default'),
+          Query.equal('userId', user.$id),      // ✅ 驼峰命名
+          Query.orderDesc('isDefault'),         // ✅ 驼峰命名
         ]
       );
 
@@ -84,7 +86,7 @@ const Checkout: React.FC = () => {
       setAddresses(fetchedAddresses);
       
       // 自动选择默认地址
-      const defaultAddress = fetchedAddresses.find(addr => addr.is_default);
+      const defaultAddress = fetchedAddresses.find(addr => addr.isDefault);
       if (defaultAddress) {
         setSelectedAddressId(defaultAddress.$id);
       } else if (fetchedAddresses.length > 0) {
@@ -102,8 +104,8 @@ const Checkout: React.FC = () => {
     e.preventDefault();
     if (!user) return;
 
-    // 验证表单
-    if (!newAddress.contact_name || !newAddress.contact_phone || !newAddress.address) {
+    // ✅ 验证表单（使用驼峰命名）
+    if (!newAddress.contactName || !newAddress.contactPhone || !newAddress.streetAddress) {
       alert('请填写必填项');
       return;
     }
@@ -114,9 +116,9 @@ const Checkout: React.FC = () => {
         COLLECTIONS.ADDRESSES,
         ID.unique(),
         {
-          user_id: user.$id,
+          userId: user.$id,      // ✅ 驼峰命名
           ...newAddress,
-          created_at: new Date().toISOString(),
+          createdAt: new Date().toISOString(),  // ✅ 驼峰命名
         },
         [
           // 行级安全：只有该用户可以读取、更新、删除
@@ -137,16 +139,17 @@ const Checkout: React.FC = () => {
       // 关闭表单
       setShowAddressForm(false);
       
-      // 重置表单
+      // ✅ 重置表单（使用驼峰命名）
       setNewAddress({
-        contact_name: '',
-        contact_phone: '',
+        contactName: '',
+        contactPhone: '',
         province: '',
         city: '',
         district: '',
-        address: '',
-        zipcode: '',
-        is_default: false,
+        village: '',
+        streetAddress: '',
+        label: '',
+        isDefault: false,
       });
     } catch (err: any) {
       console.error('❌ 添加地址失败:', err);
@@ -186,23 +189,20 @@ const Checkout: React.FC = () => {
         COLLECTIONS.ORDERS,
         ID.unique(),
         {
-          user_id: user.$id,
+          orderId: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // 生成订单号
+          userId: user.$id,
           status: 'pending',
-          total_amount: cartTotal,
-          payment_method: paymentMethod,
-          remark: remark,
+          totalAmount: cartTotal,
+          paymentMethod: paymentMethod,
+          remark: remark || '',
           
-          // 收货地址快照
-          shipping_contact_name: selectedAddress.contact_name,
-          shipping_contact_phone: selectedAddress.contact_phone,
-          shipping_province: selectedAddress.province,
-          shipping_city: selectedAddress.city,
-          shipping_district: selectedAddress.district,
-          shipping_address: selectedAddress.address,
-          shipping_zipcode: selectedAddress.zipcode || '',
+          // ✅ 收货地址快照（简化版 - 拼接完整地址）
+          shippingContactName: selectedAddress.contactName,
+          shippingContactPhone: selectedAddress.contactPhone,
+          shippingFullAddress: `${selectedAddress.province} ${selectedAddress.city} ${selectedAddress.district} ${selectedAddress.village} ${selectedAddress.streetAddress}`,
           
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         },
         [
           // 行级安全：只有该用户可以读取、更新
@@ -221,14 +221,14 @@ const Checkout: React.FC = () => {
             COLLECTIONS.ORDER_ITEMS,
             ID.unique(),
             {
-              order_id: order.$id,
-              product_id: item.productId,
-              product_name: item.productTitle,
-              product_image: item.image,
-              variant_name: item.variantName || '',
-              price: item.price,  // 价格快照
+              orderId: order.$id,                   // ✅ 驼峰命名
+              productId: item.productId,            // ✅ 驼峰命名
+              productName: item.productTitle,       // ✅ 驼峰命名（商品名称快照）
+              productImage: item.image,             // ✅ 驼峰命名（商品图片快照）
+              variantName: item.variantName || '',  // ✅ 驼峰命名
+              price: item.price,                    // 价格快照
               quantity: item.quantity,
-              created_at: new Date().toISOString(),
+              createdAt: new Date().toISOString(),  // ✅ 驼峰命名
             },
             [
               Permission.read(Role.user(user.$id)),
@@ -335,8 +335,8 @@ const Checkout: React.FC = () => {
                         <input
                           type="text"
                           required
-                          value={newAddress.contact_name}
-                          onChange={(e) => setNewAddress({ ...newAddress, contact_name: e.target.value })}
+                          value={newAddress.contactName}
+                          onChange={(e) => setNewAddress({ ...newAddress, contactName: e.target.value })}
                           className="w-full px-4 py-2 border-4 border-black font-bold focus:outline-none focus:bg-white"
                           placeholder="请输入收货人姓名"
                         />
@@ -347,8 +347,8 @@ const Checkout: React.FC = () => {
                         <input
                           type="tel"
                           required
-                          value={newAddress.contact_phone}
-                          onChange={(e) => setNewAddress({ ...newAddress, contact_phone: e.target.value })}
+                          value={newAddress.contactPhone}
+                          onChange={(e) => setNewAddress({ ...newAddress, contactPhone: e.target.value })}
                           className="w-full px-4 py-2 border-4 border-black font-bold focus:outline-none focus:bg-white"
                           placeholder="请输入手机号"
                         />
@@ -378,15 +378,50 @@ const Checkout: React.FC = () => {
                         />
                       </div>
 
+                      <div>
+                        <label className="block font-bold mb-2">区县 *</label>
+                        <input
+                          type="text"
+                          required
+                          value={newAddress.district}
+                          onChange={(e) => setNewAddress({ ...newAddress, district: e.target.value })}
+                          className="w-full px-4 py-2 border-4 border-black font-bold focus:outline-none focus:bg-white"
+                          placeholder="请输入区县"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold mb-2">乡镇/街道 *</label>
+                        <input
+                          type="text"
+                          required
+                          value={newAddress.village}
+                          onChange={(e) => setNewAddress({ ...newAddress, village: e.target.value })}
+                          className="w-full px-4 py-2 border-4 border-black font-bold focus:outline-none focus:bg-white"
+                          placeholder="请输入乡镇/街道"
+                        />
+                      </div>
+
                       <div className="md:col-span-2">
                         <label className="block font-bold mb-2">详细地址 *</label>
                         <textarea
                           required
-                          value={newAddress.address}
-                          onChange={(e) => setNewAddress({ ...newAddress, address: e.target.value })}
+                          value={newAddress.streetAddress}
+                          onChange={(e) => setNewAddress({ ...newAddress, streetAddress: e.target.value })}
                           className="w-full px-4 py-2 border-4 border-black font-bold focus:outline-none focus:bg-white resize-none"
                           rows={3}
                           placeholder="请输入详细地址（街道、楼栋、门牌号等）"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold mb-2">地址标签</label>
+                        <input
+                          type="text"
+                          value={newAddress.label || ''}
+                          onChange={(e) => setNewAddress({ ...newAddress, label: e.target.value })}
+                          className="w-full px-4 py-2 border-4 border-black font-bold focus:outline-none focus:bg-white"
+                          placeholder="如：家、公司"
                         />
                       </div>
                     </div>
@@ -438,16 +473,21 @@ const Checkout: React.FC = () => {
                         />
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-black">{addr.contact_name}</span>
-                            <span className="font-bold text-gray-600">{addr.contact_phone}</span>
-                            {addr.is_default && (
+                            <span className="font-black">{addr.contactName}</span>
+                            <span className="font-bold text-gray-600">{addr.contactPhone}</span>
+                            {addr.label && (
+                              <span className="px-2 py-0.5 bg-blue-400 text-white text-xs font-bold border border-black">
+                                {addr.label}
+                              </span>
+                            )}
+                            {addr.isDefault && (
                               <span className="px-2 py-0.5 bg-red-400 text-white text-xs font-bold border border-black">
                                 默认
                               </span>
                             )}
                           </div>
                           <p className="text-sm font-bold text-gray-700">
-                            {addr.province} {addr.city} {addr.district} {addr.address}
+                            {addr.province} {addr.city} {addr.district} {addr.village} {addr.streetAddress}
                           </p>
                         </div>
                       </div>

@@ -91,10 +91,10 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     setIsAdding(true);
     try {
       await addToCart({
-        product_id: product.id,
-        product_name: product.title,
-        product_image: product.image,
-        variant_name: '',
+        productId: product.id,              // ✅ 驼峰命名
+        productName: product.title,         // ✅ 驼峰命名
+        productImage: product.image,        // ✅ 驼峰命名
+        variantName: '',                    // ✅ 驼峰命名
         price: product.basePrice,
         quantity: quantity,
       });

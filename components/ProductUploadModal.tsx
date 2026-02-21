@@ -132,14 +132,14 @@ export default function ProductUploadModal({
         ip: data.ip_tag,  // ip_tag -> ip
         category: data.category,
         price: Number(data.price),
-        stock_quantity: Number(data.stock),  // stock -> stock_quantity
-        imageUrl: uploadedImages[0],  // 使用第一张图片作为主图
-        condition: 'new',  // 默认新品
-        seller_id: user.$id,  // 卖家 ID
-        seller_name: user.name || user.email,  // 卖家名称
+        stockQuantity: Number(data.stock),      // ✅ 驼峰命名
+        imageUrl: uploadedImages[0],            // 使用第一张图片作为主图
+        condition: 'new',                       // 默认新品
+        sellerId: user.$id,                     // ✅ 驼峰命名
+        sellerName: user.name || user.email,    // ✅ 驼峰命名
         status: 'active',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        createdAt: new Date().toISOString(),   // ✅ 驼峰命名
+        updatedAt: new Date().toISOString(),   // ✅ 驼峰命名
       };
 
       if (editMode && initialData?.$id) {
@@ -150,7 +150,7 @@ export default function ProductUploadModal({
           initialData.$id,
           {
             ...productData,
-            updated_at: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),  // ✅ 驼峰命名
           }
         );
         console.log('✅ 商品更新成功');

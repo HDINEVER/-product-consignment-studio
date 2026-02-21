@@ -213,8 +213,11 @@ const AdminOrders: React.FC = () => {
                     className="flex justify-between items-center p-4 bg-gray-50 border-3 border-black rounded-xl"
                   >
                     <div className="flex-1">
-                      <p className="font-bold">{item.product_name}</p>
-                      <p className="text-sm text-gray-500">SKU: {item.sku_code}</p>
+                      {/* ✅ 驼峰命名：productName, variantName */}
+                      <p className="font-bold">{item.productName}</p>
+                      {item.variantName && (
+                        <p className="text-sm text-gray-500">规格: {item.variantName}</p>
+                      )}
                     </div>
                     <div className="text-right">
                       <p className="font-bold">¥{item.price} × {item.quantity}</p>

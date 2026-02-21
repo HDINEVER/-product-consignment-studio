@@ -4,82 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ComicCon Consignment Hub - 二次元寄售站</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- ✅ 已移除 Tailwind CDN，使用 PostCSS 版本 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              'brutal': ['Space Grotesk', 'Noto Sans SC', 'system-ui', 'sans-serif'],
-            },
-            colors: {
-              'brutal': {
-                'yellow': '#FFE566',
-                'orange': '#FF6B35',
-                'pink': '#FF4F9A',
-                'cyan': '#00D4FF',
-                'purple': '#7B68EE',
-                'blue': '#4A90E2',
-                'dark': '#1A1A2E',
-                'light': '#FFFEF0',
-                'black': '#000000',
-                'bg': '#F5F5F5',
-              },
-              'arknights': {
-                'gold': '#F5B041',
-                'red': '#E74C3C',
-                'blue': '#3498DB',
-                'gray': '#2C3E50',
-              }
-            },
-            borderWidth: {
-              '3': '3px',
-            },
-            boxShadow: {
-              'brutal': '4px 4px 0px 0px rgba(0,0,0,1)',
-              'brutal-sm': '2px 2px 0px 0px rgba(0,0,0,1)',
-              'brutal-md': '6px 6px 0px 0px rgba(0,0,0,1)',
-              'brutal-lg': '8px 8px 0px 0px rgba(0,0,0,1)',
-              'brutal-xl': '12px 12px 0px 0px rgba(0,0,0,1)',
-              'brutal-hover': '6px 6px 0px 0px rgba(0,0,0,1)',
-              'brutal-active': '2px 2px 0px 0px rgba(0,0,0,1)',
-            },
-            animation: {
-              'shake': 'shake 0.5s ease-in-out',
-              'pulse-brutal': 'pulse-brutal 2s ease-in-out infinite',
-              'slide-up': 'slide-up 0.3s ease-out',
-              'glitch': 'glitch 0.3s ease-in-out',
-            },
-            keyframes: {
-              'shake': {
-                '0%, 100%': { transform: 'translateX(0)' },
-                '25%': { transform: 'translateX(-5px)' },
-                '75%': { transform: 'translateX(5px)' },
-              },
-              'pulse-brutal': {
-                '0%, 100%': { transform: 'scale(1)' },
-                '50%': { transform: 'scale(1.02)' },
-              },
-              'slide-up': {
-                '0%': { transform: 'translateY(20px)', opacity: '0' },
-                '100%': { transform: 'translateY(0)', opacity: '1' },
-              },
-              'glitch': {
-                '0%': { transform: 'translate(0)' },
-                '20%': { transform: 'translate(-2px, 2px)' },
-                '40%': { transform: 'translate(-2px, -2px)' },
-                '60%': { transform: 'translate(2px, 2px)' },
-                '80%': { transform: 'translate(2px, -2px)' },
-                '100%': { transform: 'translate(0)' },
-              },
-            }
-          }
-        }
-      }
-    </script>
     <style>
       /* Neo-brutalism 全局样式 */
       * {

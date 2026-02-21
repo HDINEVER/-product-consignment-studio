@@ -8,6 +8,10 @@ interface User {
   email: string;
   name: string;
   phone?: string;
+  role?: 'guest' | 'user' | 'admin';
+  dateOfBirth?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // 用户角色枚举
@@ -89,6 +93,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // 获取用户详细信息（从数据库）
       let userName = currentUser.name;
       let userPhone = '';
+      let userRole: 'guest' | 'user' | 'admin' = 'user';
+      let userDateOfBirth = '';
+      let userCreatedAt = '';
+      let userUpdatedAt = '';
       
       try {
         const userDoc = await databases.getDocument(
@@ -98,8 +106,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         );
         userName = userDoc.name as string || currentUser.name;
         userPhone = userDoc.phone as string || '';
-      } catch {
-        // 用户文档不存在，使用默认值
+        userRole = userDoc.role as 'guest' | 'user' | 'admin' || 'user';
+        userDateOfBirth = userDoc.dateOfBirth as string || '';
+        userCreatedAt = userDoc.createdAt as string || '';
+        userUpdatedAt = userDoc.updatedAt as string || '';
+      } catch (err) {
+        console.log('⚠️ 用户文档不存在或读取失败，使用默认值:', err);
       }
       
       setUser({
@@ -107,6 +119,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         email: currentUser.email,
         name: userName,
         phone: userPhone,
+        role: userRole,
+        dateOfBirth: userDateOfBirth,
+        createdAt: userCreatedAt,
+        updatedAt: userUpdatedAt,
       });
       
       console.log('✅ 用户已登录:', currentUser.email, adminStatus ? '(管理员)' : '(普通用户)');
@@ -147,10 +163,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           COLLECTIONS.CART_ITEMS,
           ID.unique(),
           {
-            user_id: user.$id,
-            product_id: item.product_id,
+            userId: user.$id,                      // ✅ 使用驼峰命名
+            productId: item.productId,             // ✅ 使用驼峰命名
             quantity: item.quantity,
-            created_at: new Date().toISOString(),
+            createdAt: new Date().toISOString(),   // ✅ 使用驼峰命名
+            isActive: true,                        // ✅ 添加必填字段
           }
         );
       }
@@ -229,7 +246,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           email: email,
           name: name,
           phone: '',
-          created_at: new Date().toISOString(),
+          role: 'user',                           // ✅ 添加必填字段
+          createdAt: new Date().toISOString(),    // ✅ 使用驼峰命名
+          updatedAt: new Date().toISOString(),    // ✅ 使用驼峰命名
         }
       );
 

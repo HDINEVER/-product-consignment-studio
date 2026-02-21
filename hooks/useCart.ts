@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { databases, DATABASE_ID, COLLECTIONS, Query, ID, Permission, Role } from '../lib/appwrite';
 import { useAuth } from '../contexts/AuthContext';
-import { CartItem } from '../types';
+import { CartItem, AppwriteCartItem } from '../types';
 import { 
   getGuestCart, 
   addToGuestCart, 
@@ -14,15 +14,6 @@ import {
 // ========== 扩展 CartItem 添加 ID ==========
 export interface CartItemWithId extends CartItem {
   id: string;  // 购物车项 ID（数据库 ID 或本地生成）
-}
-
-// ========== Appwrite 购物车文档类型 ==========
-interface AppwriteCartItem {
-  $id: string;
-  user_id: string;
-  product_id: string;
-  quantity: number;
-  created_at: string;
 }
 
 export function useCart() {
@@ -42,10 +33,10 @@ export function useCart() {
         const guestItems = getGuestCart();
         const mapped: CartItemWithId[] = guestItems.map((item, index) => ({
           id: `guest-${index}`,
-          productId: item.product_id,
-          productTitle: item.product_name,
+          productId: item.productId,           // ✅ 驼峰命名
+          productTitle: item.productName,      // ✅ 驼峰命名
           image: item.image || '/placeholder-product.jpg',
-          variantName: item.variant_name || '',
+          variantName: item.variantName || '', // ✅ 驼峰命名
           price: item.price,
           quantity: item.quantity,
         }));
@@ -57,8 +48,8 @@ export function useCart() {
           DATABASE_ID,
           COLLECTIONS.CART_ITEMS,
           [
-            Query.equal('user_id', user.$id),
-            Query.orderDesc('created_at'),
+            Query.equal('userId', user.$id),      // ✅ 使用驼峰命名
+            Query.orderDesc('createdAt'),          // ✅ 使用驼峰命名
           ]
         );
 
@@ -76,7 +67,7 @@ export function useCart() {
               const product = await databases.getDocument(
                 DATABASE_ID,
                 COLLECTIONS.PRODUCTS,
-                cartDoc.product_id
+                cartDoc.productId                  // ✅ 使用驼峰命名
               );
               productName = product.name as string;
               productImage = (product.imageUrl as string) || '/placeholder-product.jpg';
@@ -87,7 +78,7 @@ export function useCart() {
 
             return {
               id: cartDoc.$id,
-              productId: cartDoc.product_id,
+              productId: cartDoc.productId,        // ✅ 使用驼峰命名
               productTitle: productName,
               image: productImage,
               variantName: '',  // 可以从购物车文档扩展
@@ -115,21 +106,21 @@ export function useCart() {
 
   // ========== 添加到购物车 ==========
   const addToCart = async (item: {
-    product_id: string;
-    product_name: string;
-    product_image: string;
-    variant_name?: string;
+    productId: string;          // ✅ 驼峰命名
+    productName: string;        // ✅ 驼峰命名 
+    productImage: string;       // ✅ 驼峰命名
+    variantName?: string;       // ✅ 驼峰命名
     price: number;
     quantity: number;
   }) => {
     try {
       if (isGuest) {
-        // 游客：存入 sessionStorage（注意字段映射：product_image -> image）
+        // 游客：存入 sessionStorage（注意字段映射：productImage -> image）
         addToGuestCart({
-          product_id: item.product_id,
-          product_name: item.product_name,
-          image: item.product_image,  // GuestCartItem 使用 image 字段
-          variant_name: item.variant_name,
+          productId: item.productId,       // ✅ 驼峰命名
+          productName: item.productName,   // ✅ 驼峰命名
+          image: item.productImage,         // GuestCartItem 使用 image 字段
+          variantName: item.variantName,   // ✅ 驼峰命名
           price: item.price,
           quantity: item.quantity,
         });
@@ -141,10 +132,11 @@ export function useCart() {
           COLLECTIONS.CART_ITEMS,
           ID.unique(),
           {
-            user_id: user.$id,
-            product_id: item.product_id,
+            userId: user.$id,                      // ✅ 使用驼峰命名
+            productId: item.productId,             // ✅ 使用驼峰命名
             quantity: item.quantity,
-            created_at: new Date().toISOString(),
+            createdAt: new Date().toISOString(),   // ✅ 使用驼峰命名
+            isActive: true,                        // ✅ 添加必填字段
           },
           [
             // 行级安全：只有该用户可以读取、更新、删除
@@ -235,7 +227,7 @@ export function useCart() {
         const response = await databases.listDocuments(
           DATABASE_ID,
           COLLECTIONS.CART_ITEMS,
-          [Query.equal('user_id', user.$id)]
+          [Query.equal('userId', user.$id)]  // ✅ 使用驼峰命名
         );
 
         await Promise.all(

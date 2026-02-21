@@ -114,7 +114,7 @@ const AdminTest: React.FC = () => {
           await databases.listDocuments(
             DATABASE_ID,
             COLLECTIONS.CART_ITEMS,
-            [Query.equal('user_id', user!.$id), Query.limit(5)]
+            [Query.equal('userId', user!.$id), Query.limit(5)]  // ✅ 驼峰命名
           );
           updateResult(3, { status: 'success', message: '✓ 购物车访问正常' });
         } catch (error: any) {
@@ -131,7 +131,7 @@ const AdminTest: React.FC = () => {
           await databases.listDocuments(
             DATABASE_ID,
             COLLECTIONS.ORDERS,
-            [Query.equal('user_id', user!.$id), Query.limit(5)]
+            [Query.equal('userId', user!.$id), Query.limit(5)]  // ✅ 驼峰命名
           );
           updateResult(4, { status: 'success', message: '✓ 订单访问正常' });
         } catch (error: any) {
@@ -157,12 +157,11 @@ const AdminTest: React.FC = () => {
               name: '__TEST_PRODUCT__',
               description: 'Admin permission test',
               price: 0,
-              seller_id: user!.$id,
-              seller_name: user!.name,
-              category: 'test',
-              condition: 'new',
-              status: 'draft',
-              created_at: new Date().toISOString(),
+              stockQuantity: 0,
+              categoryId: '',  // 测试商品，不需要分类
+              ipId: '',  // 测试商品，不需要IP标签
+              isActive: false,  // 测试商品，设为不活跃
+              createdAt: new Date().toISOString(),  // ✅ 驼峰命名
             }
           );
           

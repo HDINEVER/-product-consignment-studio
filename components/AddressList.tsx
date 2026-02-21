@@ -6,14 +6,14 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface Address {
   id: number;
-  contact_name: string;
-  contact_phone: string;
+  contactName: string;    // ✅ 驼峰命名
+  contactPhone: string;   // ✅ 驼峰命名
   province: string;
   city: string;
   district: string;
   address: string;
   zipcode?: string;
-  is_default: boolean;
+  isDefault: boolean;     // ✅ 驼峰命名
 }
 
 export default function AddressList() {
@@ -154,7 +154,8 @@ export default function AddressList() {
                 transition={{ delay: index * 0.1 }}
                 className="bg-white border-4 border-black rounded-none shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 relative"
               >
-                {address.is_default && (
+                {/* ✅ 驼峰命名：isDefault */}
+                {address.isDefault && (
                   <div className="absolute top-0 right-0 bg-yellow-400 border-l-4 border-b-4 border-black px-4 py-2 font-black flex items-center gap-2">
                     <Check size={16} />
                     默认地址
@@ -162,9 +163,10 @@ export default function AddressList() {
                 )}
                 
                 <div className="mb-4 pt-8">
+                  {/* ✅ 驼峰命名：contactName, contactPhone */}
                   <div className="flex items-center gap-4 mb-2">
-                    <h3 className="text-xl font-black">{address.contact_name}</h3>
-                    <span className="text-gray-600">{address.contact_phone}</span>
+                    <h3 className="text-xl font-black">{address.contactName}</h3>
+                    <span className="text-gray-600">{address.contactPhone}</span>
                   </div>
                   <p className="text-gray-700">
                     {address.province} {address.city} {address.district} {address.address}
@@ -175,7 +177,8 @@ export default function AddressList() {
                 </div>
 
                 <div className="flex items-center gap-4 pt-4 border-t-2 border-black">
-                  {!address.is_default && (
+                  {/* ✅ 驼峰命名：isDefault */}
+                  {!address.isDefault && (
                     <button
                       onClick={() => handleSetDefault(address.id)}
                       className="px-4 py-2 bg-yellow-400 text-black font-bold border-2 border-black hover:bg-yellow-500 transition-colors"
