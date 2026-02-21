@@ -368,7 +368,7 @@ const ShadcnDashboard: React.FC<ShadcnDashboardProps> = ({ onSwitchToOriginal })
                           <div key={order.id} className="flex items-center gap-4">
                             <Avatar className="h-9 w-9">
                               <AvatarFallback>
-                                {order.user_email.substring(0, 2).toUpperCase()}
+                                {(order.user_email || 'UN').substring(0, 2).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex-1 space-y-1">
