@@ -264,8 +264,8 @@ const Shop = () => {
                 placeholder="搜索商品..."
                 className="flex-1"
               />
-              {/* 价格筛选 - 仅在大屏显示，紧挨搜索栏 */}
-              <div className="hidden lg:block shrink-0">
+              {/* 价格筛选 - 在所有屏幕尺寸显示 */}
+              <div className="shrink-0">
                 <PriceRangeFilter
                   min={0}
                   max={2000}

@@ -47,6 +47,8 @@ export default function BentoProductGrid({
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [isDraggable, setIsDraggable] = useState(false);
   const [layouts, setLayouts] = useState<{ [key: string]: Layout[] }>({});
+  const [isExpanded, setIsExpanded] = useState(false); // 控制按钮组展开/收缩
+  const buttonGroupRef = React.useRef<HTMLDivElement>(null); // 用于检测外部点击
   const { width, containerRef, mounted } = useContainerWidth({ measureBeforeMount: true });
   
   // Generate Optimized Bento Layout
@@ -126,6 +128,20 @@ export default function BentoProductGrid({
     }
   }, [products, generateBentoLayout]);
 
+  // 监听外部点击以收缩按钮组
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (buttonGroupRef.current && !buttonGroupRef.current.contains(event.target as Node)) {
+        setIsExpanded(false);
+      }
+    };
+
+    if (isExpanded) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isExpanded]);
+
   // Regular Grid Layout
   const generateGridLayout = useCallback((products: Product[]) => {
      return {
@@ -160,65 +176,118 @@ export default function BentoProductGrid({
   }
 
   return (
-    <div className="space-y-4">
-      {/* Controls */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-2">
-           <span className="text-xs sm:text-sm font-bold text-gray-500">
-            共 {products.length} 件商品
-          </span>
-        </div>
-        
-        <div className="flex items-center gap-2 sm:gap-3">
-           {isAdmin && (viewMode === 'bento' || viewMode === 'grid') && (
-            <button
-              onClick={() => setIsDraggable(!isDraggable)}
-              className={`hidden sm:flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl border-2 border-black font-bold text-xs sm:text-sm transition-all ${
-                isDraggable
-                  ? 'bg-brutal-yellow shadow-brutal'
-                  : 'bg-white hover:bg-gray-50'
-              }`}
-            >
-              <Shuffle size={14} className="sm:w-4 sm:h-4" />
-              <span className="hidden md:inline">{isDraggable ? '锁定布局' : '调整布局'}</span>
-              <span className="md:hidden">{isDraggable ? '锁定' : '调整'}</span>
-            </button>
+    <div className="relative">
+      {/* 浮动按钮组 - 固定在右下方，购物车按钮上方 */}
+      <div ref={buttonGroupRef} className="fixed bottom-28 right-6 z-40">
+        <div className="flex flex-col-reverse gap-2">
+          {/* 展开状态：显示所有按钮 */}
+          {isExpanded && (
+            <>
+              {/* 大图模式按钮 */}
+              <button
+                onClick={() => {
+                  setViewMode('bento');
+                  setIsExpanded(false);
+                }}
+                className={`w-12 h-12 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 ${
+                  viewMode === 'bento' 
+                    ? 'bg-black text-white shadow-brutal' 
+                    : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:translate-x-0.5 active:translate-y-0.5'
+                }`}
+                title="大图模式"
+              >
+                <LayoutGrid size={20} />
+              </button>
+
+              {/* 小卡片模式按钮 */}
+              <button
+                onClick={() => {
+                  setViewMode('grid');
+                  setIsExpanded(false);
+                }}
+                className={`w-12 h-12 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 ${
+                  viewMode === 'grid' 
+                    ? 'bg-black text-white shadow-brutal' 
+                    : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:translate-x-0.5 active:translate-y-0.5'
+                }`}
+                title="小卡片模式"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="7" height="7"/>
+                  <rect x="14" y="3" width="7" height="7"/>
+                  <rect x="3" y="14" width="7" height="7"/>
+                  <rect x="14" y="14" width="7" height="7"/>
+                </svg>
+              </button>
+
+              {/* 列表模式按钮 */}
+              <button
+                onClick={() => {
+                  setViewMode('list');
+                  setIsExpanded(false);
+                }}
+                className={`w-12 h-12 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 ${
+                  viewMode === 'list' 
+                    ? 'bg-black text-white shadow-brutal' 
+                    : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:translate-x-0.5 active:translate-y-0.5'
+                }`}
+                title="列表布局"
+              >
+                <ListIcon size={20} />
+              </button>
+
+              {/* 管理员拖拽按钮（仅在 bento/grid 模式下显示）*/}
+              {isAdmin && (viewMode === 'bento' || viewMode === 'grid') && (
+                <button
+                  onClick={() => setIsDraggable(!isDraggable)}
+                  className={`w-12 h-12 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 ${
+                    isDraggable
+                      ? 'bg-brutal-yellow shadow-brutal'
+                      : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:translate-x-0.5 active:translate-y-0.5'
+                  }`}
+                  title={isDraggable ? '锁定布局' : '调整布局'}
+                >
+                  <Shuffle size={20} />
+                </button>
+              )}
+            </>
           )}
 
-           <div className="flex rounded-xl border-2 border-black overflow-hidden">
-            <button
-              onClick={() => setViewMode('bento')}
-              className={`p-2.5 transition-colors ${
-                viewMode === 'bento' ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
-              }`}
-              title="大图模式"
-            >
-              <LayoutGrid size={18} />
-            </button>
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2.5 border-l-2 border-black transition-colors ${
-                viewMode === 'grid' ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
-              }`}
-              title="小卡片模式"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="3" width="7" height="7"/>
-                <rect x="14" y="3" width="7" height="7"/>
-                <rect x="3" y="14" width="7" height="7"/>
-                <rect x="14" y="14" width="7" height="7"/>
-              </svg>
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2.5 border-l-2 border-black transition-colors ${
-                viewMode === 'list' ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
-              }`}
-              title="列表布局"
-            >
-              <ListIcon size={18} />
-            </button>
-          </div>
+          {/* 主按钮：显示当前视图模式，点击展开/收缩 */}
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className={`w-12 h-12 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 ${
+              isExpanded
+                ? 'bg-brutal-cyan shadow-brutal'
+                : 'bg-black text-white shadow-brutal hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5'
+            }`}
+            title={isExpanded ? '收起' : '切换视图'}
+          >
+            {/* 图标内容 - 只旋转图标，不旋转背景 */}
+            <div className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : 'rotate-0'}`}>
+              {isExpanded ? (
+                // 展开时显示 X 图标
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              ) : (
+                // 收缩时显示当前视图模式图标
+                <>
+                  {viewMode === 'bento' && <LayoutGrid size={20} />}
+                  {viewMode === 'grid' && (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="3" width="7" height="7"/>
+                      <rect x="14" y="3" width="7" height="7"/>
+                      <rect x="3" y="14" width="7" height="7"/>
+                      <rect x="14" y="14" width="7" height="7"/>
+                    </svg>
+                  )}
+                  {viewMode === 'list' && <ListIcon size={20} />}
+                </>
+              )}
+            </div>
+          </button>
         </div>
       </div>
 
