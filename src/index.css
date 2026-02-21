@@ -93,6 +93,7 @@
     font-family: "Space Grotesk", "Noto Sans SC", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
 }
 
@@ -110,6 +111,12 @@
 html {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+  background-color: hsl(var(--background));
+  height: 100%;
+}
+
+body {
+  min-height: 100%;
 }
 
 /* 防止文本被意外选中 */
