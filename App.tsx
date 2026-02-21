@@ -10,7 +10,6 @@ import AdminProducts from './components/AdminProducts';
 import AdminUsers from './components/AdminUsers';
 import AdminTest from './components/AdminTest';
 import ProductDetail from './components/ProductDetail';
-import Cart from './components/Cart';
 import Checkout from './components/Checkout';
 import Orders from './components/Orders';
 import UserProfile from './components/UserProfile';
@@ -28,7 +27,6 @@ function App() {
         <Routes>
           <Route path="/" element={<Shop />} />
           <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/orders/:id" element={<Orders />} />

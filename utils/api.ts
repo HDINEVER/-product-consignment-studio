@@ -1,7 +1,7 @@
 /**
  * API 工具函数 - 使用 Appwrite SDK 封装所有后端 API 调用
  */
-import { account, databases, storage, Query, ID, DATABASE_ID, COLLECTIONS, STORAGE_BUCKET_ID } from '../lib/appwrite';
+import { account, databases, storage, Query, ID, DATABASE_ID, COLLECTIONS, STORAGE_BUCKET_ID, Permission, Role } from '../lib/appwrite';
 import type { Models } from 'appwrite';
 
 // ============ 认证相关 ============
@@ -23,6 +23,7 @@ export const authAPI = {
       );
 
       // 在用户集合中创建用户文档（存储额外信息）
+      // ⚠️ 注意：users 集合权限需要配置为允许 'users' 角色
       await databases.createDocument(
         DATABASE_ID,
         COLLECTIONS.USERS,
@@ -34,6 +35,7 @@ export const authAPI = {
           role: 'user',
           created_at: new Date().toISOString(),
         }
+        // 不指定权限参数，使用集合的默认权限配置
       );
 
       // 自动登录

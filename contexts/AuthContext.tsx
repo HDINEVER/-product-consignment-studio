@@ -237,7 +237,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // 创建账号
       const newUser = await account.create(ID.unique(), email, password, name);
 
-      // 在用户集合中创建用户文档
+      // 在用户集合中创建用户文档（继承集合默认权限）
+      // ⚠️ 注意：users 集合权限需要配置为允许 'users' 角色
       await databases.createDocument(
         DATABASE_ID,
         COLLECTIONS.USERS,
@@ -246,10 +247,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           email: email,
           name: name,
           phone: '',
-          role: 'user',                           // ✅ 添加必填字段
-          createdAt: new Date().toISOString(),    // ✅ 使用驼峰命名
-          updatedAt: new Date().toISOString(),    // ✅ 使用驼峰命名
+          role: 'user',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         }
+        // 不指定权限参数，使用集合的默认权限配置
       );
 
       // 自动登录

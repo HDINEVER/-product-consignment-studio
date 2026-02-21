@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ShoppingCart, Heart, Share2, Package, Truck, Shield } from 'lucide-react';
-import { productAPI, cartAPI } from '../utils/api';
+import { productAPI } from '../utils/api';
+import { useCart } from '../hooks/useCart';
 import AnimatedButton from './AnimatedButton';
 
 interface ProductSku {
@@ -30,6 +31,7 @@ interface ProductDetail {
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -60,18 +62,24 @@ const ProductDetail: React.FC = () => {
   };
 
   const handleAddToCart = async () => {
-    if (!selectedSku) {
+    if (!selectedSku || !product) {
       alert('请选择商品规格');
       return;
     }
 
     try {
       setAddingToCart(true);
-      await cartAPI.addToCart({
-        sku_id: selectedSku.id,
+      const success = await addToCart({
+        productId: product.id.toString(),
+        productName: product.name,
+        productImage: selectedSku.images?.[0] || '/placeholder.jpg',
+        variantName: selectedSku.sku_code,
+        price: selectedSku.price,
         quantity,
       });
-      alert('已加入购物车！');
+      if (success) {
+        alert('✅ 已加入购物车！');
+      }
     } catch (error: any) {
       alert(error.message || '加入购物车失败');
     } finally {
@@ -86,7 +94,7 @@ const ProductDetail: React.FC = () => {
     }
     
     await handleAddToCart();
-    navigate('/cart');
+    navigate('/checkout');
   };
 
   const currentImages = selectedSku?.images || [];

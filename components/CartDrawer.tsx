@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Trash2, FileText, Send, ShoppingBag, Plus, Minus } from 'lucide-react';
+import { X, Trash2, FileText, Send, ShoppingBag, Plus, Minus, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { CartItem } from '../types';
@@ -11,6 +11,7 @@ interface CartDrawerProps {
   cart: CartItem[];
   onRemoveItem: (index: number) => void;
   onUpdateQuantity?: (index: number, quantity: number) => void;
+  onClearCart?: () => void;
 }
 
 const CartDrawer: React.FC<CartDrawerProps> = ({ 
@@ -18,7 +19,8 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
   onClose, 
   cart, 
   onRemoveItem,
-  onUpdateQuantity 
+  onUpdateQuantity,
+  onClearCart
 }) => {
   const navigate = useNavigate();
   const { isGuest } = useAuth();
@@ -32,6 +34,23 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
 
   const handleCheckout = () => {
     navigate('/checkout');
+    onClose();
+  };
+
+  const handleClearCart = () => {
+    if (cart.length === 0) return;
+    if (window.confirm(`\u786e\u5b9a\u8981\u6e05\u7a7a ${cart.length} \u4ef6\u5546\u54c1\u5417\uff1f`)) {
+      onClearCart?.();
+    }
+  };
+
+  const handleViewProduct = (productId: string) => {
+    navigate(`/product/${productId}`);
+    onClose();
+  };
+
+  const handleContinueShopping = () => {
+    navigate('/');
     onClose();
   };
 
@@ -70,13 +89,26 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
               </p>
             </div>
           </div>
-          <button 
-            onClick={onClose} 
-            className="p-1.5 sm:p-2 bg-white hover:bg-red-400 rounded-lg sm:rounded-xl transition-colors border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
-            aria-label="关闭购物车"
-          >
-            <X size={18} className="sm:w-5 sm:h-5" strokeWidth={3} />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* 清空购物车按钮 */}
+            {cart.length > 0 && onClearCart && (
+              <button 
+                onClick={handleClearCart}
+                className="p-1.5 sm:p-2 bg-white hover:bg-red-100 rounded-lg sm:rounded-xl transition-colors border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
+                aria-label="清空购物车"
+                title="清空购物车"
+              >
+                <Trash2 size={16} className="sm:w-4 sm:h-4 text-red-600" strokeWidth={3} />
+              </button>
+            )}
+            <button 
+              onClick={onClose} 
+              className="p-1.5 sm:p-2 bg-white hover:bg-red-400 rounded-lg sm:rounded-xl transition-colors border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
+              aria-label="关闭购物车"
+            >
+              <X size={18} className="sm:w-5 sm:h-5" strokeWidth={3} />
+            </button>
+          </div>
         </div>
 
         {/* 游客提示 */}
@@ -95,9 +127,15 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                 <ShoppingBag size={32} className="sm:w-10 sm:h-10 text-gray-400" />
               </div>
               <p className="font-black text-base sm:text-lg text-gray-800">购物车是空的</p>
-              <p className="text-xs sm:text-sm font-medium text-gray-500 mt-1 sm:mt-2">
+              <p className="text-xs sm:text-sm font-medium text-gray-500 mt-1 sm:mt-2 mb-4">
                 快去挑选喜欢的商品吧！
               </p>
+              <button 
+                onClick={handleContinueShopping}
+                className="px-4 sm:px-6 py-2 sm:py-3 bg-yellow-400 text-black font-black text-sm sm:text-base rounded-lg sm:rounded-xl border-2 sm:border-4 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] sm:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] sm:hover:translate-x-[4px] sm:hover:translate-y-[4px] transition-all"
+              >
+                去逛逛 🛍️
+              </button>
             </div>
           ) : (
             <div className="space-y-2 sm:space-y-3">
@@ -110,19 +148,32 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                   transition={{ delay: idx * 0.05 }}
                   className="group relative flex gap-2 sm:gap-3 p-2 sm:p-3 border-2 sm:border-4 border-black rounded-lg sm:rounded-xl bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] sm:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] sm:hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 sm:hover:-translate-y-1 transition-all"
                 >
-                  {/* 商品图片 */}
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl border-2 border-black overflow-hidden shrink-0 bg-gray-100">
+                  {/* 商品图片 - 可点击查看详情 */}
+                  <button
+                    onClick={() => handleViewProduct(item.productId)}
+                    className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl border-2 border-black overflow-hidden shrink-0 bg-gray-100 hover:ring-2 hover:ring-yellow-400 transition-all group/img relative"
+                    aria-label="查看商品详情"
+                  >
                     <img 
                       src={item.image} 
                       alt={item.productTitle} 
                       className="w-full h-full object-cover" 
                     />
-                  </div>
+                    {/* 悬停提示 */}
+                    <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/20 transition-colors flex items-center justify-center">
+                      <ExternalLink size={16} className="text-white opacity-0 group-hover/img:opacity-100 transition-opacity" />
+                    </div>
+                  </button>
 
                   {/* 商品信息 */}
                   <div className="flex-1 flex flex-col justify-between min-w-0">
                     <div>
-                      <h3 className="font-bold text-xs sm:text-sm line-clamp-1">{item.productTitle}</h3>
+                      <button
+                        onClick={() => handleViewProduct(item.productId)}
+                        className="font-bold text-xs sm:text-sm line-clamp-1 hover:text-yellow-600 transition-colors text-left w-full"
+                      >
+                        {item.productTitle}
+                      </button>
                       <p className="text-[10px] sm:text-xs font-medium text-gray-600 mt-0.5 sm:mt-1 line-clamp-1">
                         {item.variantName}
                       </p>

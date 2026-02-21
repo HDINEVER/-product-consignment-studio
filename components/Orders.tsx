@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, 
@@ -107,6 +107,7 @@ const statusConfig: Record<string, { label: string; color: string; bgColor: stri
 // ========== 主组件 ==========
 const Orders: React.FC = () => {
   const navigate = useNavigate();
+  const { id: orderIdFromUrl } = useParams<{ id: string }>();
   const { user, isGuest, isUser, isAdmin, loading: authLoading } = useAuth();
   
   const [orders, setOrders] = useState<Order[]>([]);
@@ -222,6 +223,19 @@ const Orders: React.FC = () => {
       loadOrders();
     }
   }, [user, isUser, isAdmin, authLoading]);
+
+  // ========== URL 参数自动打开订单详情 ==========
+  useEffect(() => {
+    if (orderIdFromUrl && orders.length > 0) {
+      const targetOrder = orders.find(order => order.$id === orderIdFromUrl);
+      if (targetOrder) {
+        console.log('🎯 自动打开订单详情:', orderIdFromUrl);
+        setSelectedOrder(targetOrder);
+        // 清理 URL（移除订单 ID，保持在订单列表页）
+        navigate('/orders', { replace: true });
+      }
+    }
+  }, [orderIdFromUrl, orders, navigate]);
   
   // ========== 查看订单详情 ==========
   const handleViewDetail = (order: Order) => {

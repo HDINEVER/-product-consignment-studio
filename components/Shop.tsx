@@ -36,7 +36,7 @@ const Shop = () => {
       deleteProduct, 
       updateProduct 
     } = useProducts();
-    const { cartItems, cartCount, addToCart, removeFromCart, updateQuantity, loading: cartLoading } = useCart();
+    const { cartItems, cartCount, addToCart, removeFromCart, updateQuantity, clearCart, loading: cartLoading } = useCart();
     const { user, isAuthenticated, isGuest, isAdmin, hasGuestCart } = useAuth();
     const { tags, loading: tagsLoading, addTag, deleteTag, getCategoryNames, getIPNames, getTagIdByName } = useTags();
 
@@ -158,6 +158,10 @@ const Shop = () => {
           await updateQuantity(item.id, quantity);
         }
     };
+
+    const handleClearCart = async () => {
+        await clearCart();
+    };
     
     // 管理员: 删除商品
     const handleDeleteProduct = async (productId: string) => {
@@ -251,7 +255,7 @@ const Shop = () => {
                 <Menu size={20} className="sm:w-6 sm:h-6" />
             </AnimatedButton>
             <div className="flex items-center gap-3">
-                <img src="/assets/logo.webp" alt="工作室Logo" className="w-9 h-9 sm:w-11 sm:h-11 border-2 border-black shadow-brutal rounded-xl object-cover" />
+                <img src="/assets/logo.webp" alt="工作室Logo" className="w-12 h-12 border-2 border-black shadow-brutal rounded-xl object-cover" />
                 <h1 className="font-black text-lg sm:text-xl hidden md:block tracking-tight">二次元寄售站</h1>
             </div>
             </div>
@@ -381,10 +385,10 @@ const Shop = () => {
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 overflow-y-auto bg-[#f3f3f3] p-3 sm:p-4 md:p-6 lg:p-8 relative">
+            <main className="flex-1 overflow-y-auto bg-[#f3f3f3] p-4 sm:p-5 md:p-6 lg:p-8 relative">
             
             {/* Category Tabs (Like Browser Tabs) */}
-            <div className="mb-8">
+            <div className="mb-5">
                 {/* 管理员: 分类标签管理 */}
                 {isAdmin ? (
                   <div className="mb-4">
@@ -492,7 +496,7 @@ const Shop = () => {
 
             {/* 🔥 技巧B: 加载更多按钮 */}
             {!productsLoading && !productsError && products.length > 0 && (
-              <div className="flex flex-col items-center mt-8 mb-4 gap-3">
+              <div className="flex flex-col items-center mt-6 mb-4 gap-3">
                 <p className="text-sm text-gray-500 font-medium">
                   已加载 {products.length} / {total} 个商品
                 </p>
@@ -528,6 +532,7 @@ const Shop = () => {
             cart={cartItems}
             onRemoveItem={(index) => cartItems[index] && handleRemoveFromCart(cartItems[index].id)}
             onUpdateQuantity={handleUpdateQuantity}
+            onClearCart={handleClearCart}
         />
 
         {/* 悬浮购物车按钮 - 右下角 */}

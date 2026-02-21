@@ -307,6 +307,7 @@ export default function BentoProductGrid({
               onLayoutChange={onLayoutChange}
               draggableHandle=".drag-handle"
               margin={[16, 16]}
+              containerPadding={[0, 0]}
               draggableCancel=".no-drag"
             >
               {products.map((product) => (
