@@ -178,8 +178,8 @@ export default function BentoProductGrid({
   return (
     <div className="relative">
       {/* 浮动按钮组 - 固定在右下方，购物车按钮上方 */}
-      <div ref={buttonGroupRef} className="fixed bottom-28 right-6 z-40">
-        <div className="flex flex-col-reverse gap-2">
+      <div ref={buttonGroupRef} className="fixed bottom-24 sm:bottom-28 right-4 sm:right-6 z-40">
+        <div className="flex flex-col-reverse gap-2 sm:gap-3">
           {/* 展开状态：显示所有按钮 */}
           {isExpanded && (
             <>
@@ -189,14 +189,15 @@ export default function BentoProductGrid({
                   setViewMode('bento');
                   setIsExpanded(false);
                 }}
-                className={`w-12 h-12 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 ${
+                className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
                   viewMode === 'bento' 
                     ? 'bg-black text-white shadow-brutal' 
-                    : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:translate-x-0.5 active:translate-y-0.5'
+                    : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:shadow-brutal-sm'
                 }`}
                 title="大图模式"
+                aria-label="切换到大图模式"
               >
-                <LayoutGrid size={20} />
+                <LayoutGrid size={20} className="sm:w-6 sm:h-6" />
               </button>
 
               {/* 小卡片模式按钮 */}
@@ -205,12 +206,13 @@ export default function BentoProductGrid({
                   setViewMode('grid');
                   setIsExpanded(false);
                 }}
-                className={`w-12 h-12 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 ${
+                className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
                   viewMode === 'grid' 
                     ? 'bg-black text-white shadow-brutal' 
-                    : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:translate-x-0.5 active:translate-y-0.5'
+                    : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:shadow-brutal-sm'
                 }`}
                 title="小卡片模式"
+                aria-label="切换到小卡片模式"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="3" width="7" height="7"/>
@@ -226,28 +228,30 @@ export default function BentoProductGrid({
                   setViewMode('list');
                   setIsExpanded(false);
                 }}
-                className={`w-12 h-12 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 ${
+                className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
                   viewMode === 'list' 
                     ? 'bg-black text-white shadow-brutal' 
-                    : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:translate-x-0.5 active:translate-y-0.5'
+                    : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:shadow-brutal-sm'
                 }`}
                 title="列表布局"
+                aria-label="切换到列表布局"
               >
-                <ListIcon size={20} />
+                <ListIcon size={20} className="sm:w-6 sm:h-6" />
               </button>
 
               {/* 管理员拖拽按钮（仅在 bento/grid 模式下显示）*/}
               {isAdmin && (viewMode === 'bento' || viewMode === 'grid') && (
                 <button
                   onClick={() => setIsDraggable(!isDraggable)}
-                  className={`w-12 h-12 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 ${
+                  className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
                     isDraggable
                       ? 'bg-brutal-yellow shadow-brutal'
-                      : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:translate-x-0.5 active:translate-y-0.5'
+                      : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:shadow-brutal-sm'
                   }`}
                   title={isDraggable ? '锁定布局' : '调整布局'}
+                  aria-label={isDraggable ? '锁定布局' : '调整布局'}
                 >
-                  <Shuffle size={20} />
+                  <Shuffle size={20} className="sm:w-6 sm:h-6" />
                 </button>
               )}
             </>
@@ -256,12 +260,13 @@ export default function BentoProductGrid({
           {/* 主按钮：显示当前视图模式，点击展开/收缩 */}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`w-12 h-12 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 ${
+            className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
               isExpanded
                 ? 'bg-brutal-cyan shadow-brutal'
-                : 'bg-black text-white shadow-brutal hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5'
+                : 'bg-black text-white shadow-brutal hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] active:shadow-brutal-sm'
             }`}
             title={isExpanded ? '收起' : '切换视图'}
+            aria-label={isExpanded ? '收起视图选项' : '展开视图选项'}
           >
             {/* 图标内容 - 只旋转图标，不旋转背景 */}
             <div className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : 'rotate-0'}`}>

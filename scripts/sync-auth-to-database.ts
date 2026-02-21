@@ -5,7 +5,7 @@
  * 运行：npx tsx scripts/sync-auth-to-database.ts
  */
 
-import { Client, Users, Databases, Query, Permission, Role } from 'appwrite';
+import { Client, Users, Databases, Query } from 'node-appwrite';
 import * as dotenv from 'dotenv';
 
 // 加载环境变量

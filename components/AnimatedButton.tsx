@@ -57,6 +57,8 @@ const AnimatedButton: React.FC<AnimatedButtonProps> = ({
         font-bold rounded-lg
         transition-shadow duration-150
         disabled:opacity-50 disabled:cursor-not-allowed
+        touch-target touch-feedback
+        active:opacity-90
         ${variantStyles[variant]}
         ${className}
       `}
@@ -74,6 +76,7 @@ const AnimatedButton: React.FC<AnimatedButtonProps> = ({
         damping: 25,
       }}
       disabled={disabled}
+      style={{ WebkitTapHighlightColor: 'transparent' }}
       {...props}
     >
       {/* Shimmer Effect Layer */}

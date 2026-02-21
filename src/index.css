@@ -96,7 +96,99 @@
   }
 }
 
-/* Neo-brutalism 全局样式 */
+/* ========================================
+   移动端触摸体验优化
+   ======================================== */
+
+/* 禁用webkit触摸高亮 */
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* 优化触摸滚动 */
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 防止文本被意外选中 */
+button,
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* 可选中的文本元素保持可选中 */
+input,
+textarea,
+[contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* 触摸反馈动画 */
+@keyframes touch-feedback {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+/* 通用触摸目标最小尺寸（44x44px iOS标准，48x48px Material标准）*/
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  position: relative;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  /* 仅在触摸设备上应用 */
+  .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+  
+  /* 移动端按钮增大间距防止误触 */
+  button + button,
+  .btn + .btn {
+    margin-left: 12px;
+  }
+  
+  /* 移动端输入框优化 */
+  input,
+  textarea,
+  select {
+    font-size: 16px; /* 防止iOS自动缩放 */
+  }
+}
+
+/* 主动触摸反馈类 */
+.touch-feedback:active {
+  animation: touch-feedback 0.15s ease-out;
+  opacity: 0.9;
+}
+
+/* 优化移动端点击延迟 */
+a,
+button,
+[role="button"],
+[onclick] {
+  touch-action: manipulation;
+}
+
+/* 移动端滚动容器优化 */
+.scroll-container {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* ========================================
+   Neo-brutalism 全局样式
+   ======================================== */
+
 .bg-brutal-light {
   background-color: #FFFEF0;
 }

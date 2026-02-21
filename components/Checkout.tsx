@@ -27,6 +27,15 @@ const Checkout: React.FC = () => {
   const { user, isGuest } = useAuth();
   const { cartItems, cartTotal, clearCart } = useCart();
   
+  // 🐛 调试日志：监控购物车数据变化
+  useEffect(() => {
+    console.log('🛒 Checkout 组件 - 购物车数据更新:', {
+      数量: cartItems.length,
+      总价: cartTotal,
+      明细: cartItems,
+    });
+  }, [cartItems, cartTotal]);
+  
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
   const [showAddressForm, setShowAddressForm] = useState(false);
@@ -60,7 +69,7 @@ const Checkout: React.FC = () => {
     
     if (cartItems.length === 0) {
       alert('购物车是空的');
-      navigate('/cart');
+      navigate('/');  // ✅ 修复：跳转到首页而不是 /cart
       return;
     }
     
@@ -177,6 +186,9 @@ const Checkout: React.FC = () => {
 
     try {
       console.log('📝 开始创建订单...');
+      console.log('🛒 购物车数据:', cartItems);
+      console.log('💰 订单总额:', cartTotal);
+      console.log('👤 用户ID:', user.$id);
       
       const selectedAddress = addresses.find(addr => addr.$id === selectedAddressId);
       if (!selectedAddress) {
@@ -184,62 +196,88 @@ const Checkout: React.FC = () => {
       }
 
       // 1️⃣ 创建订单主表
-      const order = await databases.createDocument(
-        DATABASE_ID,
-        COLLECTIONS.ORDERS,
-        ID.unique(),
-        {
-          orderId: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // 生成订单号
-          userId: user.$id,
-          status: 'pending',
-          totalAmount: cartTotal,
-          paymentMethod: paymentMethod,
-          remark: remark || '',
-          
-          // ✅ 收货地址快照（简化版 - 拼接完整地址）
-          shippingContactName: selectedAddress.contactName,
-          shippingContactPhone: selectedAddress.contactPhone,
-          shippingFullAddress: `${selectedAddress.province} ${selectedAddress.city} ${selectedAddress.district} ${selectedAddress.village} ${selectedAddress.streetAddress}`,
-          
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        [
-          // 行级安全：只有该用户可以读取、更新
-          Permission.read(Role.user(user.$id)),
-          Permission.update(Role.user(user.$id)),
-        ]
-      );
-
-      console.log('✅ 订单创建成功:', order.$id);
+      const orderData = {
+        orderId: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        userId: user.$id,
+        status: 'pending',
+        totalAmount: cartTotal,
+        paymentMethod: paymentMethod,
+        // ❌ 移除 remark 字段（数据库中不存在）
+        // remark: remark || '',
+        
+        // ✅ 收货地址快照
+        shippingContactName: selectedAddress.contactName,
+        shippingContactPhone: selectedAddress.contactPhone,
+        shippingFullAddress: `${selectedAddress.province} ${selectedAddress.city} ${selectedAddress.district} ${selectedAddress.village} ${selectedAddress.streetAddress}`,
+        
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      console.log('📦 创建订单主表，数据:', orderData);
+      console.log('📦 Database ID:', DATABASE_ID);
+      console.log('📦 Collection:', COLLECTIONS.ORDERS);
+      
+      let order;
+      try {
+        order = await databases.createDocument(
+          DATABASE_ID,
+          COLLECTIONS.ORDERS,
+          ID.unique(),
+          orderData
+        );
+        console.log('✅ 订单主表创建成功:', order);
+      } catch (orderErr: any) {
+        console.error('❌ 订单主表创建失败，详细错误:', orderErr);
+        console.error('❌ 错误类型:', orderErr.constructor.name);
+        console.error('❌ 错误消息:', orderErr.message);
+        console.error('❌ 错误代码:', orderErr.code);
+        console.error('❌ 完整错误对象:', JSON.stringify(orderErr, null, 2));
+        throw new Error(`订单创建失败: ${orderErr.message}`);
+      }
 
       // 2️⃣ 创建订单明细
-      await Promise.all(
-        cartItems.map((item) =>
-          databases.createDocument(
+      console.log('📋 开始创建订单明细，商品数量:', cartItems.length);
+      
+      try {
+        const orderItemsPromises = cartItems.map((item, index) => {
+          // ✅ 适配数据库结构：计算 subtotal
+          const subtotal = item.price * item.quantity;
+          
+          const itemData = {
+            orderId: order.$id,
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.price,
+            subtotal: subtotal,              // ✅ 必填字段：小计
+            discount: 0,                     // ✅ 默认值：折扣
+            taxAmount: 0,                    // ✅ 默认值：税额
+            // ❌ 移除数据库中不存在的字段：
+            // productName, productImage, variantName, createdAt
+          };
+          
+          console.log(`🛍️ 创建订单项 ${index + 1}/${cartItems.length}:`, itemData);
+          
+          return databases.createDocument(
             DATABASE_ID,
             COLLECTIONS.ORDER_ITEMS,
             ID.unique(),
-            {
-              orderId: order.$id,                   // ✅ 驼峰命名
-              productId: item.productId,            // ✅ 驼峰命名
-              productName: item.productTitle,       // ✅ 驼峰命名（商品名称快照）
-              productImage: item.image,             // ✅ 驼峰命名（商品图片快照）
-              variantName: item.variantName || '',  // ✅ 驼峰命名
-              price: item.price,                    // 价格快照
-              quantity: item.quantity,
-              createdAt: new Date().toISOString(),  // ✅ 驼峰命名
-            },
-            [
-              Permission.read(Role.user(user.$id)),
-            ]
-          )
-        )
-      );
+            itemData
+          );
+        });
+        
+        await Promise.all(orderItemsPromises);
+        console.log('✅ 所有订单明细创建成功');
+      } catch (itemsErr: any) {
+        console.error('❌ 订单明细创建失败:', itemsErr);
+        console.error('❌ 错误类型:', itemsErr.constructor.name);
+        console.error('❌ 错误消息:', itemsErr.message);
+        console.error('❌ 完整错误对象:', JSON.stringify(itemsErr, null, 2));
+        throw new Error(`订单明细创建失败: ${itemsErr.message}`);
+      }
 
-      console.log('✅ 订单明细创建成功');
-
-      // 3️⃣ 清空购物车
+      // 3️⃣ ⚠️ 只有前面都成功了才清空购物车
+      console.log('🧹 开始清空购物车...');
       await clearCart();
       console.log('✅ 购物车已清空');
 
@@ -247,8 +285,12 @@ const Checkout: React.FC = () => {
       alert('🎉 订单提交成功！');
       navigate(`/orders/${order.$id}`);
     } catch (err: any) {
-      console.error('❌ 订单提交失败:', err);
+      console.error('❌ 订单提交失败（最外层错误）:', err);
+      console.error('❌ 错误类型:', err.constructor.name);
+      console.error('❌ 错误消息:', err.message);
+      console.error('❌ 错误堆栈:', err.stack);
       setError(err.message || '订单提交失败，请重试');
+      alert(`❌ 订单提交失败: ${err.message}`);
     } finally {
       setSubmitting(false);
     }
@@ -273,11 +315,11 @@ const Checkout: React.FC = () => {
       <div className="bg-white border-b-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <button
-            onClick={() => navigate('/cart')}
+            onClick={() => navigate('/')}
             className="flex items-center gap-2 text-gray-700 hover:text-black transition-colors font-bold"
           >
             <ArrowLeft size={20} />
-            返回购物车
+            返回商店
           </button>
         </div>
       </div>

@@ -41,11 +41,19 @@ export default function ProductCard({
   const isEditingIP = editingTag?.productId === product.id && editingTag?.type === 'ip';
 
   return (
-    <div className="relative group h-full cursor-pointer">
+    <div className="relative group h-full touch-feedback">
       {/* 商品卡片主体 */}
       <div 
-        className="h-full bg-white rounded-2xl border-2 border-black shadow-brutal overflow-hidden flex flex-col transition-all duration-200 hover:shadow-brutal-lg hover:-translate-y-1"
+        className="h-full bg-white rounded-2xl border-2 border-black shadow-brutal overflow-hidden flex flex-col transition-all duration-200 hover:shadow-brutal-lg hover:-translate-y-1 cursor-pointer active:scale-[0.98] active:shadow-brutal-sm"
         onClick={() => !editingTag && onSelect?.(product)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if ((e.key === 'Enter' || e.key === ' ') && !editingTag) {
+            e.preventDefault();
+            onSelect?.(product);
+          }
+        }}
       >
         {/* 拖拽手柄 - 仅管理员可见 */}
         {isDraggable && isAdmin && (
@@ -166,8 +174,9 @@ export default function ProductCard({
                 e.stopPropagation();
                 onAddToCart?.(product);
               }}
-              className="p-1.5 sm:p-2 bg-black text-white rounded-lg border-2 border-black shadow-brutal-sm hover:bg-gray-800 transition-all active:translate-y-0.5 active:shadow-none"
+              className="p-1.5 sm:p-2 bg-black text-white rounded-lg border-2 border-black shadow-brutal-sm hover:bg-gray-800 transition-all active:scale-95 active:shadow-none touch-target min-w-[44px] min-h-[44px] flex items-center justify-center"
               title="加入购物车"
+              aria-label="加入购物车"
             >
               <ShoppingCart size={14} className="sm:w-4 sm:h-4" />
             </button>
@@ -177,14 +186,15 @@ export default function ProductCard({
 
       {/* 管理员操作按钮 */}
       {isAdmin && (
-        <div className="absolute bottom-12 sm:bottom-14 right-1.5 sm:right-2 flex gap-1 sm:gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10">
+        <div className="absolute bottom-12 sm:bottom-14 right-1.5 sm:right-2 flex gap-1.5 sm:gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10">
           <button 
             onClick={(e) => {
               e.stopPropagation();
               onEdit?.(product.id);
             }}
-            className="p-1.5 sm:p-2 bg-brutal-yellow text-black rounded-lg border-2 border-black shadow-brutal-sm hover:bg-yellow-400 hover:scale-105 transition-all"
+            className="p-2 sm:p-2.5 bg-brutal-yellow text-black rounded-lg border-2 border-black shadow-brutal-sm hover:bg-yellow-400 hover:scale-105 active:scale-95 transition-all touch-target min-w-[44px] min-h-[44px] flex items-center justify-center"
             title="编辑商品"
+            aria-label="编辑商品"
           >
             <Edit size={12} className="sm:w-3.5 sm:h-3.5" />
           </button>
@@ -193,8 +203,9 @@ export default function ProductCard({
               e.stopPropagation();
               onDelete?.(product.id);
             }}
-            className="p-1.5 sm:p-2 bg-red-500 text-white rounded-lg border-2 border-black shadow-brutal-sm hover:bg-red-600 hover:scale-105 transition-all"
+            className="p-2 sm:p-2.5 bg-red-500 text-white rounded-lg border-2 border-black shadow-brutal-sm hover:bg-red-600 hover:scale-105 active:scale-95 transition-all touch-target min-w-[44px] min-h-[44px] flex items-center justify-center"
             title="删除商品"
+            aria-label="删除商品"
           >
             <Trash2 size={12} className="sm:w-3.5 sm:h-3.5" />
           </button>
