@@ -14,6 +14,8 @@ import Checkout from './components/Checkout';
 import Orders from './components/Orders';
 import UserProfile from './components/UserProfile';
 import AddressList from './components/AddressList';
+import AuthCallback from './components/AuthCallback';
+import AuthFailure from './components/AuthFailure';
 
 function App() {
   // 验证 Appwrite 连接
@@ -30,6 +32,8 @@ function App() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/orders/:id" element={<Orders />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/auth/failure" element={<AuthFailure />} />
           
           {/* User Profile Routes */}
           <Route path="/profile" element={<UserProfile />} />

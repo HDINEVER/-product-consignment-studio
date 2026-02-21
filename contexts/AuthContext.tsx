@@ -55,6 +55,38 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [hasGuestCart, setHasGuestCart] = useState(false);
   const [isAdminVerified, setIsAdminVerified] = useState(false);
 
+  const ensureUserDocument = async (currentUser: { $id: string; email: string; name?: string }) => {
+    try {
+      const userDoc = await databases.getDocument(
+        DATABASE_ID,
+        COLLECTIONS.USERS,
+        currentUser.$id
+      );
+      return userDoc;
+    } catch (error: any) {
+      const errorCode = error?.code || error?.response?.code;
+      if (errorCode && Number(errorCode) !== 404) {
+        throw error;
+      }
+
+      const createdAt = new Date().toISOString();
+      const newUserDoc = await databases.createDocument(
+        DATABASE_ID,
+        COLLECTIONS.USERS,
+        currentUser.$id,
+        {
+          email: currentUser.email,
+          name: currentUser.name || 'Google User',
+          phone: '',
+          role: 'user',
+          createdAt,
+          updatedAt: createdAt,
+        }
+      );
+      return newUserDoc;
+    }
+  };
+
   // ========== 检查用户是否属于 Admins 团队 ==========
   const checkAdminStatus = async (): Promise<boolean> => {
     try {
@@ -99,11 +131,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       let userUpdatedAt = '';
       
       try {
-        const userDoc = await databases.getDocument(
-          DATABASE_ID,
-          COLLECTIONS.USERS,
-          currentUser.$id
-        );
+        const userDoc = await ensureUserDocument(currentUser);
         userName = userDoc.name as string || currentUser.name;
         userPhone = userDoc.phone as string || '';
         userRole = userDoc.role as 'guest' | 'user' | 'admin' || 'user';
@@ -111,7 +139,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         userCreatedAt = userDoc.createdAt as string || '';
         userUpdatedAt = userDoc.updatedAt as string || '';
       } catch (err) {
-        console.log('⚠️ 用户文档不存在或读取失败，使用默认值:', err);
+        console.log('⚠️ 用户文档读取失败，使用默认值:', err);
       }
       
       setUser({
@@ -199,15 +227,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       let userPhone = '';
       
       try {
-        const userDoc = await databases.getDocument(
-          DATABASE_ID,
-          COLLECTIONS.USERS,
-          currentUser.$id
-        );
+        const userDoc = await ensureUserDocument(currentUser);
         userName = userDoc.name as string || currentUser.name;
         userPhone = userDoc.phone as string || '';
       } catch {
-        // 用户文档不存在，使用默认值
+        // 用户文档读取失败，使用默认值
       }
 
       const loggedInUser = {
@@ -278,18 +302,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // Google OAuth 登录（预留接口）
+  // Google OAuth 登录
   const loginWithGoogle = async () => {
     try {
-      // TODO: 配置 Google OAuth 后启用
-      // account.createOAuth2Session(
-      //   'google',
-      //   'http://localhost:5173/auth/callback', // 成功回调
-      //   'http://localhost:5173/auth/failure',  // 失败回调
-      // );
-      
-      alert('🚧 Google 登录功能即将上线，敬请期待！');
-      console.log('Google OAuth 预留接口');
+      const origin = window.location.origin;
+      await account.createOAuth2Session(
+        'google',
+        `${origin}/auth/callback`,
+        `${origin}/auth/failure`
+      );
     } catch (error: any) {
       console.error('❌ Google 登录失败:', error);
       throw new Error(error.message || 'Google 登录失败');

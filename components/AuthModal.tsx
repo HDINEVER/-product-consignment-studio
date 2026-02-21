@@ -56,7 +56,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
     try {
       await loginWithGoogle();
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Google 登录失败');
     }
   };
 
