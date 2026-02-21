@@ -113,6 +113,9 @@ export default {
           '80%': { transform: 'translate(2px, -2px)' },
           '100%': { transform: 'translate(0)' },
         },
+        shimmer: {
+          '100%': { transform: 'translateX(100%)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -121,6 +124,7 @@ export default {
         'pulse-brutal': 'pulse-brutal 2s ease-in-out infinite',
         'slide-up': 'slide-up 0.3s ease-out',
         glitch: 'glitch 0.3s ease-in-out',
+        shimmer: 'shimmer 1.5s infinite',
       },
     },
   },

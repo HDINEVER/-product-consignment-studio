@@ -330,21 +330,38 @@ export default function BentoProductGrid({
                      <ProductCard
                         product={product}
                         isAdmin={isAdmin}
-                        isDraggable={false}
                         onSelect={onProductSelect}
                         onAddToCart={onAddToCart}
-                        onEdit={onEdit}
-                        onDelete={onDelete}
-                        onEditCategory={onEditCategory}
-                        onEditIP={onEditIP}
-                        editingTag={editingTag}
-                        categories={categories}
-                        ips={ips}
-                        onCategoryChange={onCategoryChange}
-                        onIPChange={onIPChange}
-                        onTagBlur={onTagBlur}
                       />
                   </div>
+                  
+                  {/* 管理员操作按钮 - 悬浮显示 */}
+                  {isAdmin && !isDraggable && (
+                    <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEdit?.(product.id);
+                        }}
+                        className="p-2 bg-brutal-yellow text-black rounded-lg border-2 border-black shadow-brutal-sm hover:bg-yellow-400 hover:scale-105 active:scale-95 transition-all"
+                        title="编辑商品"
+                        aria-label="编辑商品"
+                      >
+                        <Edit size={14} />
+                      </button>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete?.(product.id);
+                        }}
+                        className="p-2 bg-red-500 text-white rounded-lg border-2 border-black shadow-brutal-sm hover:bg-red-600 hover:scale-105 active:scale-95 transition-all"
+                        title="删除商品"
+                        aria-label="删除商品"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </ResponsiveGridLayout>

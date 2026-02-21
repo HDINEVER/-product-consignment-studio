@@ -3,34 +3,34 @@
 /* Tailwind CSS 4.x 主题配置 */
 @theme {
   /* 字体 */
-  --font-family-brutal: 'Space Grotesk', 'Noto Sans SC', system-ui, sans-serif;
-  
+  --font-family-brutal: "Space Grotesk", "Noto Sans SC", system-ui, sans-serif;
+
   /* 自定义颜色 */
-  --color-brutal-yellow: #FFE566;
-  --color-brutal-orange: #FF6B35;
-  --color-brutal-pink: #FF4F9A;
-  --color-brutal-cyan: #00D4FF;
-  --color-brutal-purple: #7B68EE;
-  --color-brutal-blue: #4A90E2;
-  --color-brutal-dark: #1A1A2E;
-  --color-brutal-light: #FFFEF0;
+  --color-brutal-yellow: #ffe566;
+  --color-brutal-orange: #ff6b35;
+  --color-brutal-pink: #ff4f9a;
+  --color-brutal-cyan: #00d4ff;
+  --color-brutal-purple: #7b68ee;
+  --color-brutal-blue: #4a90e2;
+  --color-brutal-dark: #1a1a2e;
+  --color-brutal-light: #fffef0;
   --color-brutal-black: #000000;
-  
-  --color-arknights-black: #0A0E1A;
-  --color-arknights-gold: #FFD700;
-  --color-arknights-silver: #C0C0C0;
-  --color-arknights-blue: #00A0E9;
-  --color-arknights-red: #FF4444;
-  
+
+  --color-arknights-black: #0a0e1a;
+  --color-arknights-gold: #ffd700;
+  --color-arknights-silver: #c0c0c0;
+  --color-arknights-blue: #00a0e9;
+  --color-arknights-red: #ff4444;
+
   /* Neo-brutalism 阴影 */
-  --shadow-brutal: 4px 4px 0px 0px rgba(0,0,0,1);
-  --shadow-brutal-sm: 2px 2px 0px 0px rgba(0,0,0,1);
-  --shadow-brutal-md: 6px 6px 0px 0px rgba(0,0,0,1);
-  --shadow-brutal-lg: 8px 8px 0px 0px rgba(0,0,0,1);
-  --shadow-brutal-xl: 12px 12px 0px 0px rgba(0,0,0,1);
-  --shadow-brutal-hover: 6px 6px 0px 0px rgba(0,0,0,1);
-  --shadow-brutal-active: 2px 2px 0px 0px rgba(0,0,0,1);
-  
+  --shadow-brutal: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+  --shadow-brutal-sm: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+  --shadow-brutal-md: 6px 6px 0px 0px rgba(0, 0, 0, 1);
+  --shadow-brutal-lg: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+  --shadow-brutal-xl: 12px 12px 0px 0px rgba(0, 0, 0, 1);
+  --shadow-brutal-hover: 6px 6px 0px 0px rgba(0, 0, 0, 1);
+  --shadow-brutal-active: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+
   /* 边框宽度 */
   --width-3: 3px;
 }
@@ -86,11 +86,11 @@
   * {
     border-color: hsl(var(--border));
   }
-  
+
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: 'Space Grotesk', 'Noto Sans SC', system-ui, sans-serif;
+    font-family: "Space Grotesk", "Noto Sans SC", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -131,9 +131,15 @@ textarea,
 
 /* 触摸反馈动画 */
 @keyframes touch-feedback {
-  0% { transform: scale(1); }
-  50% { transform: scale(0.95); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* 通用触摸目标最小尺寸（44x44px iOS标准，48x48px Material标准）*/
@@ -149,13 +155,13 @@ textarea,
     min-height: 48px;
     min-width: 48px;
   }
-  
+
   /* 移动端按钮增大间距防止误触 */
   button + button,
   .btn + .btn {
     margin-left: 12px;
   }
-  
+
   /* 移动端输入框优化 */
   input,
   textarea,
@@ -190,23 +196,23 @@ button,
    ======================================== */
 
 .bg-brutal-light {
-  background-color: #FFFEF0;
+  background-color: #fffef0;
 }
 
 .bg-brutal-yellow {
-  background-color: #FFE566;
+  background-color: #ffe566;
 }
 
 .bg-brutal-blue {
-  background-color: #4A90E2;
+  background-color: #4a90e2;
 }
 
 .bg-brutal-cyan {
-  background-color: #00D4FF;
+  background-color: #00d4ff;
 }
 
 .bg-brutal-pink {
-  background-color: #FF4F9A;
+  background-color: #ff4f9a;
 }
 
 /* Gumroad 风格黑色按钮阴影 - 关键样式！ */
@@ -266,12 +272,12 @@ button,
 
 .btn-brutal:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px 0px rgba(0,0,0,1);
+  box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 1);
 }
 
 .btn-brutal:active {
   transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0px 0px rgba(0,0,0,1);
+  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
 }
 
 /* 明日方舟风格装饰线 */
@@ -280,13 +286,13 @@ button,
 }
 
 .arknights-border::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #F5B041, #E74C3C, #F5B041);
+  background: linear-gradient(90deg, #f5b041, #e74c3c, #f5b041);
 }
 
 /* 复选框明日方舟风格 */
@@ -302,11 +308,11 @@ button,
 }
 
 .checkbox-brutal:checked {
-  background: #FFE566;
+  background: #ffe566;
 }
 
 .checkbox-brutal:checked::after {
-  content: '✓';
+  content: "✓";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -319,7 +325,7 @@ button,
   border: 3px solid black;
   border-radius: 16px;
   background: white;
-  box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
   overflow: hidden;
 }
 
@@ -328,7 +334,7 @@ button,
   border: 4px solid black;
   border-radius: 20px;
   background: white;
-  box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);
+  box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
   overflow: hidden;
 }
 
@@ -346,7 +352,7 @@ button,
 .input-brutal:focus {
   outline: none;
   transform: translate(-2px, -2px);
-  box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
 }
 
 /* 隐藏滚动条 */
@@ -361,8 +367,13 @@ button,
 
 /* 闪烁警告动画 */
 @keyframes blink-warning {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 .blink-warning {
@@ -378,7 +389,7 @@ button,
 
 .divider-arknights::before,
 .divider-arknights::after {
-  content: '';
+  content: "";
   flex: 1;
   height: 3px;
   background: linear-gradient(90deg, transparent, black, transparent);
@@ -401,11 +412,11 @@ button,
 
 .react-grid-item.resizing {
   z-index: 100;
-  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 .react-grid-item.react-grid-placeholder {
-  background: rgba(0,0,0,0.1) !important;
+  background: rgba(0, 0, 0, 0.1) !important;
   opacity: 0.5;
   z-index: 2;
   border-radius: 12px;

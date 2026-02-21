@@ -14,6 +14,7 @@ export interface Product {
   stockQuantity?: number;
   materialType?: string;
   variants: ProductVariant[];
+  productAttribute?: 'new' | 'hot' | 'discount' | null;  // ✅ 产品属性标签
 }
 
 export interface CartItem {
@@ -122,6 +123,7 @@ export interface AppwriteProduct {
   materialType?: string; // 材质类型
   sellerId?: string;     // 卖家ID
   sellerName?: string;   // 卖家名称
+  productAttribute?: 'new' | 'hot' | 'discount' | null;  // ✅ 产品属性标签 (new/hot/discount)
   createdAt: string;     // ISO datetime
   updatedAt: string;     // ISO datetime
   $createdAt: string;    // Appwrite 自动字段

@@ -17,6 +17,7 @@ interface ProductFormData {
   category: string;
   price: number;
   stock: number;
+  productAttribute?: 'new' | 'hot' | 'discount' | '';  // ✅ 添加产品属性字段
 }
 
 interface ProductUploadModalProps {
@@ -141,6 +142,7 @@ export default function ProductUploadModal({
         sellerId: user.$id,                     // ✅ 驼峰命名
         sellerName: user.name || user.email,    // ✅ 驼峰命名
         status: 'active',
+        productAttribute: data.productAttribute || null,  // ✅ 产品属性标签
         createdAt: new Date().toISOString(),   // ✅ 驼峰命名
         updatedAt: new Date().toISOString(),   // ✅ 驼峰命名
       };
@@ -394,6 +396,24 @@ export default function ProductUploadModal({
                     <p className="mt-2 text-red-600 font-bold">{errors.category.message}</p>
                   )}
                 </div>
+              </div>
+
+              {/* ✅ 产品属性标签 (NEW/HOT/DISCOUNT) */}
+              <div>
+                <label className="block text-lg font-black mb-3">产品标签 <span className="text-sm text-gray-500">(可选)</span></label>
+                <select
+                  {...register('productAttribute')}
+                  disabled={submitting}
+                  className="w-full px-4 py-3 border-4 border-black rounded-xl font-bold focus:outline-none focus:bg-yellow-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <option value="">-- 无标签 --</option>
+                  <option value="new">🆕 NEW (新品)</option>
+                  <option value="hot">🔥 HOT (热门)</option>
+                  <option value="discount">💰 SALE (折扣)</option>
+                </select>
+                <p className="mt-2 text-sm text-gray-600">
+                  选择后将在商品卡片上显示对应的标签
+                </p>
               </div>
 
               {/* 价格 和 库存 - 并排 */}

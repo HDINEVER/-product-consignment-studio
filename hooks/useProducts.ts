@@ -19,6 +19,7 @@ const mapToProduct = (doc: AppwriteProduct, categoryMap: TagsMap = {}, ipMap: Ta
   stockQuantity: doc.stockQuantity,                   // ✅ 使用 stockQuantity
   materialType: undefined,
   variants: [],
+  productAttribute: doc.productAttribute || null,     // ✅ 产品属性标签
 });
 
 // ========== 筛选参数类型 ==========
