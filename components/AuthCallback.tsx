@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,8 +8,13 @@ const AuthCallback: React.FC = () => {
   const navigate = useNavigate();
   const { refreshAuth, syncGuestCart } = useAuth();
 
+  const isProcessing = useRef(false);
+
   useEffect(() => {
     const finishLogin = async () => {
+      if (isProcessing.current) return;
+      isProcessing.current = true;
+
       // createOAuth2Token 回调时，URL 会携带 userId 和 secret 参数
       // 需要用这两个参数调用 createSession 来建立真正的会话
       const params = new URLSearchParams(window.location.search);
@@ -18,18 +23,36 @@ const AuthCallback: React.FC = () => {
 
       if (userId && secret) {
         try {
-          await account.createSession(userId, secret);
-          console.log('✅ OAuth Token 换取 Session 成功');
-        } catch (err) {
+          // 先尝试获取当前用户，看是否已经登录了（比如 React Strict Mode 跑了两次）
+          let alreadyLoggedIn = false;
+          try {
+            await account.get();
+            alreadyLoggedIn = true;
+          } catch (e) {
+            // 未登录，正常现象
+          }
+          
+          if (!alreadyLoggedIn) {
+            await account.createSession(userId, secret);
+            console.log('✅ OAuth Token 换取 Session 成功');
+          }
+        } catch (err: any) {
           console.error('❌ 创建 Session 失败:', err);
+          // 如果报错说会话已存在或者不合法，可以酌情处理
+          // 但既然发生了错误，且不是已登录状态，就要调到 failure
           navigate('/auth/failure', { replace: true });
           return;
         }
       }
 
-      await refreshAuth();
-      await syncGuestCart();
-      navigate('/', { replace: true });
+      try {
+        await refreshAuth();
+        await syncGuestCart();
+        navigate('/', { replace: true });
+      } catch (err) {
+        console.error('❌ 刷新用户状态失败:', err);
+        navigate('/', { replace: true }); // 如果只是这里失败也至少回到主页
+      }
     };
 
     finishLogin();
