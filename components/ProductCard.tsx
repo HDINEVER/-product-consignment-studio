@@ -137,10 +137,13 @@ export default function ProductCard({
         {/* 收藏按钮 */}
         <button 
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             onToggleFavorite?.(product.id);
           }}
-          className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-white border-2 border-black rounded-full shadow-[2px_2px_0_0_#000] sm:shadow-[3px_3px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[3px_3px_0_0_#000] sm:hover:shadow-[4px_4px_0_0_#000] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] sm:active:translate-x-[3px] sm:active:translate-y-[3px] transition-all"
+          onPointerDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+          className="no-drag absolute top-3 left-3 sm:top-4 sm:left-4 z-20 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-white border-2 border-black rounded-full shadow-[2px_2px_0_0_#000] sm:shadow-[3px_3px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[3px_3px_0_0_#000] sm:hover:shadow-[4px_4px_0_0_#000] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] sm:active:translate-x-[3px] sm:active:translate-y-[3px] transition-all"
           aria-label={isFavorited ? "取消收藏" : "收藏"}
           title={isFavorited ? "取消收藏" : "收藏"}
         >
@@ -216,8 +219,11 @@ export default function ProductCard({
             {/* 购买按钮或状态 */}
             {status === 'idle' ? (
               <button 
-                onClick={handleOrder}
-              className={`
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleOrder(e);
+                }}
+              className={`no-drag
                 relative flex items-center gap-1.5 sm:gap-2 
                 px-3 py-1.5 sm:px-4 sm:py-2 
                 bg-black text-white font-bold rounded-lg
