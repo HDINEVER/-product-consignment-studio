@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { ShoppingCart, Heart, Star, X, Check } from 'lucide-react';
+import { useProducts } from '../hooks/useProducts';
 import { Product } from '../types';
 
 interface ProductCardProps {
@@ -24,6 +25,8 @@ export default function ProductCard({
   const [status, setStatus] = useState<'idle' | 'ordered' | 'rated'>('idle');
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { submitProductRating } = useProducts();
 
   const handleOrder = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -31,11 +34,18 @@ export default function ProductCard({
     onAddToCart?.(product);
   };
 
-  const submitRating = (e: React.MouseEvent, val: number) => {
+  const submitRating = async (e: React.MouseEvent, val: number) => {
     e.stopPropagation();
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
     setRating(val);
+    
+    // 调用后端更新评分
+    const success = await submitProductRating(product.id, val);
+    
+    setIsSubmitting(false);
     setStatus('rated');
-    // Save rating code can go here later
   };
 
   // 根据productAttribute获取标签文本和样式

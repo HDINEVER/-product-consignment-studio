@@ -1,7 +1,10 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Responsive, Layout, useContainerWidth } from 'react-grid-layout';
+import { ScrollArea } from "./ui/scroll-area";
 import { Product } from '../types';
 import ProductCard from './ProductCard';
+import ProductDetailModal from './ProductDetailModal';
+import { useProducts } from '../hooks/useProducts';
 import { LayoutGrid, LayoutDashboard, ListIcon, Shuffle, Edit, Trash2, Heart, ShoppingCart, Star, Check, X } from 'lucide-react';
 
 // Responsive grid component from react-grid-layout v2
@@ -419,6 +422,8 @@ function ListProductCard({
   const [status, setStatus] = useState<'idle' | 'ordered' | 'rated'>('idle');
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { submitProductRating } = useProducts();
 
   const handleOrder = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -426,11 +431,18 @@ function ListProductCard({
     onAddToCart?.(product);
   };
 
-  const submitRating = (e: React.MouseEvent, val: number) => {
+  const submitRating = async (e: React.MouseEvent, val: number) => {
     e.stopPropagation();
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
     setRating(val);
+    
+    // 调用后端更新评分
+    await submitProductRating(product.id, val);
+
+    setIsSubmitting(false);
     setStatus('rated');
-    // Save rating code can go here later
   };
 
   return (
