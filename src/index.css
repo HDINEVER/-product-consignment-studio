@@ -95,6 +95,11 @@
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
   }
+
+  #root {
+    background-color: #FFFEF0;
+    min-height: 100vh;
+  }
 }
 
 /* ========================================
@@ -111,12 +116,19 @@
 html {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-  background-color: hsl(var(--background));
+  background-color: #FFFEF0;
   height: 100%;
+  /* 防止过度滚动露出底部颜色 */
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
 }
 
 body {
   min-height: 100%;
+  background-color: #FFFEF0;
+  /* 防止过度滚动 */
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
 }
 
 /* 防止文本被意外选中 */
