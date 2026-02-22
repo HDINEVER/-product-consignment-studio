@@ -99,9 +99,19 @@ export function useCart() {
     }
   }, [isGuest, user]);
 
-  // 初始加载
+  // 初始加载及事件监听
   useEffect(() => {
     fetchCart();
+
+    // 监听全局购物车更新事件
+    const handleCartUpdate = () => {
+      fetchCart();
+    };
+    
+    window.addEventListener('cart-updated', handleCartUpdate);
+    return () => {
+      window.removeEventListener('cart-updated', handleCartUpdate);
+    };
   }, [fetchCart]);
 
   // ========== 添加到购物车 ==========
@@ -150,6 +160,8 @@ export function useCart() {
 
       // 刷新购物车
       await fetchCart();
+      // 通知其他组件购物车已更新
+      window.dispatchEvent(new Event('cart-updated'));
       return true;
     } catch (err: any) {
       console.error('❌ 添加购物车失败:', err);
@@ -182,6 +194,7 @@ export function useCart() {
       }
 
       await fetchCart();
+      window.dispatchEvent(new Event('cart-updated'));
       return true;
     } catch (err: any) {
       console.error('❌ 更新购物车失败:', err);
@@ -209,6 +222,7 @@ export function useCart() {
       }
 
       await fetchCart();
+      window.dispatchEvent(new Event('cart-updated'));
       return true;
     } catch (err: any) {
       console.error('❌ 移除购物车失败:', err);
@@ -238,6 +252,7 @@ export function useCart() {
       }
 
       await fetchCart();
+      window.dispatchEvent(new Event('cart-updated'));
       return true;
     } catch (err: any) {
       console.error('❌ 清空购物车失败:', err);

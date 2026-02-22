@@ -496,10 +496,6 @@ function ListProductCard({
                   e.stopPropagation();
                   onToggleFavorite(product.id);
                 }}
-                onPointerDown={(e) => e.stopPropagation()}
-                onPointerUp={(e) => e.stopPropagation()}
-                onTouchStart={(e) => e.stopPropagation()}
-                onTouchEnd={(e) => e.stopPropagation()}
                 className={`p-1.5 sm:p-2 rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all text-sm ${
                   isFavorited ? 'bg-pink-100 text-pink-500' : 'bg-white text-gray-400'
                 }`}
@@ -520,10 +516,6 @@ function ListProductCard({
                     e.stopPropagation();
                     onEdit?.(product.id);
                   }}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onPointerUp={(e) => e.stopPropagation()}
-                  onTouchStart={(e) => e.stopPropagation()}
-                  onTouchEnd={(e) => e.stopPropagation()}
                   className="p-1.5 sm:p-2 bg-brutal-yellow rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-yellow-400 hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all text-sm"
                 >
                   <Edit size={14} className="sm:w-4 sm:h-4" />
@@ -533,10 +525,6 @@ function ListProductCard({
                     e.stopPropagation();
                     onDelete?.(product.id);
                   }}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onPointerUp={(e) => e.stopPropagation()}
-                  onTouchStart={(e) => e.stopPropagation()}
-                  onTouchEnd={(e) => e.stopPropagation()}
                   className="p-1.5 sm:p-2 bg-red-500 text-white rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-red-600 hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all text-sm"
                 >
                   <Trash2 size={14} className="sm:w-4 sm:h-4" />
@@ -546,10 +534,6 @@ function ListProductCard({
             {status === 'idle' ? (
               <button 
                 onClick={handleOrder}
-                onPointerDown={(e) => e.stopPropagation()}
-                onPointerUp={(e) => e.stopPropagation()}
-                onTouchStart={(e) => e.stopPropagation()}
-                onTouchEnd={(e) => e.stopPropagation()}
                 className="px-3 py-1.5 sm:px-4 sm:py-2 bg-black text-white rounded-lg sm:rounded-xl border-2 border-black font-bold shadow-[3px_3px_0_0_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[5px_5px_0_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all text-xs sm:text-sm flex items-center gap-1.5 relative overflow-hidden group/btn"
               >
                 <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:animate-shimmer" />
