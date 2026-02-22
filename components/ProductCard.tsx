@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { ShoppingCart, Heart, Star } from 'lucide-react';
+import { ShoppingCart, Heart, Star, X, Check } from 'lucide-react';
 import { Product } from '../types';
 
 interface ProductCardProps {
@@ -20,6 +20,23 @@ export default function ProductCard({
   onToggleFavorite,
 }: ProductCardProps) {
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const [status, setStatus] = useState<'idle' | 'ordered' | 'rated'>('idle');
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+
+  const handleOrder = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setStatus('ordered');
+    onAddToCart?.(product);
+  };
+
+  const submitRating = (e: React.MouseEvent, val: number) => {
+    e.stopPropagation();
+    setRating(val);
+    setStatus('rated');
+    // Save rating code can go here later
+  };
 
   // 根据productAttribute获取标签文本和样式
   const getTagConfig = () => {
@@ -59,7 +76,7 @@ export default function ProductCard({
         group-hover:translate-x-[-3px] group-hover:translate-y-[-3px]
         group-hover:shadow-[8px_8px_0_0_#000] sm:group-hover:shadow-[12px_12px_0_0_#000]
         active:translate-x-[5px] active:translate-y-[5px]
-        active:shadow-none sm:active:shadow-none
+        active:shadow-[2px_2px_0_0_#000] sm:active:shadow-[2px_2px_0_0_#000]
         cursor-pointer
       `}
       onClick={() => onSelect?.(product)}
@@ -198,12 +215,10 @@ export default function ProductCard({
               </div>
             </div>
 
-            {/* 购买按钮 */}
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                onAddToCart?.(product);
-              }}
+            {/* 购买按钮或状态 */}
+            {status === 'idle' ? (
+              <button 
+                onClick={handleOrder}
               onPointerDown={(e) => {
                 e.stopPropagation();
               }}
@@ -232,11 +247,71 @@ export default function ProductCard({
             >
               {/* 扫光效果 */}
               <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:animate-shimmer" />
-              <ShoppingCart size={14} className="sm:w-[18px] sm:h-[18px]" />
-              <span className="text-xs sm:text-sm">BUY</span>
-            </button>
+                <ShoppingCart size={14} className="sm:w-[18px] sm:h-[18px]" />
+                <span className="text-xs sm:text-sm">ORDER</span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-1 text-green-600 font-black text-xs sm:text-sm italic animate-bounce">
+                <Check size={16} className="sm:w-5 sm:h-5" strokeWidth={3} />
+                ORDERED
+              </div>
+            )}
           </div>
         </div>
+
+        {/* 评分覆盖层 (下单后显示) */}
+        {status === 'ordered' && (
+          <div className="absolute inset-0 z-30 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center animate-in fade-in slide-in-from-bottom-4 duration-300 cursor-default" onClick={(e) => e.stopPropagation()}>
+            <button 
+              onClick={(e) => { e.stopPropagation(); setStatus('rated'); }}
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-black hover:scale-110 transition-transform"
+            >
+              <X size={20} className="sm:w-[24px] sm:h-[24px]" strokeWidth={3} />
+            </button>
+            <div className={`w-10 h-10 sm:w-12 sm:h-12 ${accent} border-2 border-black rounded-full flex items-center justify-center mb-4 shadow-[4px_4px_0_0_#000]`}>
+              <Star size={20} className="sm:w-[24px] sm:h-[24px]" fill="white" stroke="black" strokeWidth={2} />
+            </div>
+            <h4 className="font-black text-base sm:text-lg mb-1 italic uppercase">Rate this product</h4>
+            <p className="text-[10px] sm:text-xs font-bold text-gray-500 mb-6 uppercase tracking-widest">Share your experience</p>
+            
+            <div className="flex gap-2 mb-8">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  onClick={(e) => submitRating(e, star)}
+                  className="transition-transform hover:scale-125 active:scale-90"
+                >
+                  <Star 
+                    size={28} 
+                    className="sm:w-[32px] sm:h-[32px]"
+                    fill={star <= (hoverRating || rating) ? "#000" : "none"} 
+                    stroke="black"
+                    strokeWidth={2.5}
+                  />
+                </button>
+              ))}
+            </div>
+
+            <p className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-tighter">Your feedback helps the community</p>
+          </div>
+        )}
+
+        {/* 评分成功后的短暂反馈 */}
+        {status === 'rated' && (
+          <div className="absolute inset-0 z-30 bg-black text-white flex flex-col items-center justify-center p-6 text-center animate-in zoom-in duration-300 cursor-default" onClick={(e) => e.stopPropagation()}>
+             <div className="text-4xl mb-4">✨</div>
+            <h4 className="font-black text-lg sm:text-xl italic uppercase leading-none">Thanks for rating!</h4>
+            <p className="mt-2 text-[10px] sm:text-xs font-bold tracking-[0.2em] opacity-60">WE LOVE YOUR FEEDBACK</p>
+             <button 
+              onClick={(e) => { e.stopPropagation(); setStatus('idle'); setRating(0); }}
+              className="mt-6 pointer-events-auto bg-white text-black px-4 py-1.5 font-black text-xs sm:text-sm border-2 border-white hover:bg-transparent hover:text-white transition-colors uppercase italic focus:outline-none"
+            >
+              Back to Store
+             </button>
+          </div>
+        )}
 
         {/* 装饰角 */}
         <div className="absolute -bottom-1.5 sm:-bottom-2 -right-1.5 sm:-right-2 w-6 h-6 sm:w-8 sm:h-8 bg-black rotate-45 z-0" />

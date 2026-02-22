@@ -21,26 +21,16 @@ const SidebarFilterButton: React.FC<SidebarFilterButtonProps> = ({
       className={`
         w-full text-left px-4 py-3 rounded-lg font-bold text-sm
         relative overflow-hidden
-        border-2 border-b-4
-        transition-all duration-150
+        border-2 transition-all duration-150
         ${isSelected 
-          ? 'bg-yellow-400 border-black text-black active:border-b-2 active:shadow-none' 
-          : 'bg-white border-transparent text-gray-500 hover:bg-gray-50 hover:text-black hover:border-gray-200 hover:border-b-gray-300 active:border-b-2'
+          ? 'bg-yellow-400 border-black text-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0_0_rgba(0,0,0,1)]' 
+          : 'bg-white border-transparent text-gray-500 hover:bg-gray-50 hover:text-black hover:border-black hover:shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0_0_rgba(0,0,0,1)]'
         }
         ${className}
       `}
-      whileHover={{ 
-        y: -2,
-        transition: { duration: 0.1 }
-      }}
       whileTap={{ 
-        y: 4,
         scale: 0.98,
         transition: { duration: 0.05 }
-      }}
-      style={{
-        // When hovered/tapped, the border-bottom effectively reduces visually
-        // This is managed via the translate rather than actual border change for smoother animation
       }}
       {...props}
     >

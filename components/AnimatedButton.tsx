@@ -12,28 +12,25 @@ interface AnimatedButtonProps extends Omit<HTMLMotionProps<'button'>, 'ref'> {
 const variantStyles: Record<ButtonVariant, string> = {
   primary: `
     bg-black text-white 
-    border-2 border-black border-b-4
-    shadow-[0_4px_0_0_rgba(0,0,0,1)]
-    hover:shadow-[0_6px_0_0_rgba(0,0,0,1)]
-    active:shadow-none
-    active:border-b-2
+    border-2 border-black
+    shadow-[4px_4px_0_0_rgba(0,0,0,1)]
+    hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_rgba(0,0,0,1)]
+    active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0_0_rgba(0,0,0,1)]
   `,
   secondary: `
     bg-yellow-400 text-black 
-    border-2 border-black border-b-4
-    shadow-[0_4px_0_0_rgba(0,0,0,1)]
-    hover:shadow-[0_6px_0_0_rgba(0,0,0,1)]
-    active:shadow-none
-    active:border-b-2
+    border-2 border-black
+    shadow-[4px_4px_0_0_rgba(0,0,0,1)]
+    hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_rgba(0,0,0,1)]
+    active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0_0_rgba(0,0,0,1)]
   `,
   outline: `
     bg-white text-black
-    border-2 border-black border-b-4
-    shadow-[0_4px_0_0_rgba(0,0,0,1)]
-    hover:shadow-[0_6px_0_0_rgba(0,0,0,1)]
+    border-2 border-black
+    shadow-[4px_4px_0_0_rgba(0,0,0,1)]
+    hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_rgba(0,0,0,1)]
     hover:bg-gray-50
-    active:shadow-none
-    active:border-b-2
+    active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0_0_rgba(0,0,0,1)]
   `,
   ghost: `
     bg-transparent text-black
@@ -68,11 +65,9 @@ const AnimatedButton: React.FC<AnimatedButtonProps> = ({
         ${className}
       `}
       whileHover={disabled ? undefined : { 
-        y: isNeubrutalism ? -2 : 0,
         scale: variant === 'icon' ? 1.05 : 1,
       }}
       whileTap={disabled ? undefined : { 
-        y: isNeubrutalism ? 4 : 0,
         scale: variant === 'icon' ? 0.95 : 0.98,
       }}
       transition={{

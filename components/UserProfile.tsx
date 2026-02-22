@@ -48,7 +48,7 @@ export default function UserProfile() {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           onClick={() => navigate('/')}
-          className="mb-4 flex items-center gap-2 px-4 py-2 bg-white text-black font-bold border-4 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+          className="mb-4 flex items-center gap-2 px-4 py-2 bg-white text-black font-bold border-4 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0_0_rgba(0,0,0,1)] transition-all"
         >
           <ArrowLeft size={20} />
           返回首页
@@ -72,7 +72,7 @@ export default function UserProfile() {
             </div>
             <button
               onClick={handleLogout}
-              className="w-full md:w-auto px-6 py-2 bg-black text-white font-bold border-4 border-black rounded-xl hover:bg-white hover:text-black transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px]"
+              className="w-full md:w-auto px-6 py-2 bg-black text-white font-bold border-4 border-black rounded-xl hover:bg-white hover:text-black transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0_0_rgba(0,0,0,1)]"
             >
               退出登录
             </button>
@@ -102,8 +102,8 @@ export default function UserProfile() {
                     }}
                     className={`shrink-0 md:w-full flex items-center justify-between p-3 md:p-4 mb-0 md:mb-2 font-bold border-4 border-black rounded-xl transition-all ${
                       isActive
-                        ? 'bg-yellow-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
-                        : 'bg-white hover:bg-yellow-100'
+                        ? 'bg-yellow-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0_0_rgba(0,0,0,1)]'
+                        : 'bg-white hover:bg-yellow-100 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0_0_rgba(0,0,0,1)]'
                     }`}
                   >
                     <div className="flex items-center gap-2 md:gap-3">
@@ -163,7 +163,7 @@ export default function UserProfile() {
                     </div>
                     <button
                       onClick={handleSaveProfile}
-                      className="w-full md:w-auto px-8 py-3 bg-yellow-400 text-black font-black border-4 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                      className="w-full md:w-auto px-8 py-3 bg-yellow-400 text-black font-black border-4 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0_0_rgba(0,0,0,1)] transition-all"
                     >
                       保存修改
                     </button>
@@ -180,7 +180,7 @@ export default function UserProfile() {
                     </h2>
                     <button
                       onClick={() => navigate('/profile/addresses/new')}
-                      className="w-full md:w-auto px-6 py-2 bg-yellow-400 text-black font-black border-4 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                      className="w-full md:w-auto px-6 py-2 bg-yellow-400 text-black font-black border-4 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0_0_rgba(0,0,0,1)] transition-all"
                     >
                       + 新增地址
                     </button>
