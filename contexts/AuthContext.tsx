@@ -33,7 +33,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
+  loginWithGoogle: () => void;
   
   // 购物车同步
   syncGuestCart: () => Promise<void>;
@@ -303,11 +303,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   // Google OAuth 登录
-  const loginWithGoogle = async () => {
+  // 使用 createOAuth2Token 而非 createOAuth2Session，
+  // 因为移动端浏览器默认阻止第三方 Cookie，导致 session 无法读取。
+  // createOAuth2Token 通过 URL 参数传递 token，绕过 Cookie 限制。
+  const loginWithGoogle = () => {
     try {
       const origin = window.location.origin;
-      await account.createOAuth2Session(
-        'google',
+      // 注意：createOAuth2Token 内部直接做 window.location.href 跳转，
+      // 不要 await，否则后续代码不会执行。
+      account.createOAuth2Token(
+        'google' as any,
         `${origin}/auth/callback`,
         `${origin}/auth/failure`
       );
