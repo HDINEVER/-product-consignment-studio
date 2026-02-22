@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Heart, Trash2, ShoppingCart, ExternalLink, Sparkles } from 'lucide-react';
+import { X, Heart, Trash2, ShoppingCart, ExternalLink, Sparkles, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Product } from '../types';
 
@@ -172,6 +172,13 @@ const FavoritesDrawer: React.FC<FavoritesDrawerProps> = ({
                         {item.ip}
                       </span>
                     )}
+                    {/* 评分显示 */}
+                    <div className="flex items-center gap-0.5">
+                      <Star size={10} className="sm:w-3 sm:h-3 text-yellow-500" fill="#eab308" />
+                      <span className="text-[10px] sm:text-xs font-bold text-gray-600">
+                        {(item.rating || 5).toFixed(1)}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between gap-2">

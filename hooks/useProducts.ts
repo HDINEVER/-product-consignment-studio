@@ -20,6 +20,7 @@ const mapToProduct = (doc: AppwriteProduct, categoryMap: TagsMap = {}, ipMap: Ta
   materialType: undefined,
   variants: [],
   productAttribute: doc.productAttribute || null,     // ✅ 产品属性标签
+  rating: doc.rating || 5,                            // ✅ 评分，默认5分
 });
 
 // ========== 筛选参数类型 ==========

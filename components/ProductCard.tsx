@@ -174,7 +174,7 @@ export default function ProductCard({
             </h3>
             <div className="flex items-center gap-1">
               <Star size={12} className="sm:w-[14px] sm:h-[14px]" fill="#000" />
-              <span className="font-bold text-xs sm:text-sm">4.8</span>
+              <span className="font-bold text-xs sm:text-sm">{(product.rating || 5).toFixed(1)}</span>
             </div>
           </div>
           

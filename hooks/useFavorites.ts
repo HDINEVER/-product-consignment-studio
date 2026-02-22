@@ -107,6 +107,7 @@ export function useFavorites() {
           materialType: doc.materialType,
           variants: doc.variants || [],
           productAttribute: doc.productAttribute || null,
+          rating: doc.rating || 5,         // ✅ 评分，默认5分
         };
       });
 
