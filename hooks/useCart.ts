@@ -114,7 +114,7 @@ export function useCart() {
     };
   }, [fetchCart]);
 
-  // ========== 添加到购物车 ==========
+  // ========== 添加到购物车（自动合并同款商品）==========
   const addToCart = async (item: {
     productId: string;          // ✅ 驼峰命名
     productName: string;        // ✅ 驼峰命名 
@@ -125,42 +125,64 @@ export function useCart() {
   }) => {
     try {
       if (isGuest) {
-        // 游客：存入 sessionStorage（注意字段映射：productImage -> image）
+        // 游客：guestCart 内部已处理合并逻辑
         addToGuestCart({
-          productId: item.productId,       // ✅ 驼峰命名
-          productName: item.productName,   // ✅ 驼峰命名
-          image: item.productImage,         // GuestCartItem 使用 image 字段
-          variantName: item.variantName,   // ✅ 驼峰命名
+          productId: item.productId,
+          productName: item.productName,
+          image: item.productImage,
+          variantName: item.variantName,
           price: item.price,
           quantity: item.quantity,
         });
         console.log('🛒 [游客] 已添加到购物车');
       } else if (user) {
-        // 登录用户：写入 Appwrite（带行级安全权限）
-        await databases.createDocument(
+        // 登录用户：先查是否已有同款商品
+        const existing = await databases.listDocuments(
           DATABASE_ID,
           COLLECTIONS.CART_ITEMS,
-          ID.unique(),
-          {
-            userId: user.$id,                      // ✅ 使用驼峰命名
-            productId: item.productId,             // ✅ 使用驼峰命名
-            quantity: item.quantity,
-            createdAt: new Date().toISOString(),   // ✅ 使用驼峰命名
-            isActive: true,                        // ✅ 添加必填字段
-          },
           [
-            // 行级安全：只有该用户可以读取、更新、删除
-            Permission.read(Role.user(user.$id)),
-            Permission.update(Role.user(user.$id)),
-            Permission.delete(Role.user(user.$id)),
+            Query.equal('userId', user.$id),
+            Query.equal('productId', item.productId),
+            Query.limit(1),
           ]
         );
-        console.log('🛒 [用户] 已添加到购物车');
+
+        if (existing.total > 0) {
+          // ✅ 已有记录 → 累加数量
+          const doc = existing.documents[0];
+          const newQty = (doc.quantity as number) + item.quantity;
+          await databases.updateDocument(
+            DATABASE_ID,
+            COLLECTIONS.CART_ITEMS,
+            doc.$id,
+            { quantity: newQty }
+          );
+          console.log(`🛒 [用户] 数量已合并: ${item.productId} × ${newQty}`);
+        } else {
+          // ✅ 无记录 → 新建
+          await databases.createDocument(
+            DATABASE_ID,
+            COLLECTIONS.CART_ITEMS,
+            ID.unique(),
+            {
+              userId: user.$id,
+              productId: item.productId,
+              quantity: item.quantity,
+              createdAt: new Date().toISOString(),
+              isActive: true,
+            },
+            [
+              Permission.read(Role.user(user.$id)),
+              Permission.update(Role.user(user.$id)),
+              Permission.delete(Role.user(user.$id)),
+            ]
+          );
+          console.log('🛒 [用户] 已添加到购物车');
+        }
       }
 
       // 刷新购物车
       await fetchCart();
-      // 通知其他组件购物车已更新
       window.dispatchEvent(new Event('cart-updated'));
       return true;
     } catch (err: any) {
@@ -169,6 +191,7 @@ export function useCart() {
       return false;
     }
   };
+
 
   // ========== 更新购物车数量 ==========
   const updateQuantity = async (itemId: string, quantity: number) => {
