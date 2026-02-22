@@ -57,18 +57,52 @@ export function useFavorites() {
         [Query.equal('$id', productIds), Query.limit(100)]
       );
 
+      // 2.5 批量查询标签信息
+      const docs = productsResponse.documents as any[];
+      
+      // 收集所有唯一的 categoryId 和 ipId
+      const categoryIds = [...new Set(docs.map(doc => doc.categoryId).filter(id => id && id.trim()))];
+      const ipIds = [...new Set(docs.map(doc => doc.ipId).filter(id => id && id.trim()))];
+      
+      // 批量查询分类和IP标签
+      const [categoriesData, ipsData] = await Promise.all([
+        categoryIds.length > 0 
+          ? databases.listDocuments(DATABASE_ID, COLLECTIONS.CATEGORIES, [
+              Query.equal('$id', categoryIds),
+              Query.limit(100)
+            ])
+          : Promise.resolve({ documents: [] }),
+        ipIds.length > 0
+          ? databases.listDocuments(DATABASE_ID, COLLECTIONS.IP_TAGS, [
+              Query.equal('$id', ipIds),
+              Query.limit(100)
+            ])
+          : Promise.resolve({ documents: [] }),
+      ]);
+      
+      // 构建 ID -> 名称 的映射表
+      const categoryMap: { [id: string]: string } = {};
+      categoriesData.documents.forEach((doc: any) => {
+        categoryMap[doc.$id] = doc.name;
+      });
+      
+      const ipMap: { [id: string]: string } = {};
+      ipsData.documents.forEach((doc: any) => {
+        ipMap[doc.$id] = doc.name;
+      });
+
       // 3. 组合数据
       const favoriteItems: FavoriteItem[] = productsResponse.documents.map((doc: any) => {
         const favoriteRecord = favoriteRecords.find(f => f.productId === doc.$id);
         return {
           id: doc.$id,
           favoriteId: favoriteRecord?.$id || '',
-          title: doc.title || '',
-          ip: doc.ip || '',
-          category: doc.category || '',
-          image: doc.imageUrl || '',  // ✅ 修复：使用 imageUrl 字段
+          title: doc.name || '',           // ✅ 修复：使用 name 字段
+          ip: ipMap[doc.ipId] || '未分类',  // ✅ 修复：通过映射表获取IP名称
+          category: categoryMap[doc.categoryId] || '未分类',  // ✅ 修复：通过映射表获取分类名称
+          image: doc.imageUrl || '',       // ✅ 修复：使用 imageUrl 字段
           description: doc.description || '',
-          basePrice: doc.basePrice || 0,
+          basePrice: doc.price || 0,       // ✅ 修复：使用 price 字段
           stockQuantity: doc.stockQuantity,
           materialType: doc.materialType,
           variants: doc.variants || [],
