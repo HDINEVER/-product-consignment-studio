@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Responsive, Layout, useContainerWidth } from 'react-grid-layout';
 import { Product } from '../types';
 import ProductCard from './ProductCard';
-import { LayoutGrid, LayoutDashboard, ListIcon, Shuffle, Edit, Trash2, Heart } from 'lucide-react';
+import { LayoutGrid, LayoutDashboard, ListIcon, Shuffle, Edit, Trash2, Heart, ShoppingCart, Star, Check, X } from 'lucide-react';
 
 // Responsive grid component from react-grid-layout v2
 const ResponsiveGridLayout = Responsive;
@@ -416,20 +416,44 @@ function ListProductCard({
   onEdit,
   onDelete,
 }: ListProductCardProps) {
+  const [status, setStatus] = useState<'idle' | 'ordered' | 'rated'>('idle');
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+
+  const handleOrder = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setStatus('ordered');
+    onAddToCart?.(product);
+  };
+
+  const submitRating = (e: React.MouseEvent, val: number) => {
+    e.stopPropagation();
+    setRating(val);
+    setStatus('rated');
+    // Save rating code can go here later
+  };
+
   return (
     <div 
-      className="flex bg-white rounded-2xl border-2 border-black shadow-brutal overflow-hidden hover:shadow-brutal-lg transition-all cursor-pointer"
+      className="group flex bg-white rounded-2xl border-[3px] sm:border-[3.5px] border-black shadow-[5px_5px_0_0_#000] sm:shadow-[7px_7px_0_0_#000] overflow-hidden hover:translate-x-[-3px] hover:translate-y-[-3px] hover:shadow-[8px_8px_0_0_#000] sm:hover:shadow-[12px_12px_0_0_#000] active:translate-x-[5px] active:translate-y-[5px] active:shadow-[2px_2px_0_0_#000] sm:active:shadow-[2px_2px_0_0_#000] transition-all cursor-pointer relative duration-400 ease-[cubic-bezier(0.23,1,0.32,1)]"
       onClick={(e) => onSelect?.(product, e.currentTarget as HTMLElement)}
     >
-      <div className="w-24 h-24 sm:w-40 sm:h-40 flex-shrink-0 bg-gray-100">
+      <div className="w-24 h-24 sm:w-40 sm:h-40 flex-shrink-0 bg-gray-100 overflow-hidden relative border-r-[3px] sm:border-r-[3.5px] border-black">
+        {/* 背景斜纹动画 */}
+        <div 
+          className="absolute inset-0 opacity-20 pointer-events-none"
+          style={{ 
+            backgroundImage: 'repeating-linear-gradient(45deg, #000, #000 10px, transparent 10px, transparent 20px)' 
+          }}
+        />
         <img 
           src={product.image} 
           alt={product.title}
-          className="w-full h-full object-cover"
+          className="relative z-10 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
       </div>
       
-      <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between">
+      <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between relative z-10 bg-white">
         <div>
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             {product.category && (
@@ -507,22 +531,81 @@ function ListProductCard({
                 </button>
               </>
             )}
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                onAddToCart?.(product);
-              }}
-              onPointerDown={(e) => e.stopPropagation()}
-              onPointerUp={(e) => e.stopPropagation()}
-              onTouchStart={(e) => e.stopPropagation()}
-              onTouchEnd={(e) => e.stopPropagation()}
-              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-black text-white rounded-lg sm:rounded-xl border-2 border-black font-bold shadow-brutal hover:bg-gray-800 transition-all text-xs sm:text-sm"
-            >
-              购买
-            </button>
+            {status === 'idle' ? (
+              <button 
+                onClick={handleOrder}
+                onPointerDown={(e) => e.stopPropagation()}
+                onPointerUp={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchEnd={(e) => e.stopPropagation()}
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-black text-white rounded-lg sm:rounded-xl border-2 border-black font-bold shadow-[3px_3px_0_0_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[5px_5px_0_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all text-xs sm:text-sm flex items-center gap-1.5 relative overflow-hidden group/btn"
+              >
+                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:animate-shimmer" />
+                <ShoppingCart size={14} className="sm:w-[18px] sm:h-[18px]" />
+                <span className="text-xs sm:text-sm">ORDER</span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-1 text-green-600 font-black text-xs sm:text-sm italic animate-bounce pr-1">
+                <Check size={16} className="sm:w-5 sm:h-5" strokeWidth={3} />
+                ORDERED
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* 评分覆盖层 (下单后显示) */}
+      {status === 'ordered' && (
+        <div className="absolute inset-0 z-30 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center animate-in fade-in slide-in-from-bottom-4 duration-300 cursor-default" onClick={(e) => e.stopPropagation()}>
+          <button 
+            onClick={(e) => { e.stopPropagation(); setStatus('rated'); }}
+            className="absolute top-2 right-2 sm:top-3 sm:right-3 text-black hover:scale-110 transition-transform"
+          >
+            <X size={20} className="sm:w-[24px] sm:h-[24px]" strokeWidth={3} />
+          </button>
+          
+          <div className="flex items-center gap-3 sm:gap-4 mb-2">
+            <h4 className="font-black text-sm sm:text-base italic uppercase">Rate product</h4>
+          </div>
+          
+          <div className="flex gap-1.5 sm:gap-2 mb-2">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                onMouseEnter={() => setHoverRating(star)}
+                onMouseLeave={() => setHoverRating(0)}
+                onClick={(e) => submitRating(e, star)}
+                className="transition-transform hover:scale-125 active:scale-90 p-1"
+              >
+                <Star 
+                  size={20} 
+                  className="sm:w-[28px] sm:h-[28px]"
+                  fill={star <= (hoverRating || rating) ? "#000" : "none"} 
+                  stroke="black"
+                  strokeWidth={2.5}
+                />
+              </button>
+            ))}
+          </div>
+
+          <p className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Share your experience</p>
+        </div>
+      )}
+
+      {/* 评分成功后的短暂反馈 */}
+      {status === 'rated' && (
+        <div className="absolute inset-0 z-30 bg-black text-white flex flex-col items-center justify-center p-4 text-center animate-in zoom-in duration-300 cursor-default" onClick={(e) => e.stopPropagation()}>
+           <div className="text-3xl sm:text-4xl mb-2 sm:mb-3">✨</div>
+          <h4 className="font-black text-base sm:text-xl italic uppercase leading-none">Thanks for rating!</h4>
+          <p className="mt-1 sm:mt-2 text-[9px] sm:text-xs font-bold tracking-[0.2em] opacity-60">WE LOVE YOUR FEEDBACK</p>
+           <button 
+            onClick={(e) => { e.stopPropagation(); setStatus('idle'); setRating(0); }}
+            className="mt-3 sm:mt-4 pointer-events-auto bg-white text-black px-3 py-1 sm:px-4 sm:py-1.5 font-black text-xs sm:text-sm border-2 border-white hover:bg-transparent hover:text-white transition-colors uppercase italic focus:outline-none"
+          >
+            Back to Store
+           </button>
+        </div>
+      )}
     </div>
   );
 }
