@@ -12,6 +12,7 @@ interface CartDrawerProps {
   onRemoveItem: (index: number) => void;
   onUpdateQuantity?: (index: number, quantity: number) => void;
   onClearCart?: () => void;
+  onProductClick?: (productId: string) => void;
 }
 
 const CartDrawer: React.FC<CartDrawerProps> = ({ 
@@ -20,7 +21,8 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
   cart, 
   onRemoveItem,
   onUpdateQuantity,
-  onClearCart
+  onClearCart,
+  onProductClick
 }) => {
   const navigate = useNavigate();
   const { isGuest } = useAuth();
@@ -45,7 +47,11 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
   };
 
   const handleViewProduct = (productId: string) => {
-    navigate(`/product/${productId}`);
+    if (onProductClick) {
+      onProductClick(productId);
+    } else {
+      navigate(`/product/${productId}`);
+    }
     onClose();
   };
 

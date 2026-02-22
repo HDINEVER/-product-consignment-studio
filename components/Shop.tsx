@@ -600,6 +600,20 @@ const Shop = () => {
             onRemoveItem={(index) => cartItems[index] && handleRemoveFromCart(cartItems[index].id)}
             onUpdateQuantity={handleUpdateQuantity}
             onClearCart={handleClearCart}
+            onProductClick={async (productId: string) => {
+              // 在当前列表中查找
+              let product = products.find(p => p.id === productId);
+              if (!product) {
+                // 如果当前页没加载到，去后端查询详情
+                product = await getProduct(productId);
+              }
+              if (product) {
+                setSelectedProduct(product);
+                setSelectedProductRect(null); // 从购物车打开时，默认居中显示
+              } else {
+                alert('商品信息加载失败或已下架');
+              }
+            }}
         />
 
         {/* 收藏抽屉 */}
