@@ -465,8 +465,9 @@ function ListProductCard({
         />
       </div>
       
-      <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between relative z-10 bg-white">
-        <div>
+      <div className="flex-1 flex flex-col relative z-10 bg-white">
+        {/* 上半部分 */}
+        <div className="flex-1 p-3 sm:p-4 pb-2 sm:pb-3">
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             {product.category && (
               <span className="bg-brutal-yellow px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-black border-2 border-black rounded-lg">
@@ -476,7 +477,7 @@ function ListProductCard({
             {product.ip && (
               <span className="bg-brutal-blue text-white px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-black border-2 border-black rounded-lg">
                 {product.ip}
-              </span>
+               </span>
             )}
           </div>
           <h3 className="font-black text-base sm:text-lg line-clamp-1">{product.title}</h3>
@@ -485,10 +486,15 @@ function ListProductCard({
           )}
         </div>
         
-        <div className="flex items-center justify-between mt-2 sm:mt-3">
-          <span className="text-lg sm:text-2xl font-black">¥{product.basePrice}</span>
+        {/* 分隔线 */}
+        <div className="w-full border-t-[3px] border-dashed border-gray-200"></div>
+
+        {/* 下半部分 */}
+        <div className="p-3 sm:p-4 pt-2 sm:pt-3 flex items-center justify-between bg-gray-50/50">
+          <div className="flex-1"></div> {/* 占位，把右边内容推过去 */}
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="text-lg sm:text-2xl font-black mr-1 sm:mr-2">¥{product.basePrice}</span>
             {/* 收藏按钮 */}
             {onToggleFavorite && (
               <button 
@@ -499,16 +505,17 @@ function ListProductCard({
                 }}
                 onPointerDown={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}
-                className={`no-drag p-1.5 sm:p-2 rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all text-sm ${
-                  isFavorited ? 'bg-pink-100 text-pink-500' : 'bg-white text-gray-400'
+                className={`no-drag relative z-20 p-1.5 sm:p-2 rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all text-sm ${
+                  isFavorited ? 'bg-white text-pink-500' : 'bg-white text-gray-400'
                 }`}
                 title={isFavorited ? "取消收藏" : "收藏"}
                 aria-label={isFavorited ? "取消收藏" : "收藏"}
               >
                 <Heart 
                   size={14} 
-                  className="sm:w-4 sm:h-4" 
-                  fill={isFavorited ? "currentColor" : "none"}
+                  className={`sm:w-5 sm:h-5 transition-colors ${isFavorited ? 'text-pink-500' : 'text-gray-400'}`}
+                  fill={isFavorited ? "#ec4899" : "none"} 
+                  stroke={isFavorited ? "#ec4899" : "currentColor"} 
                 />
               </button>
             )}
@@ -522,7 +529,7 @@ function ListProductCard({
                   }}
                   onPointerDown={(e) => e.stopPropagation()}
                   onTouchStart={(e) => e.stopPropagation()}
-                  className="no-drag p-1.5 sm:p-2 bg-brutal-yellow rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-yellow-400 hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all text-sm"
+                  className="no-drag relative z-20 p-1.5 sm:p-2 bg-brutal-yellow rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-yellow-400 hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all text-sm"
                 >
                   <Edit size={14} className="sm:w-4 sm:h-4" />
                 </button>
@@ -534,7 +541,7 @@ function ListProductCard({
                   }}
                   onPointerDown={(e) => e.stopPropagation()}
                   onTouchStart={(e) => e.stopPropagation()}
-                  className="no-drag p-1.5 sm:p-2 bg-red-500 text-white rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-red-600 hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all text-sm"
+                  className="no-drag relative z-20 p-1.5 sm:p-2 bg-red-500 text-white rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-red-600 hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all text-sm"
                 >
                   <Trash2 size={14} className="sm:w-4 sm:h-4" />
                 </button>
@@ -546,9 +553,9 @@ function ListProductCard({
                   e.preventDefault();
                   handleOrder(e);
                 }}
-                className="no-drag px-3 py-1.5 sm:px-4 sm:py-2 bg-black text-white rounded-lg sm:rounded-xl border-2 border-black font-bold shadow-[3px_3px_0_0_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[5px_5px_0_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all text-xs sm:text-sm flex items-center gap-1.5 relative overflow-hidden group/btn"
+                className="no-drag relative z-20 px-3 py-1.5 sm:px-4 sm:py-2 bg-black text-white rounded-lg sm:rounded-xl border-[3px] border-black font-bold shadow-[3px_3px_0_0_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[5px_5px_0_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all text-xs sm:text-sm flex items-center gap-1.5 overflow-hidden group/btn"
               >
-                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:animate-shimmer" />
+                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:animate-shimmer pointer-events-none" />
                 <ShoppingCart size={14} className="sm:w-[18px] sm:h-[18px]" />
                 <span className="text-xs sm:text-sm">ORDER</span>
               </button>
