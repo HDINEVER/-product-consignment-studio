@@ -66,7 +66,7 @@ export function useFavorites() {
           title: doc.title || '',
           ip: doc.ip || '',
           category: doc.category || '',
-          image: doc.image || '',
+          image: doc.imageUrl || '',  // ✅ 修复：使用 imageUrl 字段
           description: doc.description || '',
           basePrice: doc.basePrice || 0,
           stockQuantity: doc.stockQuantity,

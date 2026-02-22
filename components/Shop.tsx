@@ -609,6 +609,11 @@ const Shop = () => {
             favorites={favorites}
             onRemoveItem={handleRemoveFavorite}
             onAddToCart={handleAddFavoriteToCart}
+            onProductClick={(product) => {
+              // ✅ 新增：点击收藏夹中的产品时打开产品详情Modal
+              setSelectedProduct(product);
+              setSelectedProductRect(null); // 从收藏夹打开时显示居中弹窗
+            }}
         />
 
         {/* 悬浮购物车按钮 - 右下角 */}

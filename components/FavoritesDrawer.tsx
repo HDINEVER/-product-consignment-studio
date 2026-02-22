@@ -1,7 +1,6 @@
 import React from 'react';
 import { X, Heart, Trash2, ShoppingCart, ExternalLink, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 import { Product } from '../types';
 
 interface FavoriteItem extends Product {
@@ -14,6 +13,7 @@ interface FavoritesDrawerProps {
   favorites: FavoriteItem[];
   onRemoveItem: (favoriteId: string) => void;
   onAddToCart?: (product: Product) => void;
+  onProductClick?: (product: Product) => void; // ✅ 新增：产品点击回调
 }
 
 const FavoritesDrawer: React.FC<FavoritesDrawerProps> = ({ 
@@ -21,13 +21,26 @@ const FavoritesDrawer: React.FC<FavoritesDrawerProps> = ({
   onClose, 
   favorites, 
   onRemoveItem,
-  onAddToCart
+  onAddToCart,
+  onProductClick // ✅ 新增
 }) => {
-  const navigate = useNavigate();
 
-  const handleViewProduct = (productId: string) => {
-    navigate(`/product/${productId}`);
-    onClose();
+  const handleViewProduct = (product: Product, e?: React.MouseEvent) => {
+    // ✅ 阻止事件传播，防止意外触发其他点击事件
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    console.log('🔍 收藏夹点击产品:', product.id, product.title);
+    
+    // ✅ 修改：调用回调函数而不是导航
+    if (onProductClick) {
+      onProductClick(product);
+      onClose(); // 关闭收藏夹抽屉
+    } else {
+      console.warn('⚠️ onProductClick 回调未定义！');
+    }
   };
 
   const handleAddToCart = (product: Product) => {
@@ -41,8 +54,7 @@ const FavoritesDrawer: React.FC<FavoritesDrawerProps> = ({
   };
 
   const handleContinueShopping = () => {
-    navigate('/');
-    onClose();
+    onClose(); // ✅ 修改：只关闭抽屉，不导航
   };
 
   if (!isOpen) return null;
@@ -116,13 +128,17 @@ const FavoritesDrawer: React.FC<FavoritesDrawerProps> = ({
                 {/* 产品图片 */}
                 <div 
                   className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 bg-white border-2 border-black rounded-lg overflow-hidden cursor-pointer"
-                  onClick={() => handleViewProduct(item.id)}
+                  onClick={(e) => handleViewProduct(item, e)}
                 >
                   {item.image ? (
                     <img 
                       src={item.image} 
                       alt={item.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      onError={(e) => {
+                        console.error('❌ 图片加载失败:', item.image);
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gray-200">
@@ -140,7 +156,7 @@ const FavoritesDrawer: React.FC<FavoritesDrawerProps> = ({
                 <div className="flex-1 min-w-0">
                   <h3 
                     className="font-black text-sm sm:text-base mb-1 truncate cursor-pointer hover:text-pink-500 transition-colors"
-                    onClick={() => handleViewProduct(item.id)}
+                    onClick={(e) => handleViewProduct(item, e)}
                   >
                     {item.title}
                   </h3>
