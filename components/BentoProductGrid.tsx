@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Responsive, Layout, useContainerWidth } from 'react-grid-layout';
 import { Product } from '../types';
 import ProductCard from './ProductCard';
-import { LayoutGrid, LayoutDashboard, ListIcon, Shuffle, Edit, Trash2 } from 'lucide-react';
+import { LayoutGrid, LayoutDashboard, ListIcon, Shuffle, Edit, Trash2, Heart } from 'lucide-react';
 
 // Responsive grid component from react-grid-layout v2
 const ResponsiveGridLayout = Responsive;
@@ -12,6 +12,8 @@ interface BentoGridProps {
   isAdmin?: boolean;
   onProductSelect: (product: Product, element?: HTMLElement) => void;
   onAddToCart: (product: Product) => void;
+  isFavorited?: (productId: string) => boolean;
+  onToggleFavorite?: (productId: string) => void;
   onEdit?: (productId: string) => void;
   onDelete?: (productId: string) => void;
   onEditCategory?: (productId: string) => void;
@@ -32,6 +34,8 @@ export default function BentoProductGrid({
   isAdmin = false,
   onProductSelect,
   onAddToCart,
+  isFavorited,
+  onToggleFavorite,
   onEdit,
   onDelete,
   onEditCategory,
@@ -190,8 +194,8 @@ export default function BentoProductGrid({
 
   return (
     <div className="relative">
-      {/* 浮动按钮组 - 固定在右下方，购物车按钮上方 */}
-      <div ref={buttonGroupRef} className="fixed bottom-28 sm:bottom-32 right-4 sm:right-6 z-40">
+      {/* 浮动按钮组 - 固定在右下方，收藏按钮上方 */}
+      <div ref={buttonGroupRef} className="fixed bottom-[180px] sm:bottom-[200px] right-6 sm:right-8 z-40">
         <div className="flex flex-col gap-2 sm:gap-3 items-end">
           {/* 展开状态：显示所有按钮 */}
           {isExpanded && (
@@ -330,8 +334,10 @@ export default function BentoProductGrid({
                      <ProductCard
                         product={product}
                         isAdmin={isAdmin}
+                        isFavorited={isFavorited?.(product.id)}
                         onSelect={onProductSelect}
                         onAddToCart={onAddToCart}
+                        onToggleFavorite={onToggleFavorite}
                       />
                   </div>
                   
@@ -375,8 +381,10 @@ export default function BentoProductGrid({
                   key={product.id}
                   product={product}
                   isAdmin={isAdmin}
+                  isFavorited={isFavorited?.(product.id)}
                   onSelect={onProductSelect}
                   onAddToCart={onAddToCart}
+                  onToggleFavorite={onToggleFavorite}
                   onEdit={onEdit}
                   onDelete={onDelete}
               />
@@ -390,17 +398,21 @@ export default function BentoProductGrid({
 interface ListProductCardProps {
   product: Product;
   isAdmin?: boolean;
+  isFavorited?: boolean;
   onSelect?: (product: Product, element?: HTMLElement) => void;
   onAddToCart?: (product: Product) => void;
+  onToggleFavorite?: (productId: string) => void;
   onEdit?: (productId: string) => void;
   onDelete?: (productId: string) => void;
 }
 
 function ListProductCard({ 
   product, 
-  isAdmin, 
+  isAdmin,
+  isFavorited = false,
   onSelect, 
   onAddToCart,
+  onToggleFavorite,
   onEdit,
   onDelete,
 }: ListProductCardProps) {
@@ -441,6 +453,30 @@ function ListProductCard({
           <span className="text-lg sm:text-2xl font-black">¥{product.basePrice}</span>
           
           <div className="flex items-center gap-2">
+            {/* 收藏按钮 */}
+            {onToggleFavorite && (
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFavorite(product.id);
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onPointerUp={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchEnd={(e) => e.stopPropagation()}
+                className={`p-1.5 sm:p-2 rounded-lg border-2 border-black shadow-brutal hover:scale-105 transition-all text-sm ${
+                  isFavorited ? 'bg-pink-100 text-pink-500' : 'bg-white text-gray-400'
+                }`}
+                title={isFavorited ? "取消收藏" : "收藏"}
+                aria-label={isFavorited ? "取消收藏" : "收藏"}
+              >
+                <Heart 
+                  size={14} 
+                  className="sm:w-4 sm:h-4" 
+                  fill={isFavorited ? "currentColor" : "none"}
+                />
+              </button>
+            )}
             {isAdmin && (
               <>
                 <button 
@@ -448,6 +484,10 @@ function ListProductCard({
                     e.stopPropagation();
                     onEdit?.(product.id);
                   }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onPointerUp={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onTouchEnd={(e) => e.stopPropagation()}
                   className="p-1.5 sm:p-2 bg-brutal-yellow rounded-lg border-2 border-black shadow-brutal hover:bg-yellow-400 transition-all text-sm"
                 >
                   <Edit size={14} className="sm:w-4 sm:h-4" />
@@ -457,6 +497,10 @@ function ListProductCard({
                     e.stopPropagation();
                     onDelete?.(product.id);
                   }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onPointerUp={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onTouchEnd={(e) => e.stopPropagation()}
                   className="p-1.5 sm:p-2 bg-red-500 text-white rounded-lg border-2 border-black shadow-brutal hover:bg-red-600 transition-all text-sm"
                 >
                   <Trash2 size={14} className="sm:w-4 sm:h-4" />
@@ -468,6 +512,10 @@ function ListProductCard({
                 e.stopPropagation();
                 onAddToCart?.(product);
               }}
+              onPointerDown={(e) => e.stopPropagation()}
+              onPointerUp={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              onTouchEnd={(e) => e.stopPropagation()}
               className="px-3 py-1.5 sm:px-4 sm:py-2 bg-black text-white rounded-lg sm:rounded-xl border-2 border-black font-bold shadow-brutal hover:bg-gray-800 transition-all text-xs sm:text-sm"
             >
               购买

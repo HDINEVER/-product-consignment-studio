@@ -6,6 +6,8 @@ import AtroposCard from './AtroposCard';
 import ProductModal from './ProductModal';
 import CartDrawer from './CartDrawer';
 import FloatingCartButton from './FloatingCartButton';
+import FavoritesDrawer from './FavoritesDrawer';
+import FloatingFavoritesButton from './FloatingFavoritesButton';
 import AuthModal from './AuthModal';
 import AnimatedButton from './AnimatedButton';
 import SidebarFilterButton from './SidebarFilterButton';
@@ -17,6 +19,7 @@ import PriceRangeFilter from './PriceRangeFilter';
 import BentoProductGrid from './BentoProductGrid';
 import { useProducts, ProductFilters } from '../hooks/useProducts';
 import { useCart } from '../hooks/useCart';
+import { useFavorites } from '../hooks/useFavorites';
 import { useAuth } from '../contexts/AuthContext';
 import { useTags } from '../hooks/useTags';
 import { hasGuestCartItems } from '../utils/guestCart';
@@ -37,6 +40,7 @@ const Shop = () => {
       updateProduct 
     } = useProducts();
     const { cartItems, cartCount, addToCart, removeFromCart, updateQuantity, clearCart, loading: cartLoading } = useCart();
+    const { favorites, favoriteCount, isFavorited, addToFavorites, removeFromFavorites, toggleFavorite } = useFavorites();
     const { user, isAuthenticated, isGuest, isAdmin, hasGuestCart } = useAuth();
     const { tags, loading: tagsLoading, addTag, deleteTag, getCategoryNames, getIPNames, getTagIdByName } = useTags();
 
@@ -50,6 +54,7 @@ const Shop = () => {
     const [selectedIP, setSelectedIP] = useState<string>('全部');
     const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth >= 1024);
     const [isCartOpen, setIsCartOpen] = useState(false);
+    const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
     const [viewProduct, setViewProduct] = useState<Product | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000]);
@@ -161,6 +166,24 @@ const Shop = () => {
 
     const handleClearCart = async () => {
         await clearCart();
+    };
+
+    // 收藏相关处理函数
+    const handleRemoveFavorite = async (favoriteId: string) => {
+        await removeFromFavorites(favoriteId);
+    };
+
+    const handleAddFavoriteToCart = async (product: Product) => {
+        // 如果产品有多个规格，打开产品详情让用户选择
+        if (product.variants && product.variants.length > 1) {
+          setViewProduct(product);
+          setIsFavoritesOpen(false);
+        } else {
+          // 单规格直接加入购物车
+          const variant = product.variants?.[0] || { name: '默认', price: product.basePrice };
+          await handleAddToCart(product, variant.name, variant.price, 1);
+          setIsFavoritesOpen(false);
+        }
     };
     
     // 管理员: 删除商品
@@ -503,6 +526,8 @@ const Shop = () => {
               <BentoProductGrid
                 products={products}
                 isAdmin={isAdmin}
+                isFavorited={isFavorited}
+                onToggleFavorite={toggleFavorite}
                 onProductSelect={(product, element) => {
                   if (!editingTag) {
                     setSelectedProduct(product);
@@ -577,11 +602,27 @@ const Shop = () => {
             onClearCart={handleClearCart}
         />
 
+        {/* 收藏抽屉 */}
+        <FavoritesDrawer
+            isOpen={isFavoritesOpen}
+            onClose={() => setIsFavoritesOpen(false)}
+            favorites={favorites}
+            onRemoveItem={handleRemoveFavorite}
+            onAddToCart={handleAddFavoriteToCart}
+        />
+
         {/* 悬浮购物车按钮 - 右下角 */}
         <FloatingCartButton
             cartCount={cartCount}
             onClick={() => setIsCartOpen(true)}
             isCartOpen={isCartOpen}
+        />
+
+        {/* 悬浮收藏按钮 - 购物车上方 */}
+        <FloatingFavoritesButton
+            favoriteCount={favoriteCount}
+            onClick={() => setIsFavoritesOpen(true)}
+            isFavoritesOpen={isFavoritesOpen}
         />
 
         {/* Auth Modal */}

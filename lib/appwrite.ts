@@ -38,6 +38,7 @@ export const COLLECTIONS = {
   ORDER_ITEMS: import.meta.env.VITE_APPWRITE_ORDER_ITEMS_COLLECTION_ID || 'order_items',
   ADDRESSES: import.meta.env.VITE_APPWRITE_ADDRESSES_COLLECTION_ID || 'addresses',
   CART_ITEMS: import.meta.env.VITE_APPWRITE_CART_ITEMS_COLLECTION_ID || 'cart_items',
+  FAVORITES: import.meta.env.VITE_APPWRITE_FAVORITES_COLLECTION_ID || 'favouritechart',
   TAGS: import.meta.env.VITE_APPWRITE_TAGS_COLLECTION_ID || 'tags',
   CATEGORIES: 'categories',  // 分类表
   IP_TAGS: 'ip_tags',        // IP标签表

@@ -5,17 +5,20 @@ import { Product } from '../types';
 interface ProductCardProps {
   product: Product;
   isAdmin?: boolean;
+  isFavorited?: boolean;
   onSelect?: (product: Product) => void;
   onAddToCart?: (product: Product) => void;
+  onToggleFavorite?: (productId: string) => void;
 }
 
 export default function ProductCard({
   product,
   isAdmin = false,
+  isFavorited = false,
   onSelect,
   onAddToCart,
+  onToggleFavorite,
 }: ProductCardProps) {
-  const [isLiked, setIsLiked] = useState(false);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   // 根据productAttribute获取标签文本和样式
@@ -108,16 +111,29 @@ export default function ProductCard({
         <button 
           onClick={(e) => {
             e.stopPropagation();
-            setIsLiked(!isLiked);
+            onToggleFavorite?.(product.id);
+          }}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+          }}
+          onPointerUp={(e) => {
+            e.stopPropagation();
+          }}
+          onTouchStart={(e) => {
+            e.stopPropagation();
+          }}
+          onTouchEnd={(e) => {
+            e.stopPropagation();
           }}
           className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-white border-2 border-black rounded-full shadow-[2px_2px_0_0_#000] sm:shadow-[3px_3px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[3px_3px_0_0_#000] sm:hover:shadow-[4px_4px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] transition-all"
-          aria-label="收藏"
+          aria-label={isFavorited ? "取消收藏" : "收藏"}
+          title={isFavorited ? "取消收藏" : "收藏"}
         >
           <Heart 
             size={14} 
-            className="sm:w-[18px] sm:h-[18px]"
-            fill={isLiked ? "#ff3e00" : "none"} 
-            stroke={isLiked ? "#ff3e00" : "currentColor"} 
+            className={`sm:w-[18px] sm:h-[18px] transition-colors ${isFavorited ? 'text-pink-500' : 'text-gray-400'}`}
+            fill={isFavorited ? "#ec4899" : "none"} 
+            stroke={isFavorited ? "#ec4899" : "currentColor"} 
           />
         </button>
 
@@ -187,6 +203,18 @@ export default function ProductCard({
               onClick={(e) => {
                 e.stopPropagation();
                 onAddToCart?.(product);
+              }}
+              onPointerDown={(e) => {
+                e.stopPropagation();
+              }}
+              onPointerUp={(e) => {
+                e.stopPropagation();
+              }}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+              }}
+              onTouchEnd={(e) => {
+                e.stopPropagation();
               }}
               className={`
                 relative flex items-center gap-1.5 sm:gap-2 
