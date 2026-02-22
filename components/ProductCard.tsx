@@ -223,13 +223,6 @@ export default function ProductCard({
             </div>
           </div>
           
-          {/* 分隔线 */}
-          <div className="my-2 sm:my-3 border-t-2 border-dashed border-gray-200 relative">
-            <span className="absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2 bg-white px-2 text-[9px] sm:text-[10px] text-gray-400">
-              OFFICIAL
-            </span>
-          </div>
-
           <div className="flex items-end justify-between mt-3 sm:mt-4">
             <div className="relative">
               <span className="text-[10px] sm:text-xs font-bold text-gray-400 block uppercase tracking-tighter">

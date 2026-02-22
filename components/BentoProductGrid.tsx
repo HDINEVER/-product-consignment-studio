@@ -1,15 +1,9 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { Responsive, Layout, useContainerWidth } from 'react-grid-layout';
-import { ScrollArea } from "./ui/scroll-area";
+import React, { useEffect, useState } from 'react';
 import { Product } from '../types';
 import ProductCard from './ProductCard';
-import ProductDetailModal from './ProductDetailModal';
 import { useProducts } from '../hooks/useProducts';
 import { useAuth } from '../contexts/AuthContext';
-import { LayoutGrid, LayoutDashboard, ListIcon, Shuffle, Edit, Trash2, Heart, ShoppingCart, Star, Check, X } from 'lucide-react';
-
-// Responsive grid component from react-grid-layout v2
-const ResponsiveGridLayout = Responsive;
+import { LayoutGrid, LayoutDashboard, ListIcon, Edit, Trash2, Heart, ShoppingCart, Star, Check, X } from 'lucide-react';
 
 interface BentoGridProps {
   products: Product[];
@@ -42,112 +36,11 @@ export default function BentoProductGrid({
   onToggleFavorite,
   onEdit,
   onDelete,
-  onEditCategory,
-  onEditIP,
-  editingTag,
-  categories = [],
-  ips = [],
-  onCategoryChange,
-  onIPChange,
-  onTagBlur,
   emptyMessage = '没有找到商品',
 }: BentoGridProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [isDraggable, setIsDraggable] = useState(false);
-  const [layouts, setLayouts] = useState<{ [key: string]: Layout[] }>({});
-  const [isExpanded, setIsExpanded] = useState(false); // 控制按钮组展开/收缩
-  const buttonGroupRef = React.useRef<HTMLDivElement>(null); // 用于检测外部点击
-  const { width, containerRef, mounted } = useContainerWidth({ measureBeforeMount: true });
-
-  // 根据容器宽度计算响应式行高和间距
-  const responsiveRowHeight = useMemo(() => {
-    if (width < 480) return 180;    // 手机端：紧凑行高
-    if (width < 768) return 200;    // 平板端
-    return 240;                      // PC端
-  }, [width]);
-
-  const responsiveMargin = useMemo((): [number, number] => {
-    if (width < 480) return [8, 8];    // 手机端：更小间距
-    if (width < 768) return [10, 10];  // 平板端
-    return [14, 14];                    // PC端
-  }, [width]);
-  
-  // Generate Optimized Bento Layout
-  const generateBentoLayout = useCallback((products: Product[]) => {
-    const lgLayout: Layout[] = [];
-    const mdLayout: Layout[] = [];
-    const smLayout: Layout[] = [];
-    const xsLayout: Layout[] = [];
-    const xxsLayout: Layout[] = [];
-
-    products.forEach((product, i) => {
-      const id = product.id;
-      
-      // --- Bento Pattern Logic (4 Columns) ---
-      // Pattern cycle of 12 items to fit nicely in 4 columns
-      const pIndex = i % 12;
-      const chunkY = Math.floor(i / 12) * 5; // Approx height
-      
-      let lgItem: Layout = { i: id, x: 0, y: Infinity, w: 1, h: 1 };
-
-      // Row 1 (y=0)
-      if (pIndex === 0)      { lgItem = { i: id, x: 0, y: chunkY + 0, w: 2, h: 2 }; }
-      else if (pIndex === 1) { lgItem = { i: id, x: 2, y: chunkY + 0, w: 1, h: 1 }; }
-      else if (pIndex === 2) { lgItem = { i: id, x: 3, y: chunkY + 0, w: 1, h: 2 }; } // Tall right
-      else if (pIndex === 3) { lgItem = { i: id, x: 2, y: chunkY + 1, w: 1, h: 1 }; } // Under item 1
-      
-      // Row 3 (y=2)
-      else if (pIndex === 4) { lgItem = { i: id, x: 0, y: chunkY + 2, w: 2, h: 1 }; } // Wide
-      else if (pIndex === 5) { lgItem = { i: id, x: 2, y: chunkY + 2, w: 1, h: 1 }; }
-      else if (pIndex === 6) { lgItem = { i: id, x: 3, y: chunkY + 2, w: 1, h: 1 }; }
-      
-      // Row 4 (y=3)
-      else if (pIndex === 7) { lgItem = { i: id, x: 0, y: chunkY + 3, w: 1, h: 1 }; }
-      else if (pIndex === 8) { lgItem = { i: id, x: 1, y: chunkY + 3, w: 1, h: 1 }; }
-      else if (pIndex === 9) { lgItem = { i: id, x: 2, y: chunkY + 3, w: 2, h: 1 }; } // Wide
-      
-      // Row 5 (y=4)
-      else if (pIndex === 10) { lgItem = { i: id, x: 0, y: chunkY + 4, w: 1, h: 1 }; }
-      else if (pIndex === 11) { lgItem = { i: id, x: 1, y: chunkY + 4, w: 3, h: 1 }; } // Very Wide
-      
-      lgLayout.push(lgItem);
-
-      // --- XS / Mobile Layout (2 Cols) ---
-      // Fix: Avoid huge 2x2 cards on mobile. Make them 2x1 (banner) or 1x1.
-      let xsItem: Layout = { i: id, x: (i % 2), y: Math.floor(i / 2), w: 1, h: 1 };
-      
-      if (pIndex === 0) {
-        // Transform the 2x2 big card into a 2x1 banner for mobile
-        xsItem = { i: id, x: 0, y: Infinity, w: 2, h: 1 };
-      } else if (pIndex === 4 || pIndex === 9 || pIndex === 11) {
-        // Keep wide items wide (full width on 2-col)
-        xsItem = { i: id, x: 0, y: Infinity, w: 2, h: 1 };
-      } else {
-        // Standard cells
-        xsItem = { i: id, x: (i % 2), y: Infinity, w: 1, h: 1 };
-      }
-      xsLayout.push(xsItem);
-      
-      // --- XXS / Small Mobile (2 Cols) ---
-      // 双列布局，交替排列
-      xxsLayout.push({ i: id, x: (i % 2), y: Math.floor(i / 2), w: 1, h: 1 });
-
-      // --- MD (3 Cols) & SM (2 Cols) ---
-      // Simple logic or reuse layout props but limit width
-      mdLayout.push({ ...lgItem, w: Math.min(lgItem.w, 3) }); 
-      smLayout.push({ ...xsItem }); 
-    });
-
-    return { lg: lgLayout, md: mdLayout, sm: smLayout, xs: xsLayout, xxs: xxsLayout };
-  }, []);
-
-  // Update layout when products change
-  useEffect(() => {
-    if (products.length > 0) {
-      const newLayouts = generateBentoLayout(products);
-      setLayouts(newLayouts);
-    }
-  }, [products, generateBentoLayout]);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const buttonGroupRef = React.useRef<HTMLDivElement>(null);
 
   // 监听外部点击以收缩按钮组
   useEffect(() => {
@@ -156,33 +49,11 @@ export default function BentoProductGrid({
         setIsExpanded(false);
       }
     };
-
     if (isExpanded) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [isExpanded]);
-
-  // Regular Grid Layout
-  const generateGridLayout = useCallback((products: Product[]) => {
-     return {
-       lg: products.map((p, i) => ({ i: p.id, x: i % 4, y: Math.floor(i / 4), w: 1, h: 1 })),
-       md: products.map((p, i) => ({ i: p.id, x: i % 3, y: Math.floor(i / 3), w: 1, h: 1 })),
-       sm: products.map((p, i) => ({ i: p.id, x: i % 2, y: Math.floor(i / 2), w: 1, h: 1 })),
-       xs: products.map((p, i) => ({ i: p.id, x: i % 2, y: Math.floor(i / 2), w: 1, h: 1 })),
-       xxs: products.map((p, i) => ({ i: p.id, x: i % 2, y: Math.floor(i / 2), w: 1, h: 1 })),
-     };
-  }, []);
-  
-  const currentLayouts = useMemo(() => {
-    if (viewMode === 'grid') return generateGridLayout(products);
-    if (!layouts.lg) return generateBentoLayout(products);
-    return layouts;
-  }, [viewMode, products, layouts, generateGridLayout, generateBentoLayout]);
-
-    const onLayoutChange = (layout: Layout[], allLayouts: { [key: string]: Layout[] }) => {
-     // Optional: Persist layout changes
-  };
 
   if (products.length === 0) {
     return (
@@ -196,109 +67,85 @@ export default function BentoProductGrid({
     );
   }
 
+  // 管理员操作按钮（复用）
+  const AdminButtons = ({ productId }: { productId: string }) =>
+    isAdmin ? (
+      <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20">
+        <button
+          onClick={(e) => { e.stopPropagation(); onEdit?.(productId); }}
+          className="p-2 bg-brutal-yellow text-black rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-yellow-400 hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all"
+          title="编辑商品"
+          aria-label="编辑商品"
+        >
+          <Edit size={14} />
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete?.(productId); }}
+          className="p-2 bg-red-500 text-white rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-red-600 hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all"
+          title="删除商品"
+          aria-label="删除商品"
+        >
+          <Trash2 size={14} />
+        </button>
+      </div>
+    ) : null;
+
   return (
     <div className="relative">
-      {/* 浮动按钮组 - 固定在右下方，收藏按钮上方 */}
-      <div ref={buttonGroupRef} className="fixed bottom-[180px] sm:bottom-[200px] right-6 sm:right-8 z-40">
+      {/* 浮动视图切换按钮组 */}
+      <div ref={buttonGroupRef} className="fixed bottom-45 sm:bottom-50 right-6 sm:right-8 z-40">
         <div className="flex flex-col gap-2 sm:gap-3 items-end">
-          {/* 展开状态：显示所有按钮 */}
           {isExpanded && (
             <>
-              {/* 大图模式按钮 */}
               <button
-                onClick={() => {
-                  setViewMode('bento');
-                  setIsExpanded(false);
-                }}
+                onClick={() => { setViewMode('bento'); setIsExpanded(false); }}
                 className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-[3px] border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
-                  viewMode === 'bento' 
-                    ? 'bg-gray-200 text-black shadow-brutal' 
-                    : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:shadow-brutal-sm'
+                  viewMode === 'bento' ? 'bg-gray-200 text-black shadow-brutal' : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal'
                 }`}
                 title="大图模式"
                 aria-label="切换到大图模式"
               >
                 <LayoutDashboard size={20} className="sm:w-6 sm:h-6" />
               </button>
-
-              {/* 小卡片模式按钮 */}
               <button
-                onClick={() => {
-                  setViewMode('grid');
-                  setIsExpanded(false);
-                }}
+                onClick={() => { setViewMode('grid'); setIsExpanded(false); }}
                 className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-[3px] border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
-                  viewMode === 'grid' 
-                    ? 'bg-gray-200 text-black shadow-brutal' 
-                    : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:shadow-brutal-sm'
+                  viewMode === 'grid' ? 'bg-gray-200 text-black shadow-brutal' : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal'
                 }`}
                 title="小卡片模式"
                 aria-label="切换到小卡片模式"
               >
                 <LayoutGrid size={20} className="sm:w-6 sm:h-6" />
               </button>
-
-              {/* 列表模式按钮 */}
               <button
-                onClick={() => {
-                  setViewMode('list');
-                  setIsExpanded(false);
-                }}
+                onClick={() => { setViewMode('list'); setIsExpanded(false); }}
                 className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-[3px] border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
-                  viewMode === 'list' 
-                    ? 'bg-gray-200 text-black shadow-brutal' 
-                    : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:shadow-brutal-sm'
+                  viewMode === 'list' ? 'bg-gray-200 text-black shadow-brutal' : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal'
                 }`}
                 title="列表布局"
                 aria-label="切换到列表布局"
               >
                 <ListIcon size={20} className="sm:w-6 sm:h-6" />
               </button>
-
-              {/* 管理员拖拽按钮（仅在 bento/grid 模式下显示）*/}
-              {isAdmin && (viewMode === 'bento' || viewMode === 'grid') && (
-                <button
-                  onClick={() => setIsDraggable(!isDraggable)}
-                  className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-[3px] border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
-                    isDraggable
-                      ? 'bg-brutal-yellow shadow-brutal'
-                      : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:shadow-brutal-sm'
-                  }`}
-                  title={isDraggable ? '锁定布局' : '调整布局'}
-                  aria-label={isDraggable ? '锁定布局' : '调整布局'}
-                >
-                  <Shuffle size={20} className="sm:w-6 sm:h-6" />
-                </button>
-              )}
             </>
           )}
-
-          {/* 主按钮：显示当前视图模式，点击展开/收缩 */}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-[3px] border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
-              isExpanded
-                ? 'bg-black text-white shadow-brutal hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] active:shadow-brutal-sm'
-                : 'bg-brutal-cyan text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:shadow-brutal-sm'
+              isExpanded ? 'bg-black text-white shadow-brutal' : 'bg-brutal-cyan text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal'
             }`}
             title={isExpanded ? '收起' : '切换视图'}
             aria-label={isExpanded ? '收起视图选项' : '展开视图选项'}
           >
-            {/* 图标内容 - 只旋转图标，不旋转背景 */}
             <div className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : 'rotate-0'}`}>
               {isExpanded ? (
-                // 展开时显示 X 图标
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
               ) : (
-                // 收缩时显示当前视图模式图标
                 <>
                   {viewMode === 'bento' && <LayoutDashboard size={20} />}
-                  {viewMode === 'grid' && (
-                    <LayoutGrid size={20} />
-                  )}
+                  {viewMode === 'grid' && <LayoutGrid size={20} />}
                   {viewMode === 'list' && <ListIcon size={20} />}
                 </>
               )}
@@ -307,92 +154,64 @@ export default function BentoProductGrid({
         </div>
       </div>
 
-      {/* Grid Layout */}
-      {(viewMode === 'bento' || viewMode === 'grid') ? (
-        <div ref={containerRef}>
-          {mounted && (
-            <ResponsiveGridLayout
-              className="layout"
-              layouts={currentLayouts}
-              breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-              cols={{ lg: 4, md: 3, sm: 2, xs: 2, xxs: 2 }}
-              rowHeight={responsiveRowHeight}
-              width={width}
-              isDraggable={isDraggable && isAdmin}
-              isResizable={isDraggable && isAdmin}
-              onLayoutChange={onLayoutChange}
-              draggableHandle=".drag-handle"
-              margin={responsiveMargin}
-              containerPadding={[0, 0]}
-              draggableCancel=".no-drag"
-            >
-              {products.map((product) => (
-                <div key={product.id} className="relative group bg-transparent h-full">
-                  {/* Drag Handle */}
-                  {isDraggable && isAdmin && (
-                     <div className="absolute top-2 right-2 z-50 p-1 bg-white border-2 border-black rounded cursor-move drag-handle hover:bg-brutal-yellow shadow-sm">
-                        <Shuffle size={14} />
-                     </div>
-                  )}
-                  <div className="h-full w-full">
-                     <ProductCard
-                        product={product}
-                        isAdmin={isAdmin}
-                        isFavorited={isFavorited?.(product.id)}
-                        onSelect={onProductSelect}
-                        onAddToCart={onAddToCart}
-                        onToggleFavorite={onToggleFavorite}
-                      />
-                  </div>
-                  
-                  {/* 管理员操作按钮 - 悬浮显示 */}
-                  {isAdmin && !isDraggable && (
-                    <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20">
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEdit?.(product.id);
-                        }}
-                        className="p-2 bg-brutal-yellow text-black rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-yellow-400 hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all"
-                        title="编辑商品"
-                        aria-label="编辑商品"
-                      >
-                        <Edit size={14} />
-                      </button>
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete?.(product.id);
-                        }}
-                        className="p-2 bg-red-500 text-white rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-red-600 hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all"
-                        title="删除商品"
-                        aria-label="删除商品"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </ResponsiveGridLayout>
-          )}
-        </div>
-      ) : (
-        /* List View */
-        <div className="flex flex-col gap-3 sm:gap-4">
-           {products.map((product) => (
-              <ListProductCard
-                  key={product.id}
+      {/* Bento 大图模式：CSS Grid，特定卡片占两列 */}
+      {viewMode === 'bento' && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+          {products.map((product, i) => {
+            const pIndex = i % 12;
+            const isWide = pIndex === 0 || pIndex === 4 || pIndex === 9 || pIndex === 11;
+            return (
+              <div key={product.id} className={`relative group ${isWide ? 'col-span-2' : 'col-span-1'}`}>
+                <ProductCard
                   product={product}
                   isAdmin={isAdmin}
                   isFavorited={isFavorited?.(product.id)}
                   onSelect={onProductSelect}
                   onAddToCart={onAddToCart}
                   onToggleFavorite={onToggleFavorite}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
+                />
+                <AdminButtons productId={product.id} />
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Grid 小卡片模式：响应式多列，2→3→4→5 cols */}
+      {viewMode === 'grid' && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+          {products.map((product) => (
+            <div key={product.id} className="relative group">
+              <ProductCard
+                product={product}
+                isAdmin={isAdmin}
+                isFavorited={isFavorited?.(product.id)}
+                onSelect={onProductSelect}
+                onAddToCart={onAddToCart}
+                onToggleFavorite={onToggleFavorite}
               />
-           ))}
+              <AdminButtons productId={product.id} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* List View */}
+      {viewMode === 'list' && (
+        <div className="flex flex-col gap-3 sm:gap-4">
+          {products.map((product) => (
+            <ListProductCard
+              key={product.id}
+              product={product}
+              isAdmin={isAdmin}
+              isFavorited={isFavorited?.(product.id)}
+              onSelect={onProductSelect}
+              onAddToCart={onAddToCart}
+              onToggleFavorite={onToggleFavorite}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          ))}
         </div>
       )}
     </div>
@@ -410,11 +229,11 @@ interface ListProductCardProps {
   onDelete?: (productId: string) => void;
 }
 
-function ListProductCard({ 
-  product, 
+function ListProductCard({
+  product,
   isAdmin,
   isFavorited = false,
-  onSelect, 
+  onSelect,
   onAddToCart,
   onToggleFavorite,
   onEdit,
@@ -424,14 +243,12 @@ function ListProductCard({
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // 防重复评分：服务器端优先，localStorage 作为游客降级
   const [alreadyRated, setAlreadyRated] = useState(() =>
     localStorage.getItem(`rated_${product.id}`) === 'true'
   );
   const { submitProductRating } = useProducts();
   const { user } = useAuth();
 
-  // 评分成功后 1.5s 自动返回产品卡片
   useEffect(() => {
     if (status !== 'rated') return;
     const timer = setTimeout(() => {
@@ -450,12 +267,9 @@ function ListProductCard({
   const submitRating = async (e: React.MouseEvent, val: number) => {
     e.stopPropagation();
     if (isSubmitting || alreadyRated) return;
-
     setIsSubmitting(true);
     setRating(val);
-    
     const result = await submitProductRating(product.id, val, user?.$id);
-
     setIsSubmitting(false);
     if (result === 'success') {
       localStorage.setItem(`rated_${product.id}`, 'true');
@@ -470,135 +284,107 @@ function ListProductCard({
   };
 
   return (
-    <div 
-      className="group flex bg-white rounded-2xl border-[3px] sm:border-[3.5px] border-black shadow-[5px_5px_0_0_#000] sm:shadow-[7px_7px_0_0_#000] overflow-hidden hover:translate-x-[-3px] hover:translate-y-[-3px] hover:shadow-[8px_8px_0_0_#000] sm:hover:shadow-[12px_12px_0_0_#000] active:translate-x-[5px] active:translate-y-[5px] active:shadow-[2px_2px_0_0_#000] sm:active:shadow-[2px_2px_0_0_#000] transition-all cursor-pointer relative duration-400 ease-[cubic-bezier(0.23,1,0.32,1)]"
+    <div
+      className="group flex items-center bg-white rounded-xl sm:rounded-2xl border-[3px] sm:border-[3.5px] border-black shadow-[3px_3px_0_0_#000] sm:shadow-[5px_5px_0_0_#000] overflow-hidden hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[5px_5px_0_0_#000] sm:hover:shadow-[7px_7px_0_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0_0_#000] transition-all cursor-pointer relative duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"
       onClick={(e) => onSelect?.(product, e.currentTarget as HTMLElement)}
     >
-      <div className="w-24 h-24 sm:w-40 sm:h-40 flex-shrink-0 bg-gray-100 overflow-hidden relative border-r-[3px] sm:border-r-[3.5px] border-black">
-        {/* 背景斜纹动画 */}
-        <div 
-          className="absolute inset-0 opacity-20 pointer-events-none"
-          style={{ 
-            backgroundImage: 'repeating-linear-gradient(45deg, #000, #000 10px, transparent 10px, transparent 20px)' 
-          }}
-        />
-        <img 
-          src={product.image} 
+      <div className="w-20 h-20 sm:w-28 sm:h-28 flex-shrink-0 bg-gray-100 overflow-hidden relative border-r-[3px] sm:border-r-[3.5px] border-black">
+        <img
+          src={product.image}
           alt={product.title}
-          className="relative z-10 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
       </div>
-      
-      <div className="flex-1 flex flex-col relative z-10 bg-white">
-        {/* 上半部分 */}
-        <div className="flex-1 p-3 sm:p-4 pb-2 sm:pb-3">
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
+
+      <div className="flex-1 flex items-center justify-between p-2 sm:p-4 gap-2 sm:gap-4 relative z-10 bg-white">
+        {/* 左侧主要信息 */}
+        <div className="flex-1 min-w-0 pr-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-1.5 flex-wrap">
             {product.category && (
-              <span className="bg-brutal-yellow px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-black border-2 border-black rounded-lg">
+              <span className="bg-brutal-yellow px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-black border-2 border-black rounded-md leading-none">
                 {product.category}
               </span>
             )}
             {product.ip && (
-              <span className="bg-brutal-blue text-white px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-black border-2 border-black rounded-lg">
+              <span className="bg-brutal-blue text-white px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-black border-2 border-black rounded-md leading-none">
                 {product.ip}
-               </span>
+              </span>
             )}
           </div>
-          <h3 className="font-black text-base sm:text-lg line-clamp-1">{product.title}</h3>
+          <h3 className="font-black text-sm sm:text-lg line-clamp-1">{product.title}</h3>
           {product.description && (
-            <p className="text-gray-500 text-xs sm:text-sm mt-1 line-clamp-2">{product.description}</p>
+            <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5 sm:mt-1 line-clamp-1 hidden sm:block">{product.description}</p>
           )}
         </div>
-        
-        {/* 分隔线 */}
-        <div className="w-full border-t-[3px] border-dashed border-gray-200"></div>
 
-        {/* 下半部分 */}
-        <div className="p-3 sm:p-4 pt-2 sm:pt-3 flex items-center justify-between bg-gray-50/50">
-          <div className="flex-1"></div> {/* 占位，把右边内容推过去 */}
-          
-          <div className="flex items-center gap-2 sm:gap-3">
-            <span className="text-lg sm:text-2xl font-black mr-1 sm:mr-2">¥{product.basePrice}</span>
-            {/* 收藏按钮 */}
-            {onToggleFavorite && (
-              <button 
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onToggleFavorite(product.id);
-                }}
+        {/* 右侧价格与操作 */}
+        <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
+          <span className="text-base sm:text-xl font-black mr-0 sm:mr-2">¥{product.basePrice}</span>
+          {onToggleFavorite && (
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleFavorite(product.id); }}
+              onPointerDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              className={`no-drag relative z-20 p-1.5 sm:p-2 rounded-lg border-[2px] sm:border-[3px] border-black shadow-[2px_2px_0_0_#000] sm:shadow-[3px_3px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all text-sm ${
+                isFavorited ? 'bg-white text-pink-500' : 'bg-white text-gray-400'
+              }`}
+              title={isFavorited ? '取消收藏' : '收藏'}
+              aria-label={isFavorited ? '取消收藏' : '收藏'}
+            >
+              <Heart
+                size={14}
+                className={`sm:w-5 sm:h-5 transition-colors ${isFavorited ? 'text-pink-500' : 'text-gray-400'}`}
+                fill={isFavorited ? '#ec4899' : 'none'}
+                stroke={isFavorited ? '#ec4899' : 'currentColor'}
+              />
+            </button>
+          )}
+          {isAdmin && (
+            <>
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit?.(product.id); }}
                 onPointerDown={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}
-                className={`no-drag relative z-20 p-1.5 sm:p-2 rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all text-sm ${
-                  isFavorited ? 'bg-white text-pink-500' : 'bg-white text-gray-400'
-                }`}
-                title={isFavorited ? "取消收藏" : "收藏"}
-                aria-label={isFavorited ? "取消收藏" : "收藏"}
+                title="编辑商品"
+                aria-label="编辑商品"
+                className="no-drag relative z-20 p-1.5 sm:p-2 bg-brutal-yellow rounded-lg border-[2px] sm:border-[3px] border-black shadow-[2px_2px_0_0_#000] sm:shadow-[3px_3px_0_0_#000] hover:bg-yellow-400 hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all text-sm hidden sm:block"
               >
-                <Heart 
-                  size={14} 
-                  className={`sm:w-5 sm:h-5 transition-colors ${isFavorited ? 'text-pink-500' : 'text-gray-400'}`}
-                  fill={isFavorited ? "#ec4899" : "none"} 
-                  stroke={isFavorited ? "#ec4899" : "currentColor"} 
-                />
+                <Edit size={14} className="sm:w-4 sm:h-4" />
               </button>
-            )}
-            {isAdmin && (
-              <>
-                <button 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onEdit?.(product.id);
-                  }}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onTouchStart={(e) => e.stopPropagation()}
-                  title="编辑商品"
-                  aria-label="编辑商品"
-                  className="no-drag relative z-20 p-1.5 sm:p-2 bg-brutal-yellow rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-yellow-400 hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all text-sm"
-                >
-                  <Edit size={14} className="sm:w-4 sm:h-4" />
-                </button>
-                <button 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onDelete?.(product.id);
-                  }}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onTouchStart={(e) => e.stopPropagation()}
-                  className="no-drag relative z-20 p-1.5 sm:p-2 bg-red-500 text-white rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-red-600 hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all text-sm"
-                >
-                  <Trash2 size={14} className="sm:w-4 sm:h-4" />
-                </button>
-              </>
-            )}
-            {status === 'idle' ? (
-              <button 
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleOrder(e);
-                }}
-                className="no-drag relative z-20 px-3 py-1.5 sm:px-4 sm:py-2 bg-black text-white rounded-lg sm:rounded-xl border-[3px] border-black font-bold shadow-[3px_3px_0_0_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[5px_5px_0_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all text-xs sm:text-sm flex items-center gap-1.5 overflow-hidden group/btn"
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete?.(product.id); }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                title="删除商品"
+                aria-label="删除商品"
+                className="no-drag relative z-20 p-1.5 sm:p-2 bg-red-500 text-white rounded-lg border-[2px] sm:border-[3px] border-black shadow-[2px_2px_0_0_#000] sm:shadow-[3px_3px_0_0_#000] hover:bg-red-600 hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all text-sm hidden sm:block"
               >
-                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:animate-shimmer pointer-events-none" />
-                <ShoppingCart size={14} className="sm:w-[18px] sm:h-[18px]" />
-                <span className="text-xs sm:text-sm">ORDER</span>
+                <Trash2 size={14} className="sm:w-4 sm:h-4" />
               </button>
-            ) : (
-              <div className="flex items-center gap-1 text-green-600 font-black text-xs sm:text-sm italic animate-bounce pr-1">
-                <Check size={16} className="sm:w-5 sm:h-5" strokeWidth={3} />
-                ORDERED
-              </div>
-            )}
-          </div>
+            </>
+          )}
+          {status === 'idle' ? (
+            <button
+              onClick={(e) => { e.preventDefault(); handleOrder(e); }}
+              className="no-drag relative z-20 px-2.5 py-1.5 sm:px-4 sm:py-2 bg-black text-white rounded-lg sm:rounded-xl border-[2px] sm:border-[3px] border-black font-bold shadow-[2px_2px_0_0_#000] sm:shadow-[3px_3px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[3px_3px_0_0_#000] sm:hover:shadow-[4px_4px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all text-[10px] sm:text-sm flex items-center gap-1 sm:gap-1.5 overflow-hidden group/btn"
+            >
+              <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:animate-shimmer pointer-events-none" />
+              <ShoppingCart size={12} className="sm:w-[18px] sm:h-[18px]" />
+              <span className="text-[10px] sm:text-sm">ORDER</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-1 text-green-600 font-black text-[10px] sm:text-sm italic animate-bounce pr-1">
+              <Check size={14} className="sm:w-5 sm:h-5" strokeWidth={3} />
+              ORDERED
+            </div>
+          )}
         </div>
       </div>
 
-      {/* 评分覆盖层 (下单后显示) */}
+      {/* 评分覆盖层 */}
       {status === 'ordered' && (
         <div className="absolute inset-0 z-30 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center animate-in fade-in slide-in-from-bottom-4 duration-300 cursor-default" onClick={(e) => e.stopPropagation()}>
-          <button 
+          <button
             onClick={(e) => { e.stopPropagation(); setStatus('rated'); }}
             title="关闭"
             aria-label="关闭评分"
@@ -606,11 +392,9 @@ function ListProductCard({
           >
             <X size={20} className="sm:w-[24px] sm:h-[24px]" strokeWidth={3} />
           </button>
-          
           <div className="flex items-center gap-3 sm:gap-4 mb-2">
             <h4 className="font-black text-sm sm:text-base italic uppercase">Rate product</h4>
           </div>
-          
           <div className="flex gap-1.5 sm:gap-2 mb-2">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
@@ -623,14 +407,12 @@ function ListProductCard({
                 disabled={alreadyRated || isSubmitting}
                 title={`评${star}星`}
                 aria-label={`评${star}星`}
-                className={`transition-transform hover:scale-125 active:scale-90 p-1 ${
-                  alreadyRated ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
+                className={`transition-transform hover:scale-125 active:scale-90 p-1 ${alreadyRated ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                <Star 
-                  size={20} 
+                <Star
+                  size={20}
                   className="sm:w-[28px] sm:h-[28px]"
-                  fill={star <= (hoverRating || rating) ? "#000" : "none"} 
+                  fill={star <= (hoverRating || rating) ? '#000' : 'none'}
                   stroke="black"
                   strokeWidth={2.5}
                 />
@@ -640,12 +422,10 @@ function ListProductCard({
           {alreadyRated && (
             <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">已评分</p>
           )}
-
           <p className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Share your experience</p>
         </div>
       )}
 
-      {/* 评分成功：短暂 toast ，1.5s 后自动关闭 */}
       {status === 'rated' && (
         <div className="absolute inset-0 z-30 bg-black/90 text-white flex flex-col items-center justify-center gap-2 animate-in zoom-in duration-200 cursor-default" onClick={(e) => e.stopPropagation()}>
           <div className="text-3xl animate-bounce">⭐</div>
