@@ -9,13 +9,13 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-brutal-yellow text-black shadow-brutal hover:bg-brutal-orange hover:shadow-brutal-hover hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px]",
+          "bg-brutal-yellow text-black shadow-brutal hover:bg-brutal-orange hover:shadow-brutal-hover hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px]",
         destructive:
-          "bg-red-500 text-white shadow-brutal hover:bg-red-600 hover:shadow-brutal-hover hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px]",
+          "bg-red-500 text-white shadow-brutal hover:bg-red-600 hover:shadow-brutal-hover hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px]",
         outline:
-          "bg-white text-black shadow-brutal hover:bg-gray-100 hover:shadow-brutal-hover hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px]",
+          "bg-white text-black shadow-brutal hover:bg-gray-100 hover:shadow-brutal-hover hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px]",
         secondary:
-          "bg-brutal-blue text-white shadow-brutal hover:bg-blue-600 hover:shadow-brutal-hover hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px]",
+          "bg-brutal-blue text-white shadow-brutal hover:bg-blue-600 hover:shadow-brutal-hover hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px]",
         ghost:
           "border-0 shadow-none hover:bg-black/5 hover:shadow-none",
         link:

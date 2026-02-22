@@ -15,7 +15,7 @@ const AuthFailure: React.FC = () => {
         <p className="text-sm text-gray-600">请稍后重试或使用邮箱密码登录。</p>
         <button
           onClick={() => navigate('/', { replace: true })}
-          className="px-4 py-2 bg-black text-white font-bold rounded-lg border-2 border-black shadow-brutal-sm"
+          className="px-4 py-2 bg-black text-white font-bold rounded-lg border-[3px] border-black shadow-[4px_4px_0_0_#000] hover:shadow-[6px_6px_0_0_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all"
         >
           返回首页
         </button>

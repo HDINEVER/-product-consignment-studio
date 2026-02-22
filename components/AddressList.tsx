@@ -181,21 +181,21 @@ export default function AddressList() {
                   {!address.isDefault && (
                     <button
                       onClick={() => handleSetDefault(address.id)}
-                      className="px-4 py-2 bg-yellow-400 text-black font-bold border-2 border-black hover:bg-yellow-500 transition-colors"
+                      className="px-4 py-2 bg-yellow-400 text-black font-bold border-[3px] border-black hover:bg-yellow-500 transition-colors"
                     >
                       设为默认
                     </button>
                   )}
                   <button
                     onClick={() => navigate(`/profile/addresses/${address.id}/edit`)}
-                    className="p-2 bg-blue-400 border-2 border-black hover:bg-blue-500 transition-colors"
+                    className="p-2 bg-blue-400 border-[3px] border-black hover:bg-blue-500 transition-colors"
                     title="编辑"
                   >
                     <Edit2 size={16} />
                   </button>
                   <button
                     onClick={() => handleDelete(address.id)}
-                    className="p-2 bg-red-400 border-2 border-black hover:bg-red-500 transition-colors"
+                    className="p-2 bg-red-400 border-[3px] border-black hover:bg-red-500 transition-colors"
                     title="删除"
                   >
                     <Trash2 size={16} />

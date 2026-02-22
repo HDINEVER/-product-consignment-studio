@@ -266,7 +266,7 @@ const ProductDetail: React.FC = () => {
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-12 h-12 bg-white border-3 border-black rounded-xl font-bold text-xl hover:bg-gray-100 active:translate-y-1 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                  className="w-12 h-12 bg-white border-3 border-black rounded-xl font-bold text-xl hover:bg-gray-100 hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-1px] active:shadow-none active:translate-y-[4px] transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
                 >
                   -
                 </button>
@@ -280,7 +280,7 @@ const ProductDetail: React.FC = () => {
                 />
                 <button
                   onClick={() => setQuantity(Math.min(selectedSku?.stock_quantity || 999, quantity + 1))}
-                  className="w-12 h-12 bg-white border-3 border-black rounded-xl font-bold text-xl hover:bg-gray-100 active:translate-y-1 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                  className="w-12 h-12 bg-white border-3 border-black rounded-xl font-bold text-xl hover:bg-gray-100 hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-1px] active:shadow-none active:translate-y-[4px] transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
                 >
                   +
                 </button>

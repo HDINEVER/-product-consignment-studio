@@ -26,7 +26,7 @@ const FloatingCartButton: React.FC<FloatingCartButtonProps> = ({
     >
       <button
         onClick={onClick}
-        className="relative group px-5 py-4 sm:px-6 sm:py-4 bg-yellow-400 text-black font-black text-base sm:text-lg border-3 sm:border-4 border-black rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] sm:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] sm:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] sm:hover:translate-x-[4px] sm:hover:translate-y-[4px] transition-all flex items-center gap-3 touch-target min-h-[56px] min-w-[56px]"
+        className="relative group px-5 py-4 sm:px-6 sm:py-4 bg-yellow-400 text-black font-black text-base sm:text-lg border-3 sm:border-4 border-black rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] sm:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] sm:hover:shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-none active:translate-x-[6px] active:translate-y-[6px] sm:active:translate-x-[8px] sm:active:translate-y-[8px] transition-all flex items-center gap-3 touch-target min-h-[56px] min-w-[56px]"
         aria-label="打开购物车"
         style={{ WebkitTapHighlightColor: 'transparent' }}
       >

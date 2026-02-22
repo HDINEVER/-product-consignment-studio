@@ -199,21 +199,21 @@ export default function AdminProducts() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => navigate(`/product/${product.id}`)}
-                          className="p-2 bg-blue-400 border-2 border-black hover:bg-blue-500 transition-colors"
+                          className="p-2 bg-blue-400 border-[3px] border-black hover:bg-blue-500 transition-colors"
                           title="查看"
                         >
                           <Eye size={16} />
                         </button>
                         <button
                           onClick={() => navigate(`/admin/products/${product.id}/edit`)}
-                          className="p-2 bg-yellow-400 border-2 border-black hover:bg-yellow-500 transition-colors"
+                          className="p-2 bg-yellow-400 border-[3px] border-black hover:bg-yellow-500 transition-colors"
                           title="编辑"
                         >
                           <Edit2 size={16} />
                         </button>
                         <button
                           onClick={() => handleDelete(product.id)}
-                          className="p-2 bg-red-400 border-2 border-black hover:bg-red-500 transition-colors"
+                          className="p-2 bg-red-400 border-[3px] border-black hover:bg-red-500 transition-colors"
                           title="删除"
                         >
                           <Trash2 size={16} />

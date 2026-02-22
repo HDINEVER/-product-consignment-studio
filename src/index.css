@@ -161,6 +161,55 @@ textarea,
   }
 }
 
+/* ========================================
+   通用按钮按压动画效果类
+   ======================================== */
+
+/* 标准按钮按压效果 - 阴影 4px */
+.brutal-btn-press {
+  transition: all 0.15s ease;
+}
+
+.brutal-btn-press:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 0 #000;
+}
+
+.brutal-btn-press:active {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+}
+
+/* 小按钮按压效果 - 阴影 3px */
+.brutal-btn-press-sm {
+  transition: all 0.15s ease;
+}
+
+.brutal-btn-press-sm:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 0 #000;
+}
+
+.brutal-btn-press-sm:active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
+}
+
+/* 大按钮按压效果 - 阴影 6px+ */
+.brutal-btn-press-lg {
+  transition: all 0.15s ease;
+}
+
+.brutal-btn-press-lg:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0 0 #000;
+}
+
+.brutal-btn-press-lg:active {
+  transform: translate(6px, 6px);
+  box-shadow: none;
+}
+
 /* 通用触摸目标最小尺寸（44x44px iOS标准，48x48px Material标准）*/
 .touch-target {
   min-height: 44px;

@@ -41,7 +41,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
         
         <button 
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 p-2 bg-white border-2 border-black rounded-full hover:bg-black hover:text-white transition-colors shadow-md"
+          className="absolute top-4 right-4 z-20 p-2 bg-white border-[3px] border-black rounded-full hover:bg-black hover:text-white transition-colors shadow-md"
         >
           <X size={20} />
         </button>

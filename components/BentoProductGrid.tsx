@@ -206,7 +206,7 @@ export default function BentoProductGrid({
                   setViewMode('bento');
                   setIsExpanded(false);
                 }}
-                className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
+                className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-[3px] border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
                   viewMode === 'bento' 
                     ? 'bg-gray-200 text-black shadow-brutal' 
                     : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:shadow-brutal-sm'
@@ -223,7 +223,7 @@ export default function BentoProductGrid({
                   setViewMode('grid');
                   setIsExpanded(false);
                 }}
-                className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
+                className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-[3px] border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
                   viewMode === 'grid' 
                     ? 'bg-gray-200 text-black shadow-brutal' 
                     : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:shadow-brutal-sm'
@@ -240,7 +240,7 @@ export default function BentoProductGrid({
                   setViewMode('list');
                   setIsExpanded(false);
                 }}
-                className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
+                className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-[3px] border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
                   viewMode === 'list' 
                     ? 'bg-gray-200 text-black shadow-brutal' 
                     : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:shadow-brutal-sm'
@@ -255,7 +255,7 @@ export default function BentoProductGrid({
               {isAdmin && (viewMode === 'bento' || viewMode === 'grid') && (
                 <button
                   onClick={() => setIsDraggable(!isDraggable)}
-                  className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
+                  className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-[3px] border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
                     isDraggable
                       ? 'bg-brutal-yellow shadow-brutal'
                       : 'bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:shadow-brutal-sm'
@@ -272,7 +272,7 @@ export default function BentoProductGrid({
           {/* 主按钮：显示当前视图模式，点击展开/收缩 */}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
+            className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full border-[3px] border-black flex items-center justify-center transition-all duration-200 touch-target active:scale-95 ${
               isExpanded
                 ? 'bg-black text-white shadow-brutal hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] active:shadow-brutal-sm'
                 : 'bg-brutal-cyan text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-brutal active:shadow-brutal-sm'
@@ -349,7 +349,7 @@ export default function BentoProductGrid({
                           e.stopPropagation();
                           onEdit?.(product.id);
                         }}
-                        className="p-2 bg-brutal-yellow text-black rounded-lg border-2 border-black shadow-brutal-sm hover:bg-yellow-400 hover:scale-105 active:scale-95 transition-all"
+                        className="p-2 bg-brutal-yellow text-black rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-yellow-400 hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all"
                         title="编辑商品"
                         aria-label="编辑商品"
                       >
@@ -360,7 +360,7 @@ export default function BentoProductGrid({
                           e.stopPropagation();
                           onDelete?.(product.id);
                         }}
-                        className="p-2 bg-red-500 text-white rounded-lg border-2 border-black shadow-brutal-sm hover:bg-red-600 hover:scale-105 active:scale-95 transition-all"
+                        className="p-2 bg-red-500 text-white rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-red-600 hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all"
                         title="删除商品"
                         aria-label="删除商品"
                       >
@@ -464,7 +464,7 @@ function ListProductCard({
                 onPointerUp={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}
                 onTouchEnd={(e) => e.stopPropagation()}
-                className={`p-1.5 sm:p-2 rounded-lg border-2 border-black shadow-brutal hover:scale-105 transition-all text-sm ${
+                className={`p-1.5 sm:p-2 rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all text-sm ${
                   isFavorited ? 'bg-pink-100 text-pink-500' : 'bg-white text-gray-400'
                 }`}
                 title={isFavorited ? "取消收藏" : "收藏"}
@@ -488,7 +488,7 @@ function ListProductCard({
                   onPointerUp={(e) => e.stopPropagation()}
                   onTouchStart={(e) => e.stopPropagation()}
                   onTouchEnd={(e) => e.stopPropagation()}
-                  className="p-1.5 sm:p-2 bg-brutal-yellow rounded-lg border-2 border-black shadow-brutal hover:bg-yellow-400 transition-all text-sm"
+                  className="p-1.5 sm:p-2 bg-brutal-yellow rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-yellow-400 hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all text-sm"
                 >
                   <Edit size={14} className="sm:w-4 sm:h-4" />
                 </button>
@@ -501,7 +501,7 @@ function ListProductCard({
                   onPointerUp={(e) => e.stopPropagation()}
                   onTouchStart={(e) => e.stopPropagation()}
                   onTouchEnd={(e) => e.stopPropagation()}
-                  className="p-1.5 sm:p-2 bg-red-500 text-white rounded-lg border-2 border-black shadow-brutal hover:bg-red-600 transition-all text-sm"
+                  className="p-1.5 sm:p-2 bg-red-500 text-white rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-red-600 hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all text-sm"
                 >
                   <Trash2 size={14} className="sm:w-4 sm:h-4" />
                 </button>

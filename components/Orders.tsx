@@ -356,7 +356,7 @@ const Orders: React.FC = () => {
             </div>
             <button
               onClick={loadOrders}
-              className="mt-4 px-4 py-2 bg-white border-2 border-black rounded-xl font-bold hover:bg-gray-100"
+              className="mt-4 px-4 py-2 bg-white border-[3px] border-black rounded-xl font-bold hover:bg-gray-100"
             >
               重试
             </button>
@@ -561,7 +561,7 @@ const Orders: React.FC = () => {
                 <h2 className="text-2xl font-black">订单详情</h2>
                 <button
                   onClick={handleCloseDetail}
-                  className="p-2 bg-white border-2 border-black rounded-lg hover:bg-gray-100 transition-colors"
+                  className="p-2 bg-white border-[3px] border-black rounded-lg hover:bg-gray-100 transition-colors"
                   aria-label="关闭订单详情"
                 >
                   <XCircle size={24} />

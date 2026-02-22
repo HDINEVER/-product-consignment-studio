@@ -79,7 +79,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
         {/* 头部 */}
         <div className="p-3 sm:p-4 bg-yellow-400 border-b-2 sm:border-b-4 border-black flex justify-between items-center shrink-0">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-1.5 sm:p-2 bg-black text-white rounded-lg sm:rounded-xl border-2 border-black">
+            <div className="p-1.5 sm:p-2 bg-black text-white rounded-lg sm:rounded-xl border-[3px] border-black">
               <ShoppingBag size={18} className="sm:w-5 sm:h-5" strokeWidth={3} />
             </div>
             <div>
@@ -94,7 +94,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
             {cart.length > 0 && onClearCart && (
               <button 
                 onClick={handleClearCart}
-                className="p-1.5 sm:p-2 bg-white hover:bg-red-100 rounded-lg sm:rounded-xl transition-colors border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
+                className="p-1.5 sm:p-2 bg-white hover:bg-red-100 rounded-lg sm:rounded-xl transition-colors border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:shadow-[4px_4px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] active:shadow-none active:translate-x-[3px] active:translate-y-[3px]"
                 aria-label="清空购物车"
                 title="清空购物车"
               >
@@ -103,7 +103,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
             )}
             <button 
               onClick={onClose} 
-              className="p-1.5 sm:p-2 bg-white hover:bg-red-400 rounded-lg sm:rounded-xl transition-colors border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
+              className="p-1.5 sm:p-2 bg-white hover:bg-red-400 rounded-lg sm:rounded-xl transition-colors border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:shadow-[4px_4px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] active:shadow-none active:translate-x-[3px] active:translate-y-[3px]"
               aria-label="关闭购物车"
             >
               <X size={18} className="sm:w-5 sm:h-5" strokeWidth={3} />
@@ -211,7 +211,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                   {/* 删除按钮 */}
                   <button 
                     onClick={() => onRemoveItem(idx)}
-                    className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 p-1 sm:p-1.5 text-white bg-red-500 hover:bg-red-600 rounded-md sm:rounded-lg transition-colors border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                    className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 p-1 sm:p-1.5 text-white bg-red-500 hover:bg-red-600 rounded-md sm:rounded-lg transition-colors border-[3px] border-black shadow-[3px_3px_0_0_#000]"
                     aria-label="移除商品"
                   >
                     <Trash2 size={12} className="sm:w-3.5 sm:h-3.5" strokeWidth={3} />

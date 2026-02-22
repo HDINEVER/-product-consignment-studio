@@ -209,7 +209,7 @@ export default function AdminUsers() {
                       {user.role !== 'admin' && (
                         <button
                           onClick={() => handleToggleStatus(user.id, user.status)}
-                          className={`px-4 py-2 font-bold border-2 border-black transition-colors ${
+                          className={`px-4 py-2 font-bold border-[3px] border-black transition-colors ${
                             user.status === 'active'
                               ? 'bg-gray-400 hover:bg-gray-500'
                               : 'bg-green-400 hover:bg-green-500'

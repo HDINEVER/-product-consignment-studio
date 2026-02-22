@@ -58,8 +58,8 @@ export default function ProductCard({
         shadow-[5px_5px_0_0_#000] sm:shadow-[7px_7px_0_0_#000]
         group-hover:translate-x-[-3px] group-hover:translate-y-[-3px]
         group-hover:shadow-[8px_8px_0_0_#000] sm:group-hover:shadow-[12px_12px_0_0_#000]
-        active:translate-x-[2px] active:translate-y-[2px]
-        active:shadow-[3px_3px_0_0_#000] sm:active:shadow-[4px_4px_0_0_#000]
+        active:translate-x-[5px] active:translate-y-[5px]
+        active:shadow-none sm:active:shadow-none
         cursor-pointer
       `}
       onClick={() => onSelect?.(product)}
@@ -125,7 +125,7 @@ export default function ProductCard({
           onTouchEnd={(e) => {
             e.stopPropagation();
           }}
-          className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-white border-2 border-black rounded-full shadow-[2px_2px_0_0_#000] sm:shadow-[3px_3px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[3px_3px_0_0_#000] sm:hover:shadow-[4px_4px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] transition-all"
+          className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-white border-2 border-black rounded-full shadow-[2px_2px_0_0_#000] sm:shadow-[3px_3px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[3px_3px_0_0_#000] sm:hover:shadow-[4px_4px_0_0_#000] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] sm:active:translate-x-[3px] sm:active:translate-y-[3px] transition-all"
           aria-label={isFavorited ? "取消收藏" : "收藏"}
           title={isFavorited ? "取消收藏" : "收藏"}
         >
@@ -224,8 +224,9 @@ export default function ProductCard({
                 shadow-[3px_3px_0_0_#000] sm:shadow-[4px_4px_0_0_#000]
                 hover:translate-x-[-2px] hover:translate-y-[-2px] 
                 hover:shadow-[5px_5px_0_0_#000] sm:hover:shadow-[6px_6px_0_0_#000]
-                active:translate-x-[1px] active:translate-y-[1px] 
-                active:shadow-[2px_2px_0_0_#000]
+                active:shadow-none
+                active:translate-x-[3px] active:translate-y-[3px] 
+                sm:active:translate-x-[4px] sm:active:translate-y-[4px]
                 transition-all overflow-hidden group/btn
               `}
             >

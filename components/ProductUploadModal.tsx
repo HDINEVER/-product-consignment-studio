@@ -236,7 +236,7 @@ export default function ProductUploadModal({
               <button
                 onClick={handleClose}
                 disabled={submitting}
-                className="p-2 bg-red-400 border-2 border-black rounded-xl hover:bg-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
+                className="p-2 bg-red-400 border-[3px] border-black rounded-xl hover:bg-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-[3px_3px_0_0_#000] hover:shadow-[4px_4px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] active:shadow-none active:translate-x-[3px] active:translate-y-[3px]"
                 aria-label="关闭"
               >
                 <X size={24} />
@@ -314,7 +314,7 @@ export default function ProductUploadModal({
                           type="button"
                           onClick={() => handleRemoveImage(index)}
                           disabled={submitting}
-                          className="absolute top-2 right-2 p-1 bg-red-400 border-2 border-black rounded-lg hover:bg-red-500 transition-colors"
+                          className="absolute top-2 right-2 p-1 bg-red-400 border-[3px] border-black rounded-lg hover:bg-red-500 transition-colors"
                           aria-label="删除图片"
                         >
                           <X size={16} />

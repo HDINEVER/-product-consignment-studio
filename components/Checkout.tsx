@@ -354,7 +354,7 @@ const Checkout: React.FC = () => {
                 </h2>
                 <button
                   onClick={() => setShowAddressForm(!showAddressForm)}
-                  className="flex items-center gap-2 px-4 py-2 bg-yellow-400 text-black font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                  className="flex items-center gap-2 px-4 py-2 bg-yellow-400 text-black font-bold border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:shadow-[4px_4px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all"
                 >
                   <Plus size={18} />
                   新增地址
@@ -472,14 +472,14 @@ const Checkout: React.FC = () => {
                     <div className="flex gap-2 mt-4">
                       <button
                         type="submit"
-                        className="px-4 py-2 bg-black text-white font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                        className="px-4 py-2 bg-black text-white font-bold border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all"
                       >
                         保存地址
                       </button>
                       <button
                         type="button"
                         onClick={() => setShowAddressForm(false)}
-                        className="px-4 py-2 bg-white text-black font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                        className="px-4 py-2 bg-white text-black font-bold border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all"
                       >
                         取消
                       </button>

@@ -76,7 +76,7 @@ export default function TagManager({
             <button
               onClick={() => !isEditMode && onSelectTag && onSelectTag(tag.name)}
               disabled={isEditMode}
-              className={`px-4 py-2 rounded-full border-2 border-black font-bold text-sm transition-all ${vertical ? 'w-full text-center' : ''} ${
+              className={`px-4 py-2 rounded-full border-[3px] border-black font-bold text-sm transition-all ${vertical ? 'w-full text-center' : ''} ${
                 selectedTag === tag.name
                   ? 'bg-brutal-black text-brutal-yellow shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
                   : 'bg-white hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px]'
@@ -93,7 +93,7 @@ export default function TagManager({
                 animate={{ scale: 1 }}
                 exit={{ scale: 0 }}
                 onClick={() => handleDelete(tag.$id, tag.name)}
-                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-brutal hover:bg-red-600 transition-colors border-2 border-black"
+                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-brutal hover:bg-red-600 transition-colors border-[3px] border-black"
                 title={`删除 ${tag.name}`}
               >
                 <X size={14} strokeWidth={3} />
@@ -106,7 +106,7 @@ export default function TagManager({
         {!showAddInput && (
           <button
             onClick={() => setShowAddInput(true)}
-            className={`px-4 py-2 rounded-full border-2 border-dashed border-gray-400 bg-white font-bold text-sm text-gray-500 hover:text-black hover:border-black transition-colors flex items-center gap-1 ${vertical ? 'w-full justify-center' : ''}`}
+            className={`px-4 py-2 rounded-full border-[3px] border-dashed border-gray-400 bg-white font-bold text-sm text-gray-500 hover:text-black hover:border-black transition-colors flex items-center gap-1 ${vertical ? 'w-full justify-center' : ''}`}
             title={`添加新${typeName}`}
           >
             <Plus size={16} />
@@ -135,7 +135,7 @@ export default function TagManager({
                   }
                 }}
                 placeholder={`新${typeName}名称`}
-                className={`px-4 py-2 rounded-full border-2 border-black bg-white font-bold text-sm outline-none focus:shadow-brutal transition-shadow ${vertical ? 'w-full' : 'w-40'}`}
+                className={`px-4 py-2 rounded-full border-[3px] border-black bg-white font-bold text-sm outline-none focus:shadow-brutal transition-shadow ${vertical ? 'w-full' : 'w-40'}`}
                 autoFocus
                 disabled={adding}
               />
@@ -143,8 +143,7 @@ export default function TagManager({
                 <button
                   onClick={handleAdd}
                   disabled={adding}
-                  className="flex-1 px-4 py-2 rounded-full border-2 border-black bg-brutal-yellow font-black text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all disabled:opacity-50 whitespace-nowrap"
-                >
+                  className="flex-1 px-4 py-2 rounded-full border-[3px] border-black bg-brutal-yellow font-black text-sm shadow-[4px_4px_0_0_#000] hover:shadow-[6px_6px_0_0_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all disabled:opacity-50 whitespace-nowrap">
                   {adding ? '添加中...' : '确认'}
                 </button>
                 <button
@@ -153,8 +152,7 @@ export default function TagManager({
                     setNewTagName('');
                   }}
                   disabled={adding}
-                  className="flex-1 px-4 py-2 rounded-full border-2 border-black bg-white font-bold text-sm hover:bg-gray-100 transition-colors whitespace-nowrap"
-                >
+                  className="flex-1 px-4 py-2 rounded-full border-[3px] border-black bg-white font-bold text-sm hover:bg-gray-100 transition-colors whitespace-nowrap">
                   取消
                 </button>
               </div>
@@ -166,7 +164,7 @@ export default function TagManager({
         {!showAddInput && (
           <button
             onClick={onToggleEditMode}
-            className={`px-4 py-2 rounded-full border-2 border-black font-bold text-sm flex items-center gap-1 transition-all ${vertical ? 'w-full justify-center' : ''} ${
+            className={`px-4 py-2 rounded-full border-[3px] border-black font-bold text-sm flex items-center gap-1 transition-all ${vertical ? 'w-full justify-center' : ''} ${
               isEditMode
                 ? 'bg-brutal-black text-brutal-yellow shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
                 : 'bg-white text-gray-600 hover:text-black hover:shadow-brutal'

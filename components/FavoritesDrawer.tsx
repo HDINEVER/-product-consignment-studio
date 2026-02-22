@@ -82,7 +82,7 @@ const FavoritesDrawer: React.FC<FavoritesDrawerProps> = ({
         {/* 头部 */}
         <div className="p-3 sm:p-4 bg-pink-400 border-b-2 sm:border-b-4 border-black flex justify-between items-center shrink-0">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-1.5 sm:p-2 bg-white text-pink-500 rounded-lg sm:rounded-xl border-2 border-black">
+            <div className="p-1.5 sm:p-2 bg-white text-pink-500 rounded-lg sm:rounded-xl border-[3px] border-black">
               <Heart size={18} className="sm:w-5 sm:h-5 fill-pink-500" strokeWidth={3} />
             </div>
             <div>
@@ -94,7 +94,7 @@ const FavoritesDrawer: React.FC<FavoritesDrawerProps> = ({
           </div>
           <button 
             onClick={onClose}
-            className="p-1.5 sm:p-2 bg-white hover:bg-gray-100 rounded-lg sm:rounded-xl transition-colors border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
+            className="p-1.5 sm:p-2 bg-white hover:bg-gray-100 rounded-lg sm:rounded-xl transition-colors border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px]"
             aria-label="关闭"
           >
             <X size={18} className="sm:w-5 sm:h-5" strokeWidth={3} />
@@ -191,7 +191,7 @@ const FavoritesDrawer: React.FC<FavoritesDrawerProps> = ({
                       {onAddToCart && (
                         <button
                           onClick={() => handleAddToCart(item)}
-                          className="p-1.5 sm:p-2 bg-yellow-400 hover:bg-yellow-500 text-black rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all"
+                          className="p-1.5 sm:p-2 bg-yellow-400 hover:bg-yellow-500 text-black rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all"
                           title="加入购物车"
                         >
                           <ShoppingCart size={14} className="sm:w-4 sm:h-4" strokeWidth={3} />
@@ -201,7 +201,7 @@ const FavoritesDrawer: React.FC<FavoritesDrawerProps> = ({
                       {/* 移除收藏按钮 */}
                       <button
                         onClick={() => handleRemoveFavorite(item.favoriteId)}
-                        className="p-1.5 sm:p-2 bg-white hover:bg-red-50 text-red-500 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all"
+                        className="p-1.5 sm:p-2 bg-white hover:bg-red-50 text-red-500 rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all"
                         title="移除收藏"
                       >
                         <Trash2 size={14} className="sm:w-4 sm:h-4" strokeWidth={3} />

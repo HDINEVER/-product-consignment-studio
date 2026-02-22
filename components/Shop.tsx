@@ -488,7 +488,7 @@ const Shop = () => {
                     {isAdmin && (
                       <button
                         onClick={() => setShowProductUploadModal(true)}
-                        className="ml-auto mr-4 w-9 h-9 rounded-full flex items-center justify-center bg-brutal-black text-brutal-yellow font-black border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+                        className="ml-auto mr-4 w-9 h-9 rounded-full flex items-center justify-center bg-brutal-black text-brutal-yellow font-black border-[3px] border-black shadow-[4px_4px_0_0_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[2px] active:translate-y-[2px] transition-all"
                         title="发布新商品"
                       >
                         <Plus size={18} strokeWidth={3} />
