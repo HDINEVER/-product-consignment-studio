@@ -5,6 +5,7 @@ import { Product } from '../types';
 import ProductCard from './ProductCard';
 import ProductDetailModal from './ProductDetailModal';
 import { useProducts } from '../hooks/useProducts';
+import { useAuth } from '../contexts/AuthContext';
 import { LayoutGrid, LayoutDashboard, ListIcon, Shuffle, Edit, Trash2, Heart, ShoppingCart, Star, Check, X } from 'lucide-react';
 
 // Responsive grid component from react-grid-layout v2
@@ -423,7 +424,22 @@ function ListProductCard({
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // 防重复评分：服务器端优先，localStorage 作为游客降级
+  const [alreadyRated, setAlreadyRated] = useState(() =>
+    localStorage.getItem(`rated_${product.id}`) === 'true'
+  );
   const { submitProductRating } = useProducts();
+  const { user } = useAuth();
+
+  // 评分成功后 1.5s 自动返回产品卡片
+  useEffect(() => {
+    if (status !== 'rated') return;
+    const timer = setTimeout(() => {
+      setStatus('idle');
+      setRating(0);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [status]);
 
   const handleOrder = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -433,16 +449,24 @@ function ListProductCard({
 
   const submitRating = async (e: React.MouseEvent, val: number) => {
     e.stopPropagation();
-    if (isSubmitting) return;
+    if (isSubmitting || alreadyRated) return;
 
     setIsSubmitting(true);
     setRating(val);
     
-    // 调用后端更新评分
-    await submitProductRating(product.id, val);
+    const result = await submitProductRating(product.id, val, user?.$id);
 
     setIsSubmitting(false);
-    setStatus('rated');
+    if (result === 'success') {
+      localStorage.setItem(`rated_${product.id}`, 'true');
+      setAlreadyRated(true);
+      setStatus('rated');
+    } else if (result === 'already_rated') {
+      localStorage.setItem(`rated_${product.id}`, 'true');
+      setAlreadyRated(true);
+    } else {
+      setRating(0);
+    }
   };
 
   return (
@@ -529,6 +553,8 @@ function ListProductCard({
                   }}
                   onPointerDown={(e) => e.stopPropagation()}
                   onTouchStart={(e) => e.stopPropagation()}
+                  title="编辑商品"
+                  aria-label="编辑商品"
                   className="no-drag relative z-20 p-1.5 sm:p-2 bg-brutal-yellow rounded-lg border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-yellow-400 hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] transition-all text-sm"
                 >
                   <Edit size={14} className="sm:w-4 sm:h-4" />
@@ -574,6 +600,8 @@ function ListProductCard({
         <div className="absolute inset-0 z-30 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center animate-in fade-in slide-in-from-bottom-4 duration-300 cursor-default" onClick={(e) => e.stopPropagation()}>
           <button 
             onClick={(e) => { e.stopPropagation(); setStatus('rated'); }}
+            title="关闭"
+            aria-label="关闭评分"
             className="absolute top-2 right-2 sm:top-3 sm:right-3 text-black hover:scale-110 transition-transform"
           >
             <X size={20} className="sm:w-[24px] sm:h-[24px]" strokeWidth={3} />
@@ -589,8 +617,15 @@ function ListProductCard({
                 key={star}
                 onMouseEnter={() => setHoverRating(star)}
                 onMouseLeave={() => setHoverRating(0)}
+                onTouchStart={() => setHoverRating(star)}
+                onTouchEnd={() => setHoverRating(0)}
                 onClick={(e) => submitRating(e, star)}
-                className="transition-transform hover:scale-125 active:scale-90 p-1"
+                disabled={alreadyRated || isSubmitting}
+                title={`评${star}星`}
+                aria-label={`评${star}星`}
+                className={`transition-transform hover:scale-125 active:scale-90 p-1 ${
+                  alreadyRated ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               >
                 <Star 
                   size={20} 
@@ -602,23 +637,19 @@ function ListProductCard({
               </button>
             ))}
           </div>
+          {alreadyRated && (
+            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">已评分</p>
+          )}
 
           <p className="text-[9px] sm:text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Share your experience</p>
         </div>
       )}
 
-      {/* 评分成功后的短暂反馈 */}
+      {/* 评分成功：短暂 toast ，1.5s 后自动关闭 */}
       {status === 'rated' && (
-        <div className="absolute inset-0 z-30 bg-black text-white flex flex-col items-center justify-center p-4 text-center animate-in zoom-in duration-300 cursor-default" onClick={(e) => e.stopPropagation()}>
-           <div className="text-3xl sm:text-4xl mb-2 sm:mb-3">✨</div>
-          <h4 className="font-black text-base sm:text-xl italic uppercase leading-none">Thanks for rating!</h4>
-          <p className="mt-1 sm:mt-2 text-[9px] sm:text-xs font-bold tracking-[0.2em] opacity-60">WE LOVE YOUR FEEDBACK</p>
-           <button 
-            onClick={(e) => { e.stopPropagation(); setStatus('idle'); setRating(0); }}
-            className="mt-3 sm:mt-4 pointer-events-auto bg-white text-black px-3 py-1 sm:px-4 sm:py-1.5 font-black text-xs sm:text-sm border-2 border-white hover:bg-transparent hover:text-white transition-colors uppercase italic focus:outline-none"
-          >
-            Back to Store
-           </button>
+        <div className="absolute inset-0 z-30 bg-black/90 text-white flex flex-col items-center justify-center gap-2 animate-in zoom-in duration-200 cursor-default" onClick={(e) => e.stopPropagation()}>
+          <div className="text-3xl animate-bounce">⭐</div>
+          <p className="font-black text-sm sm:text-base italic uppercase tracking-wider">Thanks for rating!</p>
         </div>
       )}
     </div>

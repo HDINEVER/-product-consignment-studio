@@ -1,6 +1,7 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { ShoppingCart, Heart, Star, X, Check } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
+import { useAuth } from '../contexts/AuthContext';
 import { Product } from '../types';
 
 interface ProductCardProps {
@@ -26,7 +27,22 @@ export default function ProductCard({
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // 防重复评分：服务器端优先（已登录），localStorage 作为游客降级
+  const [alreadyRated, setAlreadyRated] = useState(() =>
+    localStorage.getItem(`rated_${product.id}`) === 'true'
+  );
   const { submitProductRating } = useProducts();
+  const { user } = useAuth();
+
+  // 评分成功后 1.5s 自动返回产品卡片
+  useEffect(() => {
+    if (status !== 'rated') return;
+    const timer = setTimeout(() => {
+      setStatus('idle');
+      setRating(0);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [status]);
 
   const handleOrder = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -36,16 +52,27 @@ export default function ProductCard({
 
   const submitRating = async (e: React.MouseEvent, val: number) => {
     e.stopPropagation();
-    if (isSubmitting) return;
+    if (isSubmitting || alreadyRated) return;
     
     setIsSubmitting(true);
     setRating(val);
     
-    // 调用后端更新评分
-    const success = await submitProductRating(product.id, val);
+    // 传入 userId，服务器端防重复（游客时 userId 为 undefined，仅用 localStorage）
+    const result = await submitProductRating(product.id, val, user?.$id);
     
     setIsSubmitting(false);
-    setStatus('rated');
+    if (result === 'success') {
+      localStorage.setItem(`rated_${product.id}`, 'true');
+      setAlreadyRated(true);
+      setStatus('rated');
+    } else if (result === 'already_rated') {
+      // 服务器端确认已评过，同步本地状态
+      localStorage.setItem(`rated_${product.id}`, 'true');
+      setAlreadyRated(true);
+    } else {
+      // error：重置，让用户重试
+      setRating(0);
+    }
   };
 
   // 根据productAttribute获取标签文本和样式
@@ -256,6 +283,8 @@ export default function ProductCard({
           <div className="absolute inset-0 z-30 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center animate-in fade-in slide-in-from-bottom-4 duration-300 cursor-default" onClick={(e) => e.stopPropagation()}>
             <button 
               onClick={(e) => { e.stopPropagation(); setStatus('rated'); }}
+              title="关闭"
+              aria-label="关闭评分"
               className="absolute top-3 right-3 sm:top-4 sm:right-4 text-black hover:scale-110 transition-transform"
             >
               <X size={20} className="sm:w-[24px] sm:h-[24px]" strokeWidth={3} />
@@ -272,8 +301,15 @@ export default function ProductCard({
                   key={star}
                   onMouseEnter={() => setHoverRating(star)}
                   onMouseLeave={() => setHoverRating(0)}
+                  onTouchStart={() => setHoverRating(star)}
+                  onTouchEnd={() => setHoverRating(0)}
                   onClick={(e) => submitRating(e, star)}
-                  className="transition-transform hover:scale-125 active:scale-90"
+                  disabled={alreadyRated || isSubmitting}
+                  title={`评${star}星`}
+                  aria-label={`评${star}星`}
+                  className={`transition-transform hover:scale-125 active:scale-90 ${
+                    alreadyRated ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 >
                   <Star 
                     size={28} 
@@ -285,23 +321,19 @@ export default function ProductCard({
                 </button>
               ))}
             </div>
+            {alreadyRated && (
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest -mt-4 mb-4">已评分</p>
+            )}
 
             <p className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-tighter">Your feedback helps the community</p>
           </div>
         )}
 
-        {/* 评分成功后的短暂反馈 */}
+        {/* 评分成功：短暂 toast 反馈，1.5s 后自动关闭 */}
         {status === 'rated' && (
-          <div className="absolute inset-0 z-30 bg-black text-white flex flex-col items-center justify-center p-6 text-center animate-in zoom-in duration-300 cursor-default" onClick={(e) => e.stopPropagation()}>
-             <div className="text-4xl mb-4">✨</div>
-            <h4 className="font-black text-lg sm:text-xl italic uppercase leading-none">Thanks for rating!</h4>
-            <p className="mt-2 text-[10px] sm:text-xs font-bold tracking-[0.2em] opacity-60">WE LOVE YOUR FEEDBACK</p>
-             <button 
-              onClick={(e) => { e.stopPropagation(); setStatus('idle'); setRating(0); }}
-              className="mt-6 pointer-events-auto bg-white text-black px-4 py-1.5 font-black text-xs sm:text-sm border-2 border-white hover:bg-transparent hover:text-white transition-colors uppercase italic focus:outline-none"
-            >
-              Back to Store
-             </button>
+          <div className="absolute inset-0 z-30 bg-black/90 text-white flex flex-col items-center justify-center gap-2 animate-in zoom-in duration-200 cursor-default" onClick={(e) => e.stopPropagation()}>
+            <div className="text-3xl animate-bounce">⭐</div>
+            <p className="font-black text-sm sm:text-base italic uppercase tracking-wider">Thanks for rating!</p>
           </div>
         )}
 

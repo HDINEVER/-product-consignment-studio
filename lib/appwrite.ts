@@ -40,8 +40,9 @@ export const COLLECTIONS = {
   CART_ITEMS: import.meta.env.VITE_APPWRITE_CART_ITEMS_COLLECTION_ID || 'cart_items',
   FAVORITES: import.meta.env.VITE_APPWRITE_FAVORITES_COLLECTION_ID || 'favouritechart',
   TAGS: import.meta.env.VITE_APPWRITE_TAGS_COLLECTION_ID || 'tags',
-  CATEGORIES: 'categories',  // 分类表
-  IP_TAGS: 'ip_tags',        // IP标签表
+  CATEGORIES: 'categories',       // 分类表
+  IP_TAGS: 'ip_tags',             // IP标签表
+  PRODUCTS_SCORE: 'productsscore', // ✅ 用户评分记录表
 };
 
 // Storage Bucket ID

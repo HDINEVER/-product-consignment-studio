@@ -125,7 +125,9 @@ export interface AppwriteProduct {
   sellerId?: string;     // 卖家ID
   sellerName?: string;   // 卖家名称
   productAttribute?: 'new' | 'hot' | 'discount' | null;  // ✅ 产品属性标签 (new/hot/discount)
-  rating?: number;       // ✅ 评分 (0-5)
+  rating?: number;       // ✅ 评分 (0-5，整数，用于显示星级)
+  pingFen?: number;      // ✅ 浮点评分均值（加权平均，精确值）
+  ratingCount?: number;  // ✅ 评分人数（用于加权平均算法）
   createdAt: string;     // ISO datetime
   updatedAt: string;     // ISO datetime
   $createdAt: string;    // Appwrite 自动字段

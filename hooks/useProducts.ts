@@ -314,39 +314,75 @@ export function useProducts() {
     }
   };
 
-  // ========== 提交产品评分 ==========
-  const submitProductRating = async (id: string, newRating: number): Promise<boolean> => {
+  // ========== 提交产品评分（服务器端防重复）==========
+  const submitProductRating = async (
+    id: string,
+    newRating: number,
+    userId?: string
+  ): Promise<'success' | 'already_rated' | 'error'> => {
     try {
-      // 1. 先获取当前产品文档以计算新平均分 (或者如果需要可以直接覆盖)
+      // 1. 如果用户已登录，先查 productsScore 确认是否已评过
+      if (userId) {
+        const existing = await databases.listDocuments(
+          DATABASE_ID,
+          COLLECTIONS.PRODUCTS_SCORE,
+          [
+            Query.equal('productId', id),
+            Query.equal('userId', userId),
+            Query.limit(1),
+          ]
+        );
+        if (existing.total > 0) {
+          console.log('⚠️ 该用户已为此产品评过分:', id);
+          return 'already_rated';
+        }
+
+        // 2. 写入评分记录到 productsScore
+        await databases.createDocument(
+          DATABASE_ID,
+          COLLECTIONS.PRODUCTS_SCORE,
+          ID.unique(),
+          {
+            productId: id,
+            userId: userId,
+            rating: newRating,
+          }
+        );
+        console.log('✅ 评分记录已写入 productsScore');
+      }
+
+      // 3. 获取当前产品均分，用加权平均更新
       const doc = await databases.getDocument(
         DATABASE_ID,
         COLLECTIONS.PRODUCTS,
         id
-      ) as unknown as AppwriteProduct & { pingFen?: number; rating?: number };
-      
-      const currentAvg = doc.pingFen || doc.rating || 5; 
-      // 这里的逻辑为简单的平滑平均 (由于没有专门的评分总人数统计列，我们按当前2次历史平均计算演示效果)
-      // 如果正式需要，我们后期可以添加 voteCount 字段。
-      const updatedPingFen = (currentAvg + newRating) / 2.0;
-      
+      ) as unknown as AppwriteProduct;
+
+      const currentAvg = doc.pingFen ?? doc.rating ?? 5;
+      const currentCount = doc.ratingCount ?? 1;
+      const updatedPingFen = (currentAvg * currentCount + newRating) / (currentCount + 1);
+      const updatedCount = currentCount + 1;
+
       await databases.updateDocument(DATABASE_ID, COLLECTIONS.PRODUCTS, id, {
-        pingFen: updatedPingFen,  // 更新浮点数均分
-        rating: Math.round(updatedPingFen), // 同步更新整数星级以便其他查询使用
+        pingFen: updatedPingFen,
+        rating: Math.round(updatedPingFen),
+        ratingCount: updatedCount,
         updatedAt: new Date().toISOString(),
       });
-      console.log('✅ 产品评分已提交:', id, '新分值:', updatedPingFen.toFixed(1));
-      
-      // 更新本地状态，以便界面立即刷新（不需要完全 fetchProducts 产生加载停顿）
-      setProducts(prev => prev.map(p => 
+      console.log(`✅ 产品均分已更新: ${id} | ${updatedPingFen.toFixed(2)} (${updatedCount}人)`);
+
+      // 4. 更新本地状态
+      setProducts(prev => prev.map(p =>
         p.id === id ? { ...p, rating: updatedPingFen } : p
       ));
-      
-      return true;
+
+      return 'success';
     } catch (err: any) {
       console.error('❌ 提交产品评分失败:', err);
-      return false;
+      return 'error';
     }
   };
+
 
   // ========== 加载更多商品 ==========
   const loadMore = useCallback(async (filters?: ProductFilters) => {
