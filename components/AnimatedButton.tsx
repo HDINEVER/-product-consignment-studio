@@ -14,20 +14,26 @@ const variantStyles: Record<ButtonVariant, string> = {
     bg-black text-white 
     border-2 border-black border-b-4
     shadow-[0_4px_0_0_rgba(0,0,0,1)]
-    hover:shadow-[0_2px_0_0_rgba(0,0,0,1)]
+    hover:shadow-[0_6px_0_0_rgba(0,0,0,1)]
+    active:shadow-none
+    active:border-b-2
   `,
   secondary: `
     bg-yellow-400 text-black 
     border-2 border-black border-b-4
     shadow-[0_4px_0_0_rgba(0,0,0,1)]
-    hover:shadow-[0_2px_0_0_rgba(0,0,0,1)]
+    hover:shadow-[0_6px_0_0_rgba(0,0,0,1)]
+    active:shadow-none
+    active:border-b-2
   `,
   outline: `
     bg-white text-black
     border-2 border-black border-b-4
     shadow-[0_4px_0_0_rgba(0,0,0,1)]
-    hover:shadow-[0_2px_0_0_rgba(0,0,0,1)]
+    hover:shadow-[0_6px_0_0_rgba(0,0,0,1)]
     hover:bg-gray-50
+    active:shadow-none
+    active:border-b-2
   `,
   ghost: `
     bg-transparent text-black
@@ -55,15 +61,14 @@ const AnimatedButton: React.FC<AnimatedButtonProps> = ({
       className={`
         relative overflow-hidden
         font-bold rounded-lg
-        transition-shadow duration-150
+        transition-all duration-150
         disabled:opacity-50 disabled:cursor-not-allowed
         touch-target touch-feedback
-        active:opacity-90
         ${variantStyles[variant]}
         ${className}
       `}
       whileHover={disabled ? undefined : { 
-        y: isNeubrutalism ? 2 : 0,
+        y: isNeubrutalism ? -2 : 0,
         scale: variant === 'icon' ? 1.05 : 1,
       }}
       whileTap={disabled ? undefined : { 
@@ -76,7 +81,9 @@ const AnimatedButton: React.FC<AnimatedButtonProps> = ({
         damping: 25,
       }}
       disabled={disabled}
-      style={{ WebkitTapHighlightColor: 'transparent' }}
+      style={{ 
+        WebkitTapHighlightColor: 'transparent',
+      }}
       {...props}
     >
       {/* Shimmer Effect Layer */}

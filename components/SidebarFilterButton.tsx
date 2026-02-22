@@ -22,15 +22,15 @@ const SidebarFilterButton: React.FC<SidebarFilterButtonProps> = ({
         w-full text-left px-4 py-3 rounded-lg font-bold text-sm
         relative overflow-hidden
         border-2 border-b-4
-        transition-colors duration-150
+        transition-all duration-150
         ${isSelected 
-          ? 'bg-yellow-400 border-black text-black' 
-          : 'bg-white border-transparent text-gray-500 hover:bg-gray-50 hover:text-black hover:border-gray-200 hover:border-b-gray-300'
+          ? 'bg-yellow-400 border-black text-black active:border-b-2 active:shadow-none' 
+          : 'bg-white border-transparent text-gray-500 hover:bg-gray-50 hover:text-black hover:border-gray-200 hover:border-b-gray-300 active:border-b-2'
         }
         ${className}
       `}
       whileHover={{ 
-        y: 2,
+        y: -2,
         transition: { duration: 0.1 }
       }}
       whileTap={{ 
