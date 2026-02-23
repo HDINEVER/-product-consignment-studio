@@ -11,6 +11,8 @@ interface ProductCardProps {
   onSelect?: (product: Product) => void;
   onAddToCart?: (product: Product) => void;
   onToggleFavorite?: (productId: string) => void;
+  /** 卡片变体：'default' 有 max-width 限制，'full' 填满容器 */
+  variant?: 'default' | 'full';
 }
 
 export default function ProductCard({
@@ -20,6 +22,7 @@ export default function ProductCard({
   onSelect,
   onAddToCart,
   onToggleFavorite,
+  variant = 'default',
 }: ProductCardProps) {
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
@@ -104,7 +107,7 @@ export default function ProductCard({
   };
 
   return (
-    <div className="group relative w-full max-w-[320px] sm:max-w-[340px] lg:max-w-[360px] mx-auto">
+    <div className={`group relative w-full ${variant === 'default' ? 'max-w-[320px] sm:max-w-[340px] lg:max-w-[360px] mx-auto' : ''}`}>
       {/* 核心卡片容器 */}
       <div className={`
         relative w-full bg-white border-[3px] sm:border-[3.5px] border-black rounded-xl overflow-hidden

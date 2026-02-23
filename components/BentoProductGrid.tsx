@@ -169,6 +169,7 @@ export default function BentoProductGrid({
                   onSelect={onProductSelect}
                   onAddToCart={onAddToCart}
                   onToggleFavorite={onToggleFavorite}
+                  variant="full"
                 />
                 <AdminButtons productId={product.id} />
               </div>
