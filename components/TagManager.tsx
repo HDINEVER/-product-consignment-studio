@@ -60,7 +60,7 @@ export default function TagManager({
    * 处理删除标签
    */
   const handleDelete = async (tagId: string, tagName: string) => {
-    if (!confirm(`确认删除"${tagName}"？\n\n删除后，该${typeName}下的所有商品将归类为"未分类"。`)) {
+    if (!confirm(`确认删除“${tagName}”？\n\n删除后，该${typeName}下的所有商品将归类为“其他”。`)) {
       return;
     }
 

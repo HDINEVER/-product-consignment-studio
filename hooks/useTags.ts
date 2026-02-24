@@ -170,14 +170,14 @@ export const useTags = () => {
    * 获取分类名称数组（用于兼容现有UI）
    */
   const getCategoryNames = useCallback((): string[] => {
-    return ['全部', ...tags.categories.map(t => t.name), '未分类'];
+    return ['全部', ...tags.categories.map(t => t.name), '其他'];
   }, [tags.categories]);
 
   /**
    * 获取IP名称数组（用于兼容现有UI）
    */
   const getIPNames = useCallback((): string[] => {
-    return ['全部', ...tags.ips.map(t => t.name), '未分类'];
+    return ['全部', ...tags.ips.map(t => t.name), '其他'];
   }, [tags.ips]);
 
   // 初始加载

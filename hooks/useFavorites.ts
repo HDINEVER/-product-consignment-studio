@@ -98,8 +98,8 @@ export function useFavorites() {
           id: doc.$id,
           favoriteId: favoriteRecord?.$id || '',
           title: doc.name || '',           // ✅ 修复：使用 name 字段
-          ip: ipMap[doc.ipId] || '未分类',  // ✅ 修复：通过映射表获取IP名称
-          category: categoryMap[doc.categoryId] || '未分类',  // ✅ 修复：通过映射表获取分类名称
+          ip: ipMap[doc.ipId] || '其他',  // ✅ 修复：通过映射表获取IP名称
+          category: categoryMap[doc.categoryId] || '其他',  // ✅ 修复：通过映射表获取分类名称
           image: doc.imageUrl || '',       // ✅ 修复：使用 imageUrl 字段
           description: doc.description || '',
           basePrice: doc.price || 0,       // ✅ 修复：使用 price 字段

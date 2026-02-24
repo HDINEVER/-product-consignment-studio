@@ -94,25 +94,25 @@ const Shop = () => {
       const filters: ProductFilters = {};
       
       // 将分类名称转换为ID
-      if (selectedCategory !== '全部' && selectedCategory !== '未分类') {
+      if (selectedCategory !== '全部' && selectedCategory !== '其他') {
         const categoryId = getTagIdByName('category', selectedCategory);
         console.log('🏷️ 分类筛选:', selectedCategory, '→ ID:', categoryId);
         if (categoryId) {
           filters.category = categoryId;
         }
-      } else if (selectedCategory === '未分类') {
-        filters.category = '未分类';
+      } else if (selectedCategory === '其他') {
+        filters.category = '其他';
       }
       
       // 将IP名称转换为ID
-      if (selectedIP !== '全部' && selectedIP !== '未分类') {
+      if (selectedIP !== '全部' && selectedIP !== '其他') {
         const ipId = getTagIdByName('ip', selectedIP);
         console.log('🎮 IP筛选:', selectedIP, '→ ID:', ipId);
         if (ipId) {
           filters.ip = ipId;
         }
-      } else if (selectedIP === '未分类') {
-        filters.ip = '未分类';
+      } else if (selectedIP === '其他') {
+        filters.ip = '其他';
       }
       
       // 搜索关键词（使用防抖后的值）
@@ -205,7 +205,7 @@ const Shop = () => {
     const handleUpdateTag = async (productId: string, tagType: 'category' | 'ip', tagName: string) => {
       try {
         const tagId = getTagIdByName(tagType, tagName);
-        if (!tagId && tagName !== '未分类') {
+        if (!tagId && tagName !== '其他') {
           alert('标签不存在');
           return;
         }

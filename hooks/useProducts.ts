@@ -13,8 +13,8 @@ const mapToProduct = (doc: AppwriteProduct, categoryMap: TagsMap = {}, ipMap: Ta
   title: doc.name,                                    // ✅ 使用 name
   description: doc.description,
   basePrice: doc.price,                               // ✅ 使用 price
-  category: (categoryMap[doc.categoryId] || '未分类') as Category,  // ✅ 从映射表获取分类名称
-  ip: ipMap[doc.ipId] || '未分类',                    // ✅ 从映射表获取IP名称
+  category: (categoryMap[doc.categoryId] || '其他') as Category,  // ✅ 从映射表获取分类名称
+  ip: ipMap[doc.ipId] || '其他',                    // ✅ 从映射表获取IP名称
   image: doc.imageUrl || '/placeholder-product.jpg',  // ✅ 使用 imageUrl
   stockQuantity: doc.stockQuantity,                   // ✅ 使用 stockQuantity
   materialType: undefined,
@@ -64,17 +64,17 @@ export function useProducts() {
       }
       
       // IP 筛选（使用 ipId 字段）✅
-      if (filters?.ip && filters.ip !== '全部' && filters.ip !== '未分类') {
+      if (filters?.ip && filters.ip !== '全部' && filters.ip !== '其他') {
         queries.push(Query.equal('ipId', filters.ip));
-      } else if (filters?.ip === '未分类') {
+      } else if (filters?.ip === '其他') {
         // 查询 ipId 为空的商品
         queries.push(Query.equal('ipId', ''));
       }
       
       // 分类筛选（使用 categoryId 字段）
-      if (filters?.category && filters.category !== '全部' && filters.category !== '未分类') {
+      if (filters?.category && filters.category !== '全部' && filters.category !== '其他') {
         queries.push(Query.equal('categoryId', filters.category));
-      } else if (filters?.category === '未分类') {
+      } else if (filters?.category === '其他') {
         // 查询 categoryId 为空的商品
         queries.push(Query.equal('categoryId', ''));
       }

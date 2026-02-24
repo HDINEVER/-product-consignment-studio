@@ -38,7 +38,7 @@ export default function ProductUploadModal({
   const { user } = useAuth();
   const { tags } = useTags();
   
-  // 从数据库获取动态分类和IP列表（排除"全部"和"未分类"）
+  // 从数据库获取动态分类和IP列表（排除“全部”和“其他”）
   const CATEGORIES = tags.categories.map(t => t.name);
   const IP_TAGS = tags.ips.map(t => t.name);
   const { register, handleSubmit, formState: { errors }, reset } = useForm<ProductFormData>({
