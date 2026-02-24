@@ -17,6 +17,7 @@ import TagManager from './TagManager';
 import SearchBar from './SearchBar';
 import PriceRangeFilter from './PriceRangeFilter';
 import BentoProductGrid from './BentoProductGrid';
+import Loader from './ui/loader';
 import { useProducts, ProductFilters } from '../hooks/useProducts';
 import { useCart } from '../hooks/useCart';
 import { useFavorites } from '../hooks/useFavorites';
@@ -501,8 +502,7 @@ const Shop = () => {
             {/* Loading 状态 */}
             {productsLoading && (
               <div className="flex items-center justify-center py-20">
-                <div className="animate-spin w-8 h-8 border-4 border-brutal-black border-t-brutal-yellow rounded-full"></div>
-                <span className="ml-3 font-bold">加载中...</span>
+                <Loader size="md" text="加载中..." />
               </div>
             )}
 

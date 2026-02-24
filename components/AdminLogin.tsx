@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Lock, ArrowRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import Loader from './ui/loader';
 
 const AdminLogin: React.FC = () => {
   const { login } = useAuth();
@@ -82,10 +83,10 @@ const AdminLogin: React.FC = () => {
             className="w-full bg-black text-white font-black py-3 rounded border-2 border-transparent hover:bg-gray-800 transition-all flex items-center justify-center gap-2 group disabled:opacity-50"
           >
             {loading ? (
-              <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              <span className="flex items-center justify-center gap-2">
+                <Loader size="sm" />
                 登录中...
-              </>
+              </span>
             ) : (
               <>
                 登录 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform"/>

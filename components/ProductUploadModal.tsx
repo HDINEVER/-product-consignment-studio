@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, Image as ImageIcon, Loader, AlertCircle } from 'lucide-react';
+import { X, Upload, Image as ImageIcon, AlertCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { databases, storage, DATABASE_ID, COLLECTIONS, STORAGE_BUCKET_ID, ID, Permission, Role } from '../lib/appwrite';
 import { useAuth } from '../contexts/AuthContext';
 import { useTags } from '../hooks/useTags';
+import Loader from './ui/loader';
 
 // 管理员团队 ID（从环境变量读取，默认为 'admins'）
 const ADMIN_TEAM_ID = import.meta.env.VITE_APPWRITE_ADMIN_TEAM_ID || 'admins';
@@ -282,8 +283,7 @@ export default function ProductUploadModal({
                   >
                     {uploadingImage ? (
                       <>
-                        <Loader className="animate-spin mb-3" size={48} />
-                        <p className="font-bold">上传中...</p>
+                        <Loader size="lg" text="上传中..." />
                       </>
                     ) : (
                       <>
@@ -470,7 +470,7 @@ export default function ProductUploadModal({
                 >
                   {submitting ? (
                     <span className="flex items-center justify-center gap-2">
-                      <Loader className="animate-spin" size={20} />
+                      <Loader size="sm" />
                       {editMode ? '更新中...' : '发布中...'}
                     </span>
                   ) : (

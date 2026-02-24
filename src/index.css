@@ -489,3 +489,40 @@ button,
   z-index: 2;
   border-radius: 12px;
 }
+
+/* Billiard 8-ball Loader */
+.billiard-loader {
+  position: relative;
+  background: linear-gradient(to left, #000, #222);
+  border-radius: 50%;
+  animation: billiard-rotate 1s linear infinite;
+  z-index: 1;
+}
+
+.billiard-loader-inner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+  position: absolute;
+  background: white;
+  text-align: center;
+  color: #000;
+  font-weight: 800;
+  border-radius: 50%;
+  top: 40%;
+  left: 40%;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes billiard-rotate {
+  0% {
+    transform: rotate(0);
+  }
+  50% {
+    transform: rotate(3.1415rad);
+  }
+  100% {
+    transform: rotate(720deg);
+  }
+}

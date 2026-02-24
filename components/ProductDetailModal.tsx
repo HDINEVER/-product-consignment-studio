@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Product } from '../types';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../contexts/AuthContext';
+import Loader from './ui/loader';
 
 interface ProductDetailModalProps {
   isOpen: boolean;
@@ -372,7 +373,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               >
                 {isAdding ? (
                   <>
-                    <div className="animate-spin w-5 h-5 border-3 border-black border-t-transparent rounded-full"></div>
+                    <Loader size="sm" />
                     <span>处理中...</span>
                   </>
                 ) : isOutOfStock ? (

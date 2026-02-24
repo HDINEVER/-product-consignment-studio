@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { MapPin, Plus, Edit2, Trash2, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import Loader from './ui/loader';
 
 interface Address {
   id: number;
@@ -94,7 +95,7 @@ export default function AddressList() {
   if (loading) {
     return (
       <div className="min-h-screen bg-yellow-50 flex items-center justify-center">
-        <div className="text-2xl font-black">加载中...</div>
+        <Loader size="lg" text="加载中..." />
       </div>
     );
   }

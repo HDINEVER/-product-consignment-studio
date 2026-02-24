@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { adminAPI, productAPI } from '../utils/api';
 import AdminLogin from './AdminLogin';
 import AnimatedButton from './AnimatedButton';
+import Loader from './ui/loader';
 
 interface DashboardStats {
   total_products: number;
@@ -79,10 +80,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onSwitchToShadcn }) => 
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f3f3f3]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-black mx-auto mb-4"></div>
-          <p className="text-gray-600 font-bold">加载中...</p>
-        </div>
+        <Loader size="lg" text="加载中..." />
       </div>
     );
   }
@@ -151,8 +149,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onSwitchToShadcn }) => 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         {loading ? (
           <div className="text-center py-20">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-black mx-auto mb-4"></div>
-            <p className="text-gray-600 font-bold">加载数据中...</p>
+            <Loader size="lg" text="加载数据中..." />
           </div>
         ) : (
           <>

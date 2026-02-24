@@ -9,6 +9,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { adminAPI } from '../utils/api';
 import AdminLogin from './AdminLogin';
+import Loader from './ui/loader';
 
 // Shadcn UI Components
 import { Button } from '@/components/ui/button';
@@ -96,10 +97,7 @@ const ShadcnDashboard: React.FC<ShadcnDashboardProps> = ({ onSwitchToOriginal })
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">加载中...</p>
-        </div>
+        <Loader size="lg" text="加载中..." />
       </div>
     );
   }
@@ -204,8 +202,7 @@ const ShadcnDashboard: React.FC<ShadcnDashboardProps> = ({ onSwitchToOriginal })
       <main className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-5 md:py-6">
         {loading ? (
           <div className="text-center py-20">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">加载数据中...</p>
+            <Loader size="lg" text="加载数据中..." />
           </div>
         ) : (
           <Tabs defaultValue="overview" className="space-y-4">

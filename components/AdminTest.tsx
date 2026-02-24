@@ -4,7 +4,6 @@ import {
   Shield, 
   CheckCircle, 
   XCircle, 
-  Loader2, 
   Database, 
   User,
   Package,
@@ -15,6 +14,7 @@ import {
 } from 'lucide-react';
 import { databases, account, DATABASE_ID, COLLECTIONS, ID, Query } from '../lib/appwrite';
 import { useAuth } from '../contexts/AuthContext';
+import Loader from './ui/loader';
 
 interface TestResult {
   name: string;
@@ -203,7 +203,7 @@ const AdminTest: React.FC = () => {
       case 'success': return <CheckCircle className="text-green-500" size={20} />;
       case 'error': return <XCircle className="text-red-500" size={20} />;
       case 'skipped': return <AlertTriangle className="text-gray-400" size={20} />;
-      default: return <Loader2 className="text-yellow-500 animate-spin" size={20} />;
+      default: return <Loader size="sm" />;
     }
   };
 
@@ -261,10 +261,10 @@ const AdminTest: React.FC = () => {
                        disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
             >
               {testing ? (
-                <>
-                  <Loader2 className="animate-spin" size={24} />
+                <span className="flex items-center justify-center gap-3">
+                  <Loader size="sm" />
                   正在测试中...
-                </>
+                </span>
               ) : (
                 <>
                   <RefreshCw size={24} />

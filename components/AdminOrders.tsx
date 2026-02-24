@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { adminAPI } from '../utils/api';
 import AdminLogin from './AdminLogin';
 import AnimatedButton from './AnimatedButton';
+import Loader from './ui/loader';
 
 interface Order {
   id: number;
@@ -103,10 +104,7 @@ const AdminOrders: React.FC = () => {
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f3f3f3]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-black mx-auto mb-4"></div>
-          <p className="text-gray-600 font-bold">加载中...</p>
-        </div>
+        <Loader size="lg" text="加载中..." />
       </div>
     );
   }
@@ -280,8 +278,7 @@ const AdminOrders: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {loading ? (
           <div className="text-center py-20">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-black mx-auto mb-4"></div>
-            <p className="text-gray-600 font-bold">加载中...</p>
+            <Loader size="lg" text="加载中..." />
           </div>
         ) : orders.length === 0 ? (
           <div className="text-center py-20 bg-white border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">

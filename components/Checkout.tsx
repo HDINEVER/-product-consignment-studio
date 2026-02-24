@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, MapPin, CreditCard, Package, CheckCircle, Plus, Loader, AlertCircle } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Package, CheckCircle, Plus, AlertCircle } from 'lucide-react';
 import { databases, DATABASE_ID, COLLECTIONS, Query, ID, Permission, Role } from '../lib/appwrite';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../hooks/useCart';
 import AnimatedButton from './AnimatedButton';
+import Loader from './ui/loader';
 
 // ========== 类型定义 ==========
 interface Address {
@@ -300,10 +301,7 @@ const Checkout: React.FC = () => {
   if (loading || cartLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-yellow-50">
-        <div className="text-center">
-          <Loader className="animate-spin mx-auto mb-4" size={48} />
-          <p className="text-gray-600 font-bold text-lg">加载中...</p>
-        </div>
+        <Loader size="lg" text="加载中..." />
       </div>
     );
   }

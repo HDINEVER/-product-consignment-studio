@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Users, Search, Shield, User, Ban, CheckCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import Loader from './ui/loader';
 
 interface UserData {
   id: number;
@@ -115,7 +116,7 @@ export default function AdminUsers() {
   if (loading) {
     return (
       <div className="min-h-screen bg-yellow-50 flex items-center justify-center">
-        <div className="text-2xl font-black">加载中...</div>
+        <Loader size="lg" text="加载中..." />
       </div>
     );
   }

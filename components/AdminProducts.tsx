@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Package, Plus, Edit2, Trash2, Search, Eye } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import Loader from './ui/loader';
 
 interface Product {
   id: number;
@@ -96,7 +97,7 @@ export default function AdminProducts() {
   if (loading) {
     return (
       <div className="min-h-screen bg-yellow-50 flex items-center justify-center">
-        <div className="text-2xl font-black">加载中...</div>
+        <Loader size="lg" text="加载中..." />
       </div>
     );
   }

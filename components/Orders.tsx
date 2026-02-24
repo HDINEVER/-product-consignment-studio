@@ -19,12 +19,12 @@ import {
   MapPin,
   Calendar,
   CreditCard,
-  FileText,
-  Loader
+  FileText
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { databases, DATABASE_ID, COLLECTIONS, Query } from '../lib/appwrite';
 import AnimatedButton from './AnimatedButton';
+import Loader from './ui/loader';
 
 // ========== 类型定义 ==========
 interface OrderItem {
@@ -250,10 +250,7 @@ const Orders: React.FC = () => {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-yellow-50 flex items-center justify-center p-4">
-        <div className="flex flex-col items-center gap-4">
-          <Loader className="animate-spin" size={48} />
-          <p className="text-xl font-bold">加载中...</p>
-        </div>
+        <Loader size="lg" text="加载中..." />
       </div>
     );
   }

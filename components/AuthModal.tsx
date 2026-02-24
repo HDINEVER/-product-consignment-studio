@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mail, Lock, User, AlertTriangle, ShoppingCart, Loader2 } from 'lucide-react';
+import { X, Mail, Lock, User, AlertTriangle, ShoppingCart } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { hasGuestCartItems, getGuestCartCount } from '../utils/guestCart';
 import { Input } from './ui/input';
+import Loader from './ui/loader';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -218,10 +219,10 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 whileTap={{ scale: 0.98 }}
               >
                 {loading ? (
-                  <>
-                    <Loader2 className="animate-spin" size={20} />
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader size="sm" />
                     处理中...
-                  </>
+                  </span>
                 ) : mode === 'login' ? (
                   '立即登录'
                 ) : (
