@@ -78,7 +78,7 @@ export default function ProductCard({
     }
   };
 
-  // 根据productAttribute获取标签文本和样式
+  // 根据 productAttribute 获取标签文本和样式
   const getTagConfig = () => {
     if (!product.productAttribute) return null;
     
@@ -138,7 +138,7 @@ export default function ProductCard({
               backgroundSize: '12px 12px' 
             }}
           />
-          {/* 动态点状层 - 仅在Hover时更明显 */}
+          {/* 动态点状层 - 仅在 Hover 时更明显 */}
           <div 
             className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-400"
             style={{ 
@@ -148,7 +148,7 @@ export default function ProductCard({
           />
         </div>
 
-        {/* 标签 - 仅在有productAttribute时显示 */}
+        {/* 标签 - 仅在有 productAttribute 时显示 */}
         {tagConfig && (
           <div className={`
             absolute top-3 right-3 sm:top-4 sm:right-4 z-30 
