@@ -324,15 +324,44 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               {/* 右侧：商品信息与价格（紧密布局） */}
               <div className="flex-1 flex flex-col gap-3 sm:gap-4 min-w-0">
                 <div className="bg-white border-2 sm:border-4 border-black rounded-xl p-3 sm:p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col gap-3">
-                  <div className="flex justify-between items-start gap-4">
+                  <div className="flex justify-between items-end gap-4">
                     <div className="flex-1">
                       <div className="text-xs sm:text-sm font-bold text-gray-500 mb-1">
                         {hasVariants ? '当前规格价格' : '价格'}
                       </div>
-                      <div className="text-2xl sm:text-3xl font-black text-brutal-blue">
-                        ¥{displayPrice.toFixed(2)}
+                      <div className="flex items-baseline gap-2">
+                        <div className="text-2xl sm:text-3xl font-black text-brutal-blue">
+                          ¥{displayPrice.toFixed(2)}
+                        </div>
+                        {!hasVariants && !variantsLoading && isOutOfStock && (
+                          <span className="text-sm font-bold text-red-500">库存 0</span>
+                        )}
                       </div>
                     </div>
+
+                    {/* 无规格时的内联数量选择器 */}
+                    {!hasVariants && !variantsLoading && !isOutOfStock && (
+                      <div className="flex flex-col items-end gap-1.5">
+                        <div className="flex items-center border-2 border-black rounded-lg overflow-hidden bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                          <button
+                            onClick={handleDecrease}
+                            disabled={quantity <= 1 || isAdding}
+                            className="px-2 py-1.5 hover:bg-yellow-400 transition-colors disabled:opacity-50 border-r-2 border-black"
+                          >
+                            <Minus size={14} strokeWidth={3} />
+                          </button>
+                          <span className="w-10 text-center font-black text-sm">{quantity}</span>
+                          <button
+                            onClick={handleIncrease}
+                            disabled={quantity >= maxQuantity || isAdding}
+                            className="px-2 py-1.5 hover:bg-yellow-400 transition-colors disabled:opacity-50 border-l-2 border-black"
+                          >
+                            <Plus size={14} strokeWidth={3} />
+                          </button>
+                        </div>
+                        <span className="text-xs font-bold text-gray-500">库存 {maxQuantity}</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* 规格选择器 */}
@@ -347,7 +376,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         <span className="text-sm font-bold text-gray-700">选择规格</span>
                         <span className="text-xs font-black text-brutal-blue">{variants.length} 款可选</span>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto pr-1">
+                      <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto p-1 pb-2">
                         {variants.map((variant) => {
                           const active = selectedVariant?.id === variant.id;
                           const variantStock = variant.stockQuantity ?? 0;
@@ -360,9 +389,9 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                                 setQuantity(1);
                               }}
                               disabled={variantStock === 0 || isAdding}
-                              className={`relative flex gap-2 p-2 text-left border-2 border-black rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed ${active ? 'bg-yellow-400 shadow-[3px_3px_0_0_#000] -translate-x-0.5 -translate-y-0.5' : 'bg-white hover:bg-yellow-50 hover:shadow-[2px_2px_0_0_#000]'}`}
+                              className={`relative flex gap-2 p-2 text-left border-2 border-black rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed ${active ? 'bg-yellow-400 shadow-[1px_1px_0_0_#000] translate-x-[2px] translate-y-[2px]' : 'bg-white shadow-[3px_3px_0_0_#000] hover:bg-yellow-50 hover:shadow-[2px_2px_0_0_#000] hover:translate-x-[1px] hover:translate-y-[1px]'}`}
                             >
-                              <div className="w-10 h-10 rounded-md border-2 border-black bg-gray-100 overflow-hidden shrink-0">
+                              <div className="w-10 h-10 rounded-lg border-2 border-black bg-gray-100 overflow-hidden shrink-0">
                                 <img
                                   src={variant.imageUrl || product.image}
                                   alt={variant.name}
@@ -375,7 +404,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                                 <div className="text-[10px] font-bold text-gray-500">库存 {variantStock}</div>
                               </div>
                               {variant.tag && (
-                                <span className="absolute -top-2 -right-1 px-1.5 py-0.5 bg-brutal-blue text-white text-[10px] font-black border-2 border-black rounded">
+                                <span className="absolute -top-2 -right-1 px-1.5 py-0.5 bg-brutal-blue text-white text-[10px] font-black border-2 border-black rounded-md">
                                   {variant.tag}
                                 </span>
                               )}
@@ -386,8 +415,8 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     </div>
                   )}
 
-                  {/* 数量选择器 */}
-                  {!isOutOfStock && !needsVariantSelection && (
+                  {/* 有规格时的独立数量选择器 */}
+                  {hasVariants && !isOutOfStock && !needsVariantSelection && (
                     <div className="pt-3 border-t-2 border-gray-100 mt-1 flex items-center justify-between">
                       <span className="text-sm font-bold text-gray-700">数量</span>
                       <div className="flex items-center gap-3">
