@@ -35,8 +35,10 @@ export function useCart() {
           id: `guest-${index}`,
           productId: item.productId,           // ✅ 驼峰命名
           productTitle: item.productName,      // ✅ 驼峰命名
-          image: item.image || '/placeholder-product.jpg',
+          image: item.variantImage || item.image || '/placeholder-product.jpg',
+          variantId: item.variantId,
           variantName: item.variantName || '', // ✅ 驼峰命名
+          variantImage: item.variantImage,
           price: item.price,
           quantity: item.quantity,
         }));
@@ -61,8 +63,10 @@ export function useCart() {
             // 尝试获取商品信息
             let productName = '商品已下架';
             let productImage = '/placeholder-product.jpg';
+            let variantName = '';
+            let variantImage = '';
             let price = 0;
-            
+
             try {
               const product = await databases.getDocument(
                 DATABASE_ID,
@@ -72,6 +76,21 @@ export function useCart() {
               productName = product.name as string;
               productImage = (product.imageUrl as string) || '/placeholder-product.jpg';
               price = product.price as number;
+
+              if (cartDoc.variantId) {
+                try {
+                  const variant = await databases.getDocument(
+                    DATABASE_ID,
+                    COLLECTIONS.PRODUCT_VARIANTS,
+                    cartDoc.variantId
+                  );
+                  variantName = variant.name as string;
+                  variantImage = (variant.imageUrl as string) || '';
+                  price = variant.price as number;
+                } catch {
+                  variantName = '规格已下架';
+                }
+              }
             } catch {
               // 商品可能已被删除
             }
@@ -80,8 +99,10 @@ export function useCart() {
               id: cartDoc.$id,
               productId: cartDoc.productId,        // ✅ 使用驼峰命名
               productTitle: productName,
-              image: productImage,
-              variantName: '',  // 可以从购物车文档扩展
+              image: variantImage || productImage,
+              variantId: cartDoc.variantId,
+              variantName,
+              variantImage: variantImage || undefined,
               price: price,
               quantity: cartDoc.quantity,
             };
@@ -119,7 +140,9 @@ export function useCart() {
     productId: string;          // ✅ 驼峰命名
     productName: string;        // ✅ 驼峰命名 
     productImage: string;       // ✅ 驼峰命名
+    variantId?: string;         // ✅ 驼峰命名
     variantName?: string;       // ✅ 驼峰命名
+    variantImage?: string;      // ✅ 驼峰命名
     price: number;
     quantity: number;
   }) => {
@@ -130,26 +153,32 @@ export function useCart() {
           productId: item.productId,
           productName: item.productName,
           image: item.productImage,
+          variantId: item.variantId,
           variantName: item.variantName,
+          variantImage: item.variantImage,
           price: item.price,
           quantity: item.quantity,
         });
         console.log('🛒 [游客] 已添加到购物车');
       } else if (user) {
-        // 登录用户：先查是否已有同款商品
+        // 登录用户：先查是否已有同款商品规格
+        const existingQueries = [
+          Query.equal('userId', user.$id),
+          Query.equal('productId', item.productId),
+          Query.limit(25),
+        ];
         const existing = await databases.listDocuments(
           DATABASE_ID,
           COLLECTIONS.CART_ITEMS,
-          [
-            Query.equal('userId', user.$id),
-            Query.equal('productId', item.productId),
-            Query.limit(1),
-          ]
+          existingQueries
+        );
+        const existingDoc = existing.documents.find(
+          (doc: any) => (doc.variantId || '') === (item.variantId || '')
         );
 
-        if (existing.total > 0) {
+        if (existingDoc) {
           // ✅ 已有记录 → 累加数量
-          const doc = existing.documents[0];
+          const doc = existingDoc;
           const newQty = (doc.quantity as number) + item.quantity;
           await databases.updateDocument(
             DATABASE_ID,
@@ -167,6 +196,7 @@ export function useCart() {
             {
               userId: user.$id,
               productId: item.productId,
+              variantId: item.variantId || '',
               quantity: item.quantity,
               createdAt: new Date().toISOString(),
               isActive: true,
@@ -204,7 +234,7 @@ export function useCart() {
         // 游客：更新 sessionStorage
         const item = cartItems.find((i: CartItemWithId) => i.id === itemId);
         if (item) {
-          updateGuestCartItem(item.productId, quantity);
+          updateGuestCartItem(item.productId, quantity, item.variantId);
         }
       } else {
         // 登录用户：更新 Appwrite
@@ -233,7 +263,7 @@ export function useCart() {
         // 游客：从 sessionStorage 移除
         const item = cartItems.find((i: CartItemWithId) => i.id === itemId);
         if (item) {
-          removeFromGuestCart(item.productId);
+          removeFromGuestCart(item.productId, item.variantId);
         }
       } else {
         // 登录用户：从 Appwrite 删除

@@ -60,13 +60,14 @@ export function useFavorites() {
       // 2.5 批量查询标签信息
       const docs = productsResponse.documents as any[];
       
-      // 收集所有唯一的 categoryId 和 ipId
+      // 收集所有唯一的 categoryId、ipId 和 subCategoryId
       const categoryIds = [...new Set(docs.map(doc => doc.categoryId).filter(id => id && id.trim()))];
       const ipIds = [...new Set(docs.map(doc => doc.ipId).filter(id => id && id.trim()))];
-      
-      // 批量查询分类和IP标签
-      const [categoriesData, ipsData] = await Promise.all([
-        categoryIds.length > 0 
+      const subCategoryIds = [...new Set(docs.map(doc => doc.subCategoryId).filter(id => id && id.trim()))];
+
+      // 批量查询分类、IP 和子分类标签
+      const [categoriesData, ipsData, subCategoriesData] = await Promise.all([
+        categoryIds.length > 0
           ? databases.listDocuments(DATABASE_ID, COLLECTIONS.CATEGORIES, [
               Query.equal('$id', categoryIds),
               Query.limit(100)
@@ -75,6 +76,12 @@ export function useFavorites() {
         ipIds.length > 0
           ? databases.listDocuments(DATABASE_ID, COLLECTIONS.IP_TAGS, [
               Query.equal('$id', ipIds),
+              Query.limit(100)
+            ])
+          : Promise.resolve({ documents: [] }),
+        subCategoryIds.length > 0
+          ? databases.listDocuments(DATABASE_ID, COLLECTIONS.SUB_CATEGORIES, [
+              Query.equal('$id', subCategoryIds),
               Query.limit(100)
             ])
           : Promise.resolve({ documents: [] }),
@@ -91,6 +98,11 @@ export function useFavorites() {
         ipMap[doc.$id] = doc.name;
       });
 
+      const subCategoryMap: { [id: string]: string } = {};
+      subCategoriesData.documents.forEach((doc: any) => {
+        subCategoryMap[doc.$id] = doc.name;
+      });
+
       // 3. 组合数据
       const favoriteItems: FavoriteItem[] = productsResponse.documents.map((doc: any) => {
         const favoriteRecord = favoriteRecords.find(f => f.productId === doc.$id);
@@ -100,6 +112,7 @@ export function useFavorites() {
           title: doc.name || '',           // ✅ 修复：使用 name 字段
           ip: ipMap[doc.ipId] || '其他',  // ✅ 修复：通过映射表获取IP名称
           category: categoryMap[doc.categoryId] || '其他',  // ✅ 修复：通过映射表获取分类名称
+          subCategory: doc.subCategoryId ? subCategoryMap[doc.subCategoryId] : undefined,
           image: doc.imageUrl || '',       // ✅ 修复：使用 imageUrl 字段
           description: doc.description || '',
           basePrice: doc.price || 0,       // ✅ 修复：使用 price 字段

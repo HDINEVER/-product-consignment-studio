@@ -41,7 +41,9 @@ export const COLLECTIONS = {
   FAVORITES: import.meta.env.VITE_APPWRITE_FAVORITES_COLLECTION_ID || 'favouritechart',
   TAGS: import.meta.env.VITE_APPWRITE_TAGS_COLLECTION_ID || 'tags',
   CATEGORIES: 'categories',       // 分类表
+  SUB_CATEGORIES: 'sub_categories', // 子分类表
   IP_TAGS: 'ip_tags',             // IP标签表
+  PRODUCT_VARIANTS: 'product_variants', // 商品规格表
   PRODUCTS_SCORE: 'productsscore', // ✅ 用户评分记录表
 };
 

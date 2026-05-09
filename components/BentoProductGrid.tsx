@@ -261,7 +261,6 @@ function ListProductCard({
 
   const handleOrder = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setStatus('ordered');
     onAddToCart?.(product);
   };
 

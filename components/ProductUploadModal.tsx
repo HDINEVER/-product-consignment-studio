@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { X, Upload, Image as ImageIcon, AlertCircle, Plus, Trash2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { databases, storage, DATABASE_ID, COLLECTIONS, STORAGE_BUCKET_ID, ID, Permission, Role } from '../lib/appwrite';
+import { databases, storage, DATABASE_ID, COLLECTIONS, STORAGE_BUCKET_ID, ID, Permission, Role, Query } from '../lib/appwrite';
 import { useAuth } from '../contexts/AuthContext';
 import { useTags } from '../hooks/useTags';
 import Loader from './ui/loader';
@@ -16,9 +16,19 @@ interface ProductFormData {
   description: string;
   ip_tag: string;
   category: string;
+  subCategoryId?: string;
   price: number;
   stock: number;
   productAttribute?: 'new' | 'hot' | 'discount' | '';  // ✅ 添加产品属性字段
+}
+
+interface VariantDraft {
+  id?: string;
+  name: string;
+  price: number;
+  stockQuantity: number;
+  imageUrl: string;
+  tag: string;
 }
 
 interface ProductUploadModalProps {
@@ -38,25 +48,98 @@ export default function ProductUploadModal({
 }: ProductUploadModalProps) {
   const { user } = useAuth();
   const { tags } = useTags();
-  
+
   // 从数据库获取动态分类和IP列表（排除“全部”和“其他”）
   const CATEGORIES = tags.categories.map(t => t.name);
   const IP_TAGS = tags.ips.map(t => t.name);
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<ProductFormData>({
-    defaultValues: initialData || {
+  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<ProductFormData>({
+    defaultValues: {
       name: '',
       description: '',
       ip_tag: '',
       category: '',
+      subCategoryId: '',
       price: 0,
       stock: 0,
+      productAttribute: '',
     },
   });
 
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [variants, setVariants] = useState<VariantDraft[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string>('');
+  const selectedCategoryName = watch('category');
+  const selectedCategory = tags.categories.find(tag => tag.name === selectedCategoryName);
+  const filteredSubCategories = useMemo(
+    () => selectedCategory
+      ? tags.subCategories.filter(tag => tag.categoryId === selectedCategory.$id)
+      : [],
+    [selectedCategory, tags.subCategories]
+  );
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (!editMode || !initialData) {
+      reset({
+        name: '',
+        description: '',
+        ip_tag: '',
+        category: '',
+        subCategoryId: '',
+        price: 0,
+        stock: 0,
+        productAttribute: '',
+      });
+      setUploadedImages([]);
+      setVariants([]);
+      setError('');
+      return;
+    }
+
+    reset({
+      name: initialData.title || initialData.name || '',
+      description: initialData.description || '',
+      ip_tag: initialData.ip || '',
+      category: initialData.category || '',
+      subCategoryId: initialData.subCategoryId || '',
+      price: initialData.basePrice ?? initialData.price ?? 0,
+      stock: initialData.stockQuantity ?? initialData.stock ?? 0,
+      productAttribute: initialData.productAttribute || '',
+    });
+    setUploadedImages(initialData.image ? [initialData.image] : []);
+    setError('');
+
+    const loadVariants = async () => {
+      try {
+        const response = await databases.listDocuments(
+          DATABASE_ID,
+          COLLECTIONS.PRODUCT_VARIANTS,
+          [
+            Query.equal('productId', initialData.id || initialData.$id),
+            Query.orderAsc('sortOrder'),
+            Query.limit(100),
+          ]
+        );
+
+        setVariants(response.documents.filter((doc: any) => doc.isActive !== false).map((doc: any) => ({
+          id: doc.$id,
+          name: doc.name || '',
+          price: Number(doc.price || 0),
+          stockQuantity: Number(doc.stockQuantity || 0),
+          imageUrl: doc.imageUrl || '',
+          tag: doc.tag || '',
+        })));
+      } catch (err: any) {
+        console.error('❌ 加载商品规格失败:', err);
+        setError(err.message || '加载商品规格失败');
+      }
+    };
+
+    loadVariants();
+  }, [editMode, initialData, isOpen, reset]);
 
   // ========== 图片上传到 Appwrite Storage ==========
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,6 +195,21 @@ export default function ProductUploadModal({
     setUploadedImages((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const addVariant = () => {
+    setVariants(prev => [
+      ...prev,
+      { name: '', price: 0, stockQuantity: 0, imageUrl: '', tag: '' },
+    ]);
+  };
+
+  const updateVariant = (index: number, patch: Partial<VariantDraft>) => {
+    setVariants(prev => prev.map((variant, i) => i === index ? { ...variant, ...patch } : variant));
+  };
+
+  const removeVariant = (index: number) => {
+    setVariants(prev => prev.filter((_, i) => i !== index));
+  };
+
   // ========== 提交表单 ==========
   const onSubmit = async (data: ProductFormData) => {
     if (uploadedImages.length === 0) {
@@ -130,39 +228,47 @@ export default function ProductUploadModal({
     try {
       console.log('📝 正在创建商品...', data);
 
+      const invalidVariant = variants.find(variant =>
+        !variant.name.trim()
+        || Number(variant.price) < 0
+        || Number(variant.price) > 10000
+        || Number(variant.stockQuantity) < 0
+        || Number(variant.stockQuantity) > 9999
+      );
+      if (invalidVariant) {
+        throw new Error('请完整填写规格名称、价格和库存，价格不能超过 10000，库存不能超过 9999');
+      }
+
+      const categoryId = tags.categories.find(tag => tag.name === data.category)?.$id || data.category;
+      const ipId = tags.ips.find(tag => tag.name === data.ip_tag)?.$id || data.ip_tag;
+
       // 准备商品数据（匹配数据库字段）
       const productData = {
         name: data.name,
         description: data.description,
-        ip: data.ip_tag,  // ip_tag -> ip
-        category: data.category,
+        ipId,
+        categoryId,
+        subCategoryId: data.subCategoryId || null,
         price: Number(data.price),
         stockQuantity: Number(data.stock),      // ✅ 驼峰命名
         imageUrl: uploadedImages[0],            // 使用第一张图片作为主图
-        condition: 'new',                       // 默认新品
-        sellerId: user.$id,                     // ✅ 驼峰命名
-        sellerName: user.name || user.email,    // ✅ 驼峰命名
-        status: 'active',
+        isActive: true,
         productAttribute: data.productAttribute || null,  // ✅ 产品属性标签
-        createdAt: new Date().toISOString(),   // ✅ 驼峰命名
-        updatedAt: new Date().toISOString(),   // ✅ 驼峰命名
       };
 
-      if (editMode && initialData?.$id) {
-        // 更新商品
+      let productId = initialData?.id || initialData?.$id;
+
+      if (editMode && productId) {
         await databases.updateDocument(
           DATABASE_ID,
           COLLECTIONS.PRODUCTS,
-          initialData.$id,
-          {
-            ...productData,
-            updatedAt: new Date().toISOString(),  // ✅ 驼峰命名
-          }
+          productId,
+          productData
         );
         console.log('✅ 商品更新成功');
       } else {
         // 创建新商品（公开可读，仅管理员可编辑）
-        await databases.createDocument(
+        const productDoc = await databases.createDocument(
           DATABASE_ID,
           COLLECTIONS.PRODUCTS,
           ID.unique(),
@@ -173,12 +279,77 @@ export default function ProductUploadModal({
             Permission.delete(Role.team(ADMIN_TEAM_ID)),
           ]
         );
+        productId = productDoc.$id;
         console.log('✅ 商品创建成功');
+      }
+
+      if (productId) {
+        const existingVariantIds = new Set<string>();
+
+        if (editMode) {
+          const existingVariants = await databases.listDocuments(
+            DATABASE_ID,
+            COLLECTIONS.PRODUCT_VARIANTS,
+            [Query.equal('productId', productId), Query.limit(100)]
+          );
+          existingVariants.documents.forEach((doc: any) => existingVariantIds.add(doc.$id));
+        }
+
+        await Promise.all(
+          variants.map((variant, index) => {
+            const variantData = {
+              productId,
+              name: variant.name.trim(),
+              price: Number(variant.price),
+              imageUrl: variant.imageUrl.trim() || uploadedImages[0],
+              stockQuantity: Number(variant.stockQuantity),
+              sortOrder: index + 1,
+              isActive: true,
+              tag: variant.tag.trim() || '',
+            };
+
+            if (editMode && variant.id) {
+              existingVariantIds.delete(variant.id);
+              return databases.updateDocument(
+                DATABASE_ID,
+                COLLECTIONS.PRODUCT_VARIANTS,
+                variant.id,
+                variantData
+              );
+            }
+
+            return databases.createDocument(
+              DATABASE_ID,
+              COLLECTIONS.PRODUCT_VARIANTS,
+              ID.unique(),
+              variantData,
+              [
+                Permission.read('any'),
+                Permission.update(Role.team(ADMIN_TEAM_ID)),
+                Permission.delete(Role.team(ADMIN_TEAM_ID)),
+              ]
+            );
+          })
+        );
+
+        if (editMode && existingVariantIds.size > 0) {
+          await Promise.all(
+            Array.from(existingVariantIds).map(variantId =>
+              databases.updateDocument(
+                DATABASE_ID,
+                COLLECTIONS.PRODUCT_VARIANTS,
+                variantId,
+                { isActive: false }
+              )
+            )
+          );
+        }
       }
 
       // 重置表单
       reset();
       setUploadedImages([]);
+      setVariants([]);
       
       // 回调成功
       if (onSuccess) {
@@ -200,6 +371,7 @@ export default function ProductUploadModal({
     if (submitting) return;
     reset();
     setUploadedImages([]);
+    setVariants([]);
     setError('');
     onClose();
   };
@@ -398,6 +570,26 @@ export default function ProductUploadModal({
                 </div>
               </div>
 
+              {/* 子分类 */}
+              <div>
+                <label className="block text-lg font-black mb-3">细分类别 <span className="text-sm text-gray-500">(可选)</span></label>
+                <select
+                  {...register('subCategoryId')}
+                  disabled={submitting || !selectedCategory || filteredSubCategories.length === 0}
+                  className="w-full px-4 py-3 border-4 border-black rounded-xl font-bold focus:outline-none focus:bg-yellow-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <option value="">{selectedCategory ? '-- 不选择细分类别 --' : '请先选择商品分类'}</option>
+                  {filteredSubCategories.map((subCategory) => (
+                    <option key={subCategory.$id} value={subCategory.$id}>
+                      {subCategory.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-2 text-sm text-gray-600">
+                  细分类别用于前台筛选，不影响商品规格选择
+                </p>
+              </div>
+
               {/* ✅ 产品属性标签 (NEW/HOT/DISCOUNT) */}
               <div>
                 <label className="block text-lg font-black mb-3">产品标签 <span className="text-sm text-gray-500">(可选)</span></label>
@@ -414,6 +606,108 @@ export default function ProductUploadModal({
                 <p className="mt-2 text-sm text-gray-600">
                   选择后将在商品卡片上显示对应的标签
                 </p>
+              </div>
+
+              {/* 商品规格 */}
+              <div className="bg-white border-4 border-black rounded-xl p-4 shadow-[4px_4px_0_0_#000]">
+                <div className="flex items-center justify-between gap-4 mb-4">
+                  <div>
+                    <label className="block text-lg font-black">商品规格 <span className="text-sm text-gray-500">(可选)</span></label>
+                    <p className="text-sm text-gray-600 mt-1">有规格时，前台会要求用户选择具体规格后再加入购物车</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={addVariant}
+                    disabled={submitting}
+                    className="shrink-0 flex items-center gap-2 px-4 py-2 bg-yellow-400 border-[3px] border-black rounded-xl font-black shadow-[3px_3px_0_0_#000] hover:bg-yellow-500 disabled:opacity-50"
+                  >
+                    <Plus size={18} />
+                    添加规格
+                  </button>
+                </div>
+
+                {variants.length === 0 ? (
+                  <div className="p-4 border-2 border-dashed border-gray-300 rounded-xl text-sm font-bold text-gray-500 bg-gray-50">
+                    不添加规格时，商品使用下方基础价格和库存。
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {variants.map((variant, index) => (
+                      <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-3 p-3 bg-yellow-50 border-2 border-black rounded-xl">
+                        <label className="md:col-span-3">
+                          <span className="block mb-1 text-xs font-black text-gray-600">规格名称</span>
+                          <input
+                            type="text"
+                            value={variant.name}
+                            onChange={(e) => updateVariant(index, { name: e.target.value })}
+                            disabled={submitting}
+                            className="w-full px-3 py-2 border-2 border-black rounded-lg font-bold focus:outline-none"
+                            placeholder="如：利刃行动"
+                          />
+                        </label>
+                        <label className="md:col-span-2">
+                          <span className="block mb-1 text-xs font-black text-gray-600">规格价格</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            max="10000"
+                            value={variant.price}
+                            onChange={(e) => updateVariant(index, { price: Number(e.target.value) })}
+                            disabled={submitting}
+                            className="w-full px-3 py-2 border-2 border-black rounded-lg font-bold focus:outline-none"
+                            placeholder="0.00"
+                          />
+                        </label>
+                        <label className="md:col-span-2">
+                          <span className="block mb-1 text-xs font-black text-gray-600">规格库存</span>
+                          <input
+                            type="number"
+                            min="0"
+                            max="9999"
+                            value={variant.stockQuantity}
+                            onChange={(e) => updateVariant(index, { stockQuantity: Number(e.target.value) })}
+                            disabled={submitting}
+                            className="w-full px-3 py-2 border-2 border-black rounded-lg font-bold focus:outline-none"
+                            placeholder="0"
+                          />
+                        </label>
+                        <label className="md:col-span-3">
+                          <span className="block mb-1 text-xs font-black text-gray-600">规格图片 URL</span>
+                          <input
+                            type="url"
+                            value={variant.imageUrl}
+                            onChange={(e) => updateVariant(index, { imageUrl: e.target.value })}
+                            disabled={submitting}
+                            className="w-full px-3 py-2 border-2 border-black rounded-lg font-bold focus:outline-none"
+                            placeholder="留空使用商品主图"
+                          />
+                        </label>
+                        <label className="md:col-span-1">
+                          <span className="block mb-1 text-xs font-black text-gray-600">角标</span>
+                          <input
+                            type="text"
+                            maxLength={20}
+                            value={variant.tag}
+                            onChange={(e) => updateVariant(index, { tag: e.target.value })}
+                            disabled={submitting}
+                            className="w-full px-3 py-2 border-2 border-black rounded-lg font-bold focus:outline-none"
+                            placeholder="选填"
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => removeVariant(index)}
+                          disabled={submitting}
+                          className="md:col-span-1 self-end flex items-center justify-center p-2 bg-red-400 border-2 border-black rounded-lg hover:bg-red-500 disabled:opacity-50"
+                          aria-label="删除规格"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* 价格 和 库存 - 并排 */}

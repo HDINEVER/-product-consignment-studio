@@ -180,9 +180,11 @@ const CartDrawer: React.FC<CartDrawerProps> = ({
                       >
                         {item.productTitle}
                       </button>
-                      <p className="text-[10px] sm:text-xs font-medium text-gray-600 mt-0.5 sm:mt-1 line-clamp-1">
-                        {item.variantName}
-                      </p>
+                      {item.variantName && (
+                        <p className="text-[10px] sm:text-xs font-black text-brutal-blue mt-0.5 sm:mt-1 line-clamp-1">
+                          规格：{item.variantName}
+                        </p>
+                      )}
                     </div>
                     
                     <div className="flex justify-between items-center mt-1 sm:mt-2">

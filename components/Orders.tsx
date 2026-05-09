@@ -33,7 +33,10 @@ interface OrderItem {
   productId: string;      // ✅ 驼峰命名
   productName: string;    // ✅ 驼峰命名（商品名称快照）
   productImage: string;   // ✅ 驼峰命名（商品图片快照）
+  variantId?: string;
   variantName?: string;   // ✅ 驼峰命名（规格名称快照）
+  variantPrice?: number;
+  variantImage?: string;
   price: number;
   quantity: number;
   createdAt: string;      // ✅ 驼峰命名
@@ -439,10 +442,10 @@ const Orders: React.FC = () => {
                             <div key={item.$id} className="flex items-center gap-4 pb-4 border-b-2 border-dashed border-gray-300 last:border-0">
                               <div className="w-20 h-20 bg-gray-200 border-4 border-black rounded-xl overflow-hidden shrink-0">
                                 {/* ✅ 驼峰命名：productImage, productName */}
-                                {item.productImage ? (
+                                {(item.variantImage || item.productImage) ? (
                                   <img
-                                    src={item.productImage}
-                                    alt={item.productName}
+                                    src={item.variantImage || item.productImage}
+                                    alt={item.variantName || item.productName}
                                     className="w-full h-full object-cover"
                                   />
                                 ) : (

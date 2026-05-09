@@ -8,13 +8,22 @@ interface TagsMap {
 }
 
 // 将 Appwrite 文档转换为前端 Product 类型
-const mapToProduct = (doc: AppwriteProduct, categoryMap: TagsMap = {}, ipMap: TagsMap = {}): Product => ({
+const mapToProduct = (
+  doc: AppwriteProduct,
+  categoryMap: TagsMap = {},
+  ipMap: TagsMap = {},
+  subCategoryMap: TagsMap = {}
+): Product => ({
   id: doc.$id,
   title: doc.name,                                    // ✅ 使用 name
   description: doc.description,
   basePrice: doc.price,                               // ✅ 使用 price
   category: (categoryMap[doc.categoryId] || '其他') as Category,  // ✅ 从映射表获取分类名称
+  categoryId: doc.categoryId,
+  subCategory: doc.subCategoryId ? subCategoryMap[doc.subCategoryId] : undefined,
+  subCategoryId: doc.subCategoryId,
   ip: ipMap[doc.ipId] || '其他',                    // ✅ 从映射表获取IP名称
+  ipId: doc.ipId,
   image: doc.imageUrl || '/placeholder-product.jpg',  // ✅ 使用 imageUrl
   stockQuantity: doc.stockQuantity,                   // ✅ 使用 stockQuantity
   materialType: undefined,
@@ -26,6 +35,7 @@ const mapToProduct = (doc: AppwriteProduct, categoryMap: TagsMap = {}, ipMap: Ta
 // ========== 筛选参数类型 ==========
 export interface ProductFilters {
   category?: string;  // 分类ID或名称 - 改为string以支持动态分类
+  subCategory?: string;
   ip?: string;
   search?: string;
   status?: 'active' | 'sold' | 'draft';
@@ -79,6 +89,13 @@ export function useProducts() {
         queries.push(Query.equal('categoryId', ''));
       }
       
+      // 子分类筛选
+      if (filters?.subCategory && filters.subCategory !== '全部' && filters.subCategory !== '其他') {
+        queries.push(Query.equal('subCategoryId', filters.subCategory));
+      } else if (filters?.subCategory === '其他') {
+        queries.push(Query.equal('subCategoryId', ''));
+      }
+
       // 搜索 - 临时使用模糊搜索（contains）
       // 注意：等待 Appwrite index_search 全文索引构建完成后，可以改回 Query.search()
       if (filters?.search && filters.search.trim()) {
@@ -124,15 +141,16 @@ export function useProducts() {
       // ========== ✅ 批量查询标签信息 ==========
       const docs = response.documents as unknown as AppwriteProduct[];
       
-      // 收集所有唯一的 categoryId 和 ipId
+      // 收集所有唯一的 categoryId、ipId 和 subCategoryId
       const categoryIds = [...new Set(docs.map(doc => doc.categoryId).filter(id => id && id.trim()))];
       const ipIds = [...new Set(docs.map(doc => doc.ipId).filter(id => id && id.trim()))];
-      
-      console.log('🏷️ 需要查询的标签:', { categoryIds, ipIds });
-      
-      // 批量查询分类和IP标签
-      const [categoriesData, ipsData] = await Promise.all([
-        categoryIds.length > 0 
+      const subCategoryIds = [...new Set(docs.map(doc => doc.subCategoryId).filter((id): id is string => !!id && id.trim()))];
+
+      console.log('🏷️ 需要查询的标签:', { categoryIds, ipIds, subCategoryIds });
+
+      // 批量查询分类、子分类和IP标签
+      const [categoriesData, ipsData, subCategoriesData] = await Promise.all([
+        categoryIds.length > 0
           ? databases.listDocuments(DATABASE_ID, COLLECTIONS.CATEGORIES, [
               Query.equal('$id', categoryIds),
               Query.limit(100)
@@ -141,6 +159,12 @@ export function useProducts() {
         ipIds.length > 0
           ? databases.listDocuments(DATABASE_ID, COLLECTIONS.IP_TAGS, [
               Query.equal('$id', ipIds),
+              Query.limit(100)
+            ])
+          : Promise.resolve({ documents: [] }),
+        subCategoryIds.length > 0
+          ? databases.listDocuments(DATABASE_ID, COLLECTIONS.SUB_CATEGORIES, [
+              Query.equal('$id', subCategoryIds),
               Query.limit(100)
             ])
           : Promise.resolve({ documents: [] }),
@@ -156,12 +180,17 @@ export function useProducts() {
       ipsData.documents.forEach((doc: any) => {
         ipMap[doc.$id] = doc.name;
       });
-      
-      console.log('✅ 标签映射表:', { categoryMap, ipMap });
-      
+
+      const subCategoryMap: TagsMap = {};
+      subCategoriesData.documents.forEach((doc: any) => {
+        subCategoryMap[doc.$id] = doc.name;
+      });
+
+      console.log('✅ 标签映射表:', { categoryMap, ipMap, subCategoryMap });
+
       // 映射产品数据（传入标签映射表）
-      const mappedProducts = docs.map((doc) => 
-        mapToProduct(doc, categoryMap, ipMap)
+      const mappedProducts = docs.map((doc) =>
+        mapToProduct(doc, categoryMap, ipMap, subCategoryMap)
       );
       
       // 分页逻辑：追加模式或替换模式
@@ -403,21 +432,25 @@ export function useProducts() {
         id
       ) as unknown as AppwriteProduct;
       
-      // 查询该商品的分类和IP标签
-      const [categoryData, ipData] = await Promise.all([
+      // 查询该商品的分类、IP和子分类标签
+      const [categoryData, ipData, subCategoryData] = await Promise.all([
         doc.categoryId && doc.categoryId.trim()
           ? databases.getDocument(DATABASE_ID, COLLECTIONS.CATEGORIES, doc.categoryId).catch(() => null)
           : Promise.resolve(null),
         doc.ipId && doc.ipId.trim()
           ? databases.getDocument(DATABASE_ID, COLLECTIONS.IP_TAGS, doc.ipId).catch(() => null)
           : Promise.resolve(null),
+        doc.subCategoryId && doc.subCategoryId.trim()
+          ? databases.getDocument(DATABASE_ID, COLLECTIONS.SUB_CATEGORIES, doc.subCategoryId).catch(() => null)
+          : Promise.resolve(null),
       ]);
-      
+
       // 构建映射表
       const categoryMap: TagsMap = categoryData ? { [doc.categoryId]: (categoryData as any).name } : {};
       const ipMap: TagsMap = ipData ? { [doc.ipId]: (ipData as any).name } : {};
-      
-      return mapToProduct(doc, categoryMap, ipMap);
+      const subCategoryMap: TagsMap = subCategoryData && doc.subCategoryId ? { [doc.subCategoryId]: (subCategoryData as any).name } : {};
+
+      return mapToProduct(doc, categoryMap, ipMap, subCategoryMap);
     } catch (err: any) {
       console.error('❌ 获取商品详情失败:', err);
       return null;

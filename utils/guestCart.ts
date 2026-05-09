@@ -10,7 +10,9 @@ export interface GuestCartItem {
   price: number;
   quantity: number;
   image?: string;
+  variantId?: string;     // ✅ 驼峰命名
   variantName?: string;   // ✅ 驼峰命名
+  variantImage?: string;  // ✅ 驼峰命名
   addedAt: string;        // ✅ 驼峰命名
 }
 
@@ -46,9 +48,9 @@ export const saveGuestCart = (items: GuestCartItem[]): void => {
 export const addToGuestCart = (item: Omit<GuestCartItem, 'addedAt'>): GuestCartItem[] => {
   const cart = getGuestCart();
   
-  // 检查是否已存在相同商品
+  // 检查是否已存在相同商品规格
   const existingIndex = cart.findIndex(
-    (i) => i.productId === item.productId && i.variantName === item.variantName
+    (i) => i.productId === item.productId && (i.variantId || '') === (item.variantId || '')
   );
 
   if (existingIndex > -1) {
@@ -69,11 +71,11 @@ export const addToGuestCart = (item: Omit<GuestCartItem, 'addedAt'>): GuestCartI
 /**
  * 更新游客购物车商品数量
  */
-export const updateGuestCartItem = (productId: string, quantity: number, variantName?: string): GuestCartItem[] => {
+export const updateGuestCartItem = (productId: string, quantity: number, variantId?: string): GuestCartItem[] => {
   const cart = getGuestCart();
-  
+
   const index = cart.findIndex(
-    (i) => i.productId === productId && i.variantName === variantName  // ✅ 驼峰命名
+    (i) => i.productId === productId && (i.variantId || '') === (variantId || '')
   );
 
   if (index > -1) {
@@ -92,11 +94,11 @@ export const updateGuestCartItem = (productId: string, quantity: number, variant
 /**
  * 从游客购物车移除商品
  */
-export const removeFromGuestCart = (productId: string, variantName?: string): GuestCartItem[] => {
+export const removeFromGuestCart = (productId: string, variantId?: string): GuestCartItem[] => {
   const cart = getGuestCart();
-  
+
   const filtered = cart.filter(
-    (i) => !(i.productId === productId && i.variantName === variantName)  // ✅ 驼峰命名
+    (i) => !(i.productId === productId && (i.variantId || '') === (variantId || ''))
   );
 
   saveGuestCart(filtered);

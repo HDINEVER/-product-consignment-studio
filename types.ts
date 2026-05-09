@@ -1,13 +1,24 @@
 export interface ProductVariant {
+  id?: string;
+  productId?: string;
   name: string;
   price: number;
+  imageUrl?: string;
+  stockQuantity?: number;
+  sortOrder?: number;
+  isActive?: boolean;
+  tag?: string;
 }
 
 export interface Product {
   id: string;
   title: string;
   ip: string;
+  ipId?: string;
   category: Category;
+  categoryId?: string;
+  subCategory?: string;
+  subCategoryId?: string;
   image: string;
   description: string;
   basePrice: number;
@@ -21,7 +32,9 @@ export interface Product {
 export interface CartItem {
   productId: string;
   productTitle: string;
+  variantId?: string;
   variantName: string;
+  variantImage?: string;
   price: number;
   quantity: number;
   image: string;
@@ -46,6 +59,7 @@ export interface AppwriteCartItem {
   $id: string;
   userId: string;        // 用户ID
   productId: string;     // 商品ID
+  variantId?: string;    // 规格ID
   quantity: number;      // 数量 (1-1000)
   createdAt: string;     // ISO datetime
   updatedAt?: string;    // ISO datetime
@@ -97,7 +111,10 @@ export interface AppwriteOrderItem {
   productId: string;     // 商品ID
   productName: string;   // 商品名称（快照）✅ 驼峰命名
   productImage: string;  // 商品图片（快照）✅ 驼峰命名
+  variantId?: string;    // 规格ID
   variantName?: string;  // 规格名称（快照）✅ 驼峰命名
+  variantPrice?: number; // 规格价格（快照）
+  variantImage?: string; // 规格图片（快照）
   quantity: number;      // 数量
   price: number;         // 单价（快照）
   subtotal?: number;     // 小计
@@ -109,6 +126,30 @@ export interface AppwriteOrderItem {
 }
 
 // 6. Products 集合
+export interface AppwriteProductVariant {
+  $id: string;
+  productId: string;
+  name: string;
+  imageUrl?: string;
+  stockQuantity?: number;
+  sortOrder?: number;
+  isActive: boolean;
+  tag?: string;
+  price: number;
+  $createdAt?: string;
+  $updatedAt?: string;
+}
+
+export interface AppwriteSubCategory {
+  $id: string;
+  name: string;
+  categoryId: string;
+  sortOrder?: number;
+  isActive?: boolean;
+  $createdAt?: string;
+  $updatedAt?: string;
+}
+
 export interface AppwriteProduct {
   $id: string;
   name: string;          // 商品名称
@@ -118,6 +159,7 @@ export interface AppwriteProduct {
   stockQuantity: number; // 库存数量
   imageUrl: string;      // 商品图片URL
   categoryId: string;    // 分类ID
+  subCategoryId?: string; // 子分类ID
   ipId: string;          // ✅ IP标签ID (驼峰命名)
   isActive: boolean;     // 是否上架
   condition?: string;    // 商品状态 (new/used/refurbished)

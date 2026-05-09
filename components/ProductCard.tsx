@@ -49,7 +49,6 @@ export default function ProductCard({
 
   const handleOrder = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setStatus('ordered');
     onAddToCart?.(product);
   };
 
@@ -225,7 +224,13 @@ export default function ProductCard({
               <span className="font-bold text-xs sm:text-sm">{(product.rating || 5).toFixed(1)}</span>
             </div>
           </div>
-          
+
+          {product.subCategory && (
+            <div className="mt-2 inline-flex w-fit px-2 py-0.5 bg-yellow-100 border-2 border-black rounded-md text-[10px] sm:text-xs font-black text-black shadow-[2px_2px_0_0_#000]">
+              {product.subCategory}
+            </div>
+          )}
+
           <div className="flex items-end justify-between mt-3 sm:mt-4">
             <div className="relative">
               <span className="text-[10px] sm:text-xs font-bold text-gray-400 block uppercase tracking-tighter">

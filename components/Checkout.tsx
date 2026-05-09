@@ -251,11 +251,18 @@ const Checkout: React.FC = () => {
           const itemData = {
             orderId: order.$id,
             productId: item.productId,
+            productName: item.productTitle,
+            productImage: item.image,
+            variantId: item.variantId || '',
+            variantName: item.variantName || '',
+            variantPrice: item.variantId ? item.price : undefined,
+            variantImage: item.variantImage || '',
             quantity: item.quantity,
             price: item.price,
             subtotal: subtotal,              // ✅ 必填字段：小计
             discount: 0,                     // ✅ 默认值：折扣
             taxAmount: 0,                    // ✅ 默认值：税额
+            createdAt: new Date().toISOString(),
           };
           
           console.log(`🛍️ 创建订单项 ${index + 1}/${cartItems.length}:`, itemData);
@@ -619,7 +626,9 @@ const Checkout: React.FC = () => {
                     </div>
                     <div className="flex-1">
                       <h3 className="font-black text-sm line-clamp-1">{item.productTitle}</h3>
-                      <p className="text-xs text-gray-600 font-bold">{item.variantName}</p>
+                      {item.variantName && (
+                        <p className="text-xs text-brutal-blue font-black line-clamp-1">规格：{item.variantName}</p>
+                      )}
                       <div className="flex justify-between items-center mt-1">
                         <span className="font-bold text-sm">¥{item.price}</span>
                         <span className="text-xs text-gray-500">x{item.quantity}</span>

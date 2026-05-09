@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, MouseEvent } from 'react';
 import { X, Plus, Minus, ShoppingCart, AlertCircle, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Product } from '../types';
+import { Product, ProductVariant } from '../types';
 import { useCart } from '../hooks/useCart';
+import { useProductVariants } from '../hooks/useProductVariants';
 import { useAuth } from '../contexts/AuthContext';
 import Loader from './ui/loader';
 
@@ -20,10 +21,12 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   triggerRect
 }) => {
   const [quantity, setQuantity] = useState(1);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const { addToCart } = useCart();
   const { isGuest } = useAuth();
+  const { variants, loading: variantsLoading } = useProductVariants(product?.id);
 
   // 3D Hover 效果状态
   const imageRef = useRef<HTMLDivElement>(null);
@@ -59,6 +62,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setQuantity(1);
+      setSelectedVariant(null);
       setShowSuccess(false);
       // 重置 3D 效果
       setRotation({ x: 0, y: 0 });
@@ -112,9 +116,15 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
   if (!product) return null;
 
-  // 获取最大可购买数量
-  const maxQuantity = product.stockQuantity || 99;
-  const isOutOfStock = maxQuantity === 0;
+  const hasVariants = variants.length > 0;
+  const needsVariantSelection = hasVariants && !selectedVariant;
+  const displayImage = selectedVariant?.imageUrl || product.image;
+  const displayPrice = selectedVariant?.price ?? product.basePrice;
+  const maxQuantity = hasVariants
+    ? selectedVariant?.stockQuantity ?? 0
+    : product.stockQuantity ?? 99;
+  const isOutOfStock = !needsVariantSelection && maxQuantity === 0;
+  const isAddDisabled = variantsLoading || isOutOfStock || isAdding || needsVariantSelection;
 
   // 增加数量
   const handleIncrease = () => {
@@ -132,16 +142,23 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
   // 加入购物车
   const handleAddToCart = async () => {
+    if (variantsLoading) return;
     if (isOutOfStock) return;
-    
+    if (needsVariantSelection) {
+      alert('请先选择商品规格');
+      return;
+    }
+
     setIsAdding(true);
     try {
       await addToCart({
         productId: product.id,              // ✅ 驼峰命名
         productName: product.title,         // ✅ 驼峰命名
         productImage: product.image,        // ✅ 驼峰命名
-        variantName: '',                    // ✅ 驼峰命名
-        price: product.basePrice,
+        variantId: selectedVariant?.id,
+        variantName: selectedVariant?.name || '', // ✅ 驼峰命名
+        variantImage: selectedVariant?.imageUrl,
+        price: displayPrice,
         quantity: quantity,
       });
 
@@ -273,15 +290,15 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     />
                     
                     <img
-                      src={product.image}
-                      alt={product.title}
+                      src={displayImage}
+                      alt={selectedVariant?.name || product.title}
                       className="w-full h-full object-cover"
                     />
                     
                     {/* 分类标签 */}
                     {product.category && product.category !== '全部' && (
                       <div className="absolute top-3 left-3 bg-brutal-yellow px-2 md:px-3 py-1 text-xs font-black border-2 border-black rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                        {product.category}
+                        {product.subCategory || product.category}
                       </div>
                     )}
                     
@@ -309,15 +326,68 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 <div className="bg-white border-2 sm:border-4 border-black rounded-xl p-3 sm:p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col gap-3">
                   <div className="flex justify-between items-start gap-4">
                     <div className="flex-1">
-                      <div className="text-xs sm:text-sm font-bold text-gray-500 mb-1">价格</div>
+                      <div className="text-xs sm:text-sm font-bold text-gray-500 mb-1">
+                        {hasVariants ? '当前规格价格' : '价格'}
+                      </div>
                       <div className="text-2xl sm:text-3xl font-black text-brutal-blue">
-                        ¥{product.basePrice.toFixed(2)}
+                        ¥{displayPrice.toFixed(2)}
                       </div>
                     </div>
                   </div>
 
+                  {/* 规格选择器 */}
+                  {variantsLoading ? (
+                    <div className="pt-3 border-t-2 border-gray-100 mt-1 flex items-center gap-2 text-sm font-bold text-gray-500">
+                      <Loader size="sm" />
+                      加载规格中...
+                    </div>
+                  ) : hasVariants && (
+                    <div className="pt-3 border-t-2 border-gray-100 mt-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-bold text-gray-700">选择规格</span>
+                        <span className="text-xs font-black text-brutal-blue">{variants.length} 款可选</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto pr-1">
+                        {variants.map((variant) => {
+                          const active = selectedVariant?.id === variant.id;
+                          const variantStock = variant.stockQuantity ?? 0;
+                          return (
+                            <button
+                              key={variant.id || variant.name}
+                              type="button"
+                              onClick={() => {
+                                setSelectedVariant(variant);
+                                setQuantity(1);
+                              }}
+                              disabled={variantStock === 0 || isAdding}
+                              className={`relative flex gap-2 p-2 text-left border-2 border-black rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed ${active ? 'bg-yellow-400 shadow-[3px_3px_0_0_#000] -translate-x-0.5 -translate-y-0.5' : 'bg-white hover:bg-yellow-50 hover:shadow-[2px_2px_0_0_#000]'}`}
+                            >
+                              <div className="w-10 h-10 rounded-md border-2 border-black bg-gray-100 overflow-hidden shrink-0">
+                                <img
+                                  src={variant.imageUrl || product.image}
+                                  alt={variant.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="text-xs font-black line-clamp-1">{variant.name}</div>
+                                <div className="text-[11px] font-bold text-brutal-blue">¥{variant.price.toFixed(2)}</div>
+                                <div className="text-[10px] font-bold text-gray-500">库存 {variantStock}</div>
+                              </div>
+                              {variant.tag && (
+                                <span className="absolute -top-2 -right-1 px-1.5 py-0.5 bg-brutal-blue text-white text-[10px] font-black border-2 border-black rounded">
+                                  {variant.tag}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {/* 数量选择器 */}
-                  {!isOutOfStock && (
+                  {!isOutOfStock && !needsVariantSelection && (
                     <div className="pt-3 border-t-2 border-gray-100 mt-1 flex items-center justify-between">
                       <span className="text-sm font-bold text-gray-700">数量</span>
                       <div className="flex items-center gap-3">
@@ -368,13 +438,23 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             <div className="p-3 sm:p-4 border-t-2 sm:border-t-4 border-black bg-white shrink-0">
               <button
                 onClick={handleAddToCart}
-                disabled={isOutOfStock || isAdding}
+                disabled={isAddDisabled}
                 className="w-full py-3 sm:py-4 bg-yellow-400 text-black font-black text-base sm:text-lg border-2 sm:border-4 border-black rounded-xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] sm:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-500 hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] sm:hover:translate-x-[3px] hover:translate-y-[2px] sm:hover:translate-y-[3px] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] disabled:hover:translate-x-0 disabled:hover:translate-y-0"
               >
                 {isAdding ? (
                   <>
                     <Loader size="sm" />
                     <span>处理中...</span>
+                  </>
+                ) : variantsLoading ? (
+                  <>
+                    <Loader size="sm" />
+                    <span>加载规格中...</span>
+                  </>
+                ) : needsVariantSelection ? (
+                  <>
+                    <AlertCircle size={20} strokeWidth={3} />
+                    <span>请选择规格</span>
                   </>
                 ) : isOutOfStock ? (
                   <>
@@ -384,7 +464,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 ) : (
                   <>
                     <ShoppingCart size={20} className="sm:w-6 sm:h-6" strokeWidth={3} />
-                    <span>加入购物车 • ¥{(product.basePrice * quantity).toFixed(2)}</span>
+                    <span>加入购物车 • ¥{(displayPrice * quantity).toFixed(2)}</span>
                   </>
                 )}
               </button>

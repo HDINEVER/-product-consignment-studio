@@ -35,10 +35,11 @@ const Shop = () => {
       error: productsError, 
       total,
       hasMore,
-      fetchProducts, 
+      fetchProducts,
       loadMore,
-      deleteProduct, 
-      updateProduct 
+      deleteProduct,
+      updateProduct,
+      getProduct
     } = useProducts();
     const { cartItems, cartCount, addToCart, removeFromCart, updateQuantity, clearCart, loading: cartLoading } = useCart();
     const { favorites, favoriteCount, isFavorited, addToFavorites, removeFromFavorites, toggleFavorite } = useFavorites();
@@ -52,6 +53,7 @@ const Shop = () => {
 
     // Shop State
     const [selectedCategory, setSelectedCategory] = useState<string>('全部');
+    const [selectedSubCategory, setSelectedSubCategory] = useState<string>('全部');
     const [selectedIP, setSelectedIP] = useState<string>('全部');
     const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth >= 1024);
     const [isCartOpen, setIsCartOpen] = useState(false);
@@ -66,13 +68,25 @@ const Shop = () => {
 
     // Product Upload Modal State (Admin)
     const [showProductUploadModal, setShowProductUploadModal] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [selectedProductRect, setSelectedProductRect] = useState<DOMRect | null>(null);
 
+    const selectedCategoryId = selectedCategory !== '全部' && selectedCategory !== '其他'
+      ? getTagIdByName('category', selectedCategory)
+      : null;
+    const selectedSubCategoryTags = selectedCategoryId
+      ? tags.subCategories.filter(tag => tag.categoryId === selectedCategoryId)
+      : [];
+    const SUB_CATEGORIES = selectedCategoryId
+      ? ['全部', ...selectedSubCategoryTags.map(tag => tag.name)]
+      : [];
+
     // 标签管理状态 (Admin)
     const [isEditCategoryMode, setIsEditCategoryMode] = useState(false);
     const [isEditIPMode, setIsEditIPMode] = useState(false);
+    const [isEditSubCategoryMode, setIsEditSubCategoryMode] = useState(false);
     const [editingTag, setEditingTag] = useState<{ productId: string, type: 'category' | 'ip' } | null>(null);
 
     // 当前筛选条件（用于加载更多时传递）
@@ -95,6 +109,10 @@ const Shop = () => {
       const filters: ProductFilters = {};
       
       // 将分类名称转换为ID
+      if (selectedSubCategory !== '全部' && !selectedCategoryId) {
+        setSelectedSubCategory('全部');
+      }
+
       if (selectedCategory !== '全部' && selectedCategory !== '其他') {
         const categoryId = getTagIdByName('category', selectedCategory);
         console.log('🏷️ 分类筛选:', selectedCategory, '→ ID:', categoryId);
@@ -105,6 +123,15 @@ const Shop = () => {
         filters.category = '其他';
       }
       
+      // 将子分类名称转换为ID
+      if (selectedSubCategory !== '全部') {
+        const subCategoryId = getTagIdByName('subCategory', selectedSubCategory);
+        console.log('🏷️ 子分类筛选:', selectedSubCategory, '→ ID:', subCategoryId);
+        if (subCategoryId) {
+          filters.subCategory = subCategoryId;
+        }
+      }
+
       // 将IP名称转换为ID
       if (selectedIP !== '全部' && selectedIP !== '其他') {
         const ipId = getTagIdByName('ip', selectedIP);
@@ -133,7 +160,7 @@ const Shop = () => {
       
       console.log('📊 执行筛选，filters:', filters);
       fetchProducts(filters);
-    }, [selectedCategory, selectedIP, debouncedSearchQuery, priceRange, fetchProducts, getTagIdByName]);
+    }, [selectedCategory, selectedCategoryId, selectedSubCategory, selectedIP, debouncedSearchQuery, priceRange, fetchProducts, getTagIdByName]);
 
     // Handlers - 使用 useCart hook
     const handleAddToCart = async (product: Product, variantName: string, price: number, quantity: number) => {
@@ -175,16 +202,9 @@ const Shop = () => {
     };
 
     const handleAddFavoriteToCart = async (product: Product) => {
-        // 如果产品有多个规格，打开产品详情让用户选择
-        if (product.variants && product.variants.length > 1) {
-          setViewProduct(product);
-          setIsFavoritesOpen(false);
-        } else {
-          // 单规格直接加入购物车
-          const variant = product.variants?.[0] || { name: '默认', price: product.basePrice };
-          await handleAddToCart(product, variant.name, variant.price, 1);
-          setIsFavoritesOpen(false);
-        }
+        setSelectedProduct(product);
+        setSelectedProductRect(null);
+        setIsFavoritesOpen(false);
     };
     
     // 管理员: 删除商品
@@ -462,7 +482,10 @@ const Shop = () => {
                       isEditMode={isEditCategoryMode}
                       onToggleEditMode={() => setIsEditCategoryMode(!isEditCategoryMode)}
                       selectedTag={selectedCategory}
-                      onSelectTag={(tagName) => setSelectedCategory(tagName)}
+                      onSelectTag={(tagName) => {
+                        setSelectedCategory(tagName);
+                        setSelectedSubCategory('全部');
+                      }}
                     />
                   </div>
                 ) : null}
@@ -474,7 +497,10 @@ const Shop = () => {
                       <AnimatedButton
                         key={cat}
                         variant={selectedCategory === cat ? 'primary' : 'outline'}
-                        onClick={() => setSelectedCategory(cat)}
+                        onClick={() => {
+                          setSelectedCategory(cat);
+                          setSelectedSubCategory('全部');
+                        }}
                         className={`px-4 py-1.5 rounded-xl whitespace-nowrap ${
                           selectedCategory === cat
                             ? ''
@@ -488,7 +514,10 @@ const Shop = () => {
                     {/* 管理员: 发布新商品按钮（纯图标） */}
                     {isAdmin && (
                       <button
-                        onClick={() => setShowProductUploadModal(true)}
+                        onClick={() => {
+                          setEditingProduct(null);
+                          setShowProductUploadModal(true);
+                        }}
                         className="ml-auto mr-4 w-9 h-9 rounded-full flex items-center justify-center bg-brutal-black text-brutal-yellow font-black border-[3px] border-black shadow-[4px_4px_0_0_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[2px] active:translate-y-[2px] transition-all"
                         title="发布新商品"
                       >
@@ -497,6 +526,44 @@ const Shop = () => {
                     )}
                   </div>
                 </div>
+
+                {SUB_CATEGORIES.length > 1 && (
+                  <div className="overflow-x-auto pb-2 pt-1">
+                    <div className="flex gap-1.5 min-w-max items-center px-1">
+                      {SUB_CATEGORIES.map(subCategory => (
+                        <AnimatedButton
+                          key={subCategory}
+                          variant={selectedSubCategory === subCategory ? 'primary' : 'outline'}
+                          onClick={() => setSelectedSubCategory(subCategory)}
+                          className={`px-3 py-1 rounded-lg whitespace-nowrap text-sm ${
+                            selectedSubCategory === subCategory
+                              ? ''
+                              : 'text-gray-500 hover:text-black'
+                          }`}
+                        >
+                          {subCategory === '全部' ? '全部细分' : subCategory}
+                        </AnimatedButton>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {isAdmin && selectedCategoryId && (
+                  <div className="mt-3 p-3 bg-white border-2 border-black rounded-xl shadow-[3px_3px_0_0_#000]">
+                    <div className="mb-2 text-sm font-black text-gray-700">细分类别管理</div>
+                    <TagManager
+                      tags={selectedSubCategoryTags}
+                      type="subCategory"
+                      typeName="细分"
+                      onAdd={async (name) => await addTag('subCategory', name, selectedCategoryId)}
+                      onDelete={async (tagId, tagName) => await deleteTag(tagId, 'subCategory', tagName)}
+                      isEditMode={isEditSubCategoryMode}
+                      onToggleEditMode={() => setIsEditSubCategoryMode(!isEditSubCategoryMode)}
+                      selectedTag={selectedSubCategory}
+                      onSelectTag={(tagName) => setSelectedSubCategory(tagName)}
+                    />
+                  </div>
+                )}
             </div>
 
             {/* Loading 状态 */}
@@ -535,15 +602,15 @@ const Shop = () => {
                   }
                 }}
                 onAddToCart={(product) => {
-                  // 快速添加到购物车，使用默认变体
-                  const defaultVariant = product.variants?.[0];
-                  if (defaultVariant) {
-                    handleAddToCart(product, defaultVariant.name, defaultVariant.price, 1);
-                  } else {
-                    handleAddToCart(product, '默认', product.basePrice, 1);
-                  }
+                  setSelectedProduct(product);
+                  setSelectedProductRect(null);
                 }}
-                onEdit={(productId) => navigate(`/admin/products/${productId}/edit`)}
+                onEdit={(productId) => {
+                  const product = products.find(item => item.id === productId);
+                  if (!product) return;
+                  setEditingProduct(product);
+                  setShowProductUploadModal(true);
+                }}
                 onDelete={(productId) => handleDeleteProduct(productId)}
                 onEditCategory={(productId) => setEditingTag({ productId, type: 'category' })}
                 onEditIP={(productId) => setEditingTag({ productId, type: 'ip' })}
@@ -554,7 +621,7 @@ const Shop = () => {
                 onIPChange={(productId, value) => handleUpdateTag(productId, 'ip', value)}
                 onTagBlur={() => setEditingTag(null)}
                 emptyMessage={
-                  selectedCategory !== '全部' || selectedIP !== '全部' || searchQuery || priceRange[0] > 0 || priceRange[1] < 2000
+                  selectedCategory !== '全部' || selectedSubCategory !== '全部' || selectedIP !== '全部' || searchQuery || priceRange[0] > 0 || priceRange[1] < 2000
                     ? '试试调整筛选条件吧' 
                     : isAdmin ? '点击右上角 ➕ 发布第一个商品' : '敬请期待...'
                 }
@@ -655,10 +722,15 @@ const Shop = () => {
         {isAdmin && (
           <ProductUploadModal
             isOpen={showProductUploadModal}
-            onClose={() => setShowProductUploadModal(false)}
+            onClose={() => {
+              setShowProductUploadModal(false);
+              setEditingProduct(null);
+            }}
             onSuccess={() => {
               fetchProducts(); // 刷新商品列表
             }}
+            editMode={!!editingProduct}
+            initialData={editingProduct}
           />
         )}
 

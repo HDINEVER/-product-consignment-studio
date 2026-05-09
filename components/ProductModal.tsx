@@ -23,7 +23,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
 
   if (!isOpen || !product) return null;
 
-  const currentVariant = product.variants[selectedVariantIdx];
+  const currentVariant = product.variants[selectedVariantIdx] || { name: '', price: product.basePrice };
 
   const handleAdd = () => {
     onAddToCart(product, currentVariant.name, currentVariant.price, quantity);
@@ -74,7 +74,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">选择款式</label>
               <div className="flex flex-wrap gap-2">
-                {product.variants.map((variant, idx) => (
+                {(product.variants.length > 0 ? product.variants : [currentVariant]).map((variant, idx) => (
                   <button
                     key={idx}
                     onClick={() => setSelectedVariantIdx(idx)}
